@@ -71,7 +71,7 @@ public class SeleniumOutils {
 	 * Le driver utilisé par la boite à outils.
 	 */
 	private GenericDriver driver = null;
-	
+
 	/**
 	 * Le driver utilisé par la boite à outils.
 	 */
@@ -514,11 +514,21 @@ public class SeleniumOutils {
 	}
 	
 
+	/**
+	 * Attend la disparition d'un texte pendant 30 seconde maximum.
+	 * @param texte le texte dont on attend la disparition.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public void attendreNonPresenceTexte(final String texte) throws SeleniumException {
 		attendreNonPresenceTexte(texte, 30);
 	}
 	
-
+	/**
+	 * Attend la disparition d'un texte pendant une durée en seconde donnée.
+	 * @param texte le texte dont on attend la disparition.
+	 * @param time le temps maximal d'attente.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public void attendreNonPresenceTexte(final String texte, Integer time) throws SeleniumException {
 	    try {
 			(new WebDriverWait(driver, time)).until(new ExpectedCondition<Boolean>() {
@@ -541,7 +551,14 @@ public class SeleniumOutils {
 	    }
 	}
 	
-
+	/**
+	 * Teste la présnece d'un texte dans une page.
+	 * @param frame la frame où se situe le texte.
+	 * @param text le texte dont la présence est à tester.
+	 * @param visible la condition de visibilité du texte.
+	 * @param timestamp un timestamp de référence pour stocker l'évènement.
+	 * @return true si le texte est présent, false sinon.
+	 */
 	public boolean testerPresenceTexte(String frame, String text, boolean visible, Long timestamp){
 		logger("On teste la presence du texte " + (visible?"visible":"invisible") + " '" + text + "' (frame : " + frame + ")");
 		// Utilisation d'un timeStamp pour l'unicité des objectifs.
@@ -591,25 +608,54 @@ public class SeleniumOutils {
 		}
 	}
 
-
+	/**
+	 * Vérifie la présence d'un texte dans la page.
+	 * @param text le texte à trouver.
+	 * @param visible le critère de visibilité.
+	 * @return true si le texte est trouvé, false sinon.
+	 */
 	public boolean testerPresenceTexte(String text, boolean visible){
 		Long timestamp = new Date().getTime();
 		return testerPresenceTexte(null, text, visible, timestamp);
 	}
 	
-
-	
+	/**
+	 * Attend le chargement d'un élément, que celui ci soit visible ou non.
+	 * @param cible la cible désignant l'élement à attendre.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public void attendreChargementElement(final CibleBean cible) throws SeleniumException {
+		attendreChargementElement(cible, false, false);
+	}
+	
+	/**
+	 * Attend le chargement d'un élément dans la page avant de poursuivre le test.
+	 * @param cible la cible désignant l'élément à attendre.
+	 * @param visible l'élement doit il être visible ?
+	 * @param actif l'élement doit il être actif (non disabled) ?
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public void attendreChargementElement(final CibleBean cible, final boolean visible, final boolean actif) throws SeleniumException {
 	    try {
 	    	logger("On attend le chargement de l'élément " + cible.getClef() + " : " + cible.lister() + " (Frame : " + cible.getFrame() + ")");
 	    	final By critere = cible.creerBy();
 			(new WebDriverWait(driver, 10)).until(new ExpectedCondition<Boolean>() {
 		        public Boolean apply(WebDriver driver) {
 		        	try {
-		        		//TODO pourquoi la value?
-//		        		String temp = obtenirElement(cible.getFrame(), critere).getAttribute("value");
-//		        		return  temp != null && !"".equals(temp.trim());
-		        		return obtenirElement(cible.getFrame(), critere) != null;
+		        		Boolean retour = false;
+		        		WebElement temp;
+		        		// En fonction du critère visible on récupère l'élément.
+		        		if (visible) {
+		        			temp = obtenirElementVisible(cible);
+		        		} else {
+		        			temp = obtenirElement(cible.getFrame(), critere);
+		        		}
+		        		retour = (temp != null);
+		        		// Si on à un critère d'activité et que l'élément existe on vérifie.
+		        		if (actif && retour) {
+		        			retour = (temp.isEnabled() && temp.getAttribute("disabled") == null);
+		        		}
+		        		return retour;
 		        	} catch (SeleniumException e) {
 		        		// L'élément n'est pas encore présent.
 		        		return false;
@@ -621,7 +667,29 @@ public class SeleniumOutils {
 	    }
 	}
 	
+	/**
+	 * Fonction temporaire pour une attente. Meilleure solution à trouver.
+	 * @param nbSec le nombre de seconde d'attente
+	 */
+	public void attendre(long nbSec) {
+	    try {;
+	    	logger("On attend pendant " + nbSec + " secondes.");
+			(new WebDriverWait(driver, nbSec)).until(new ExpectedCondition<Boolean>() {
+		        public Boolean apply(WebDriver driver) {
+		        	return false;
+		        }
+		    });
+	    } catch (TimeoutException e) {
+	    	logger("Le temps d'attente est écouler.");
+	    }
+	}
 	
+	/**
+	 * Attend la disparition d'un élément pendant un nombre donné de seconde.
+	 * @param cible la cible désignant l'élément dont on attend la disparition.
+	 * @param nbreSecondes le nombre de seconde maximum d'attente.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public void attendreDisparitionElement(final CibleBean cible, Integer nbreSecondes) throws SeleniumException {
 	    try {
 	    	logger("On attend la disparition de l'élément " + cible.getClef() + " : " + cible.lister() + " (Frame : " + cible.getFrame() + ")");
@@ -671,6 +739,11 @@ public class SeleniumOutils {
 		}
 	}
 	
+	/**
+	 * Permet de changer la fenêtre active lors du test.
+	 * On active automatiquement la dernière fenêtre ouverte.
+	 * @return un driver pointant sur la dernière fenêtre ouverte.
+	 */
 	public GenericDriver changerDeFenetre() {	
 		
 		if (this.testerPresenceAlerteJavascript()) {
@@ -696,6 +769,9 @@ public class SeleniumOutils {
 		return driver;
 	}
 	
+	/**
+	 * Tente de reperer les popup javascript ouverte et de les valider.
+	 */
 	public void supprimerPopups() {	
 		SeleniumOutils temp;
 		if (this.testerPresenceAlerteJavascript()) {
@@ -717,7 +793,12 @@ public class SeleniumOutils {
 		}
 	}
 	
-
+	/**
+	 * Permet de changer la fenêtre active lors du test.
+	 * On active automatiquement la dernière fenêtre dont le titre correspond au paramètre.
+	 * @param titre le titre de la fenêtre souhaitée.
+	 * @return un driver pointant sur la fenêtre souhaitée. Si c'est impossible on reste sur la même fenêtre.
+	 */
 	public GenericDriver changerDeFenetre(String titre) {	
 		String titrePageCourante;
 		SeleniumOutils tempOutil;
@@ -771,6 +852,11 @@ public class SeleniumOutils {
 		return retour;
 	}
 	
+	/**
+	 * Permet de fermer la fenêtre courante.
+	 * On passe sur la prochaine fenêtre.
+	 * @return le drive pointant sur la prochaine fenêtre.
+	 */
 	public GenericDriver fermerFenetreCourante() {
 		logger("On ferme la fenetre courante " + driver.getTitle());
 		driver.close();
@@ -787,10 +873,26 @@ public class SeleniumOutils {
 		logger("On clique sur " + cible.creerBy().toString() + " (idFrame : " + cible.getFrame() + ")");
 		WebElement temp = obtenirElementVisible(cible);
 		
-		if (temp != null) {
-			temp.click();
-		} else {
-			throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est pas visible.");
+		try {		
+			if (temp != null) {
+				temp.click();
+			} else {
+				throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est pas visible.");
+			}
+		} catch (StaleElementReferenceException ex) {
+			throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est plus disponible (rechargement?).");
+		}
+	}
+	
+	/**
+	 * Permet un clic optionnel sur un objet potentiellement absent mais non obligatoire.
+	 * @param cible la cible du clic.
+	 */
+	public void cliquerSiPossible(CibleBean cible) {
+		try {	
+			cliquer(cible);
+		} catch (SeleniumException ex) {
+			logger("Impossible de cliquer sur la cible " + cible.creerBy().toString() + " (idFrame : " + cible.getFrame() + ")");
 		}
 	}
 	
@@ -894,10 +996,22 @@ public class SeleniumOutils {
 		}
 	}
 	
+	/**
+	 * Permet d'obtenir un élément à partir d'une cible.
+	 * @param cible la cible désignant l'objet recherché.
+	 * @return l'élément demandé.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public WebElement obtenirElement(CibleBean cible) throws SeleniumException {
 		return obtenirElement(cible.getFrame(), cible.creerBy());
 	}
 	
+	/**
+	 * Permet d'obtenir un élément visible à partir d'une cible.
+	 * @param cible la cible désignant l'objet visible recherché.
+	 * @return l'élément demandé (si il est visible).
+	 * @throws SeleniumException en cas d'erreur ou si l'élément n'est pas visible.
+	 */
 	public WebElement obtenirElementVisible(CibleBean cible) throws SeleniumException {
 		return obtenirElementVisible(cible, true);
 	}
@@ -931,17 +1045,32 @@ public class SeleniumOutils {
  		return null;
 	}
 	
+	/**
+	 * Permet d'obtenir une liste d'élément à partir d'un critère de ciblage.
+	 * @param cible le critère de ciblage pour les éléments.
+	 * @return la liste des éléments obtenu suite à la requête de ciblage.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public List<WebElement> obtenirElements(CibleBean cible) throws SeleniumException {
 		return obtenirElements(cible.getFrame(), cible.creerBy());
 	}
 	
-
-	
+	/**
+	 * Permet un clic sur un élément désigné par son ID.
+	 * @param valeur l'ID de l'élément avec lequel on intérragit.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public void cliquer(String valeur) throws SeleniumException {
 		//cliquer(null, creerBy(Clefs.ID, valeur));	
 		cliquer(new CibleBean(null, Clefs.ID, new String[] {valeur}));
 	}
 	
+	/**
+	 * Permet de cliquer sur autant d'éléments que possible répondant aux critères de ciblage.
+	 * @param cible la cible des clics.
+	 * @return le nombre de clics effectués.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public int cliquerMultiple(CibleBean cible) throws SeleniumException {
 		return cliquerMultiple(cible, null);	
 	}
@@ -977,10 +1106,14 @@ public class SeleniumOutils {
 //		}
 //	}
 	
+	public void selectionner(String libelle, CibleBean cible) throws SeleniumException {
+		selectionner(libelle, cible, true);
+	}
+	
 	/* (non-Javadoc)
 	 * @see moteur.GenericDriver#selectionner(java.lang.String, java.lang.String, beans.Clefs, java.lang.String)
 	 */
-	public void selectionner(String libelle, CibleBean cible) throws SeleniumException {
+	public void selectionner(String libelle, CibleBean cible, boolean verification) throws SeleniumException {
 		Boolean success = false;
 		try {
 			// On obtiens le select (à condition qu'il soit visible)
@@ -1012,6 +1145,11 @@ public class SeleniumOutils {
 			// On doit ensuite envoyer une validation à la selection, sans quoi la selection n'est pas finalisée.
 			if (tempOption != null) {
 				tempOption.sendKeys(Keys.RETURN);
+				
+				// Si aucune vérification n'est demandée et que la selection est déjà effective, on s'arrête là.
+				if (!verification) {
+					return;
+				}
 			}
 			
 			// On vérifie que a saisie à bien été prise en compte (A vérifier).
@@ -1051,8 +1189,10 @@ public class SeleniumOutils {
 			}		
 			logger("Selection de la valeur " +  libelle + " pour le select : " +  cible.lister());
 		} catch (NoSuchElementException ex) {	
+			ex.printStackTrace();
 			throw new SeleniumException(Erreurs.E009, "(Selecteur : " + cible.lister() + ", Valeur : " + libelle + ")");
 		} catch (SeleniumException ex) {
+			ex.printStackTrace();
 			throw new SeleniumException(ex, "(Selecteur : " + cible.lister() + ", Valeur : " + libelle + ")");
 		}
 		
@@ -1595,6 +1735,22 @@ public class SeleniumOutils {
 	public SeleniumOutils(GenericDriver driver, String typeImpl) {
 		super();
 		this.typeImpl = typeImpl;
+		this.driver = driver;
+	}
+	
+	/**
+	 * Permet de récuperer ke driver associé avec cet outil.
+	 * @return le driver.
+	 */
+	public GenericDriver getDriver() {
+		return driver;
+	}
+
+	/**
+	 * Permet de fixer le driver associé à cet outil.
+	 * @param driver le driver à mettre.
+	 */
+	public void setDriver(GenericDriver driver) {
 		this.driver = driver;
 	}
 }

@@ -261,6 +261,7 @@ public class FirefoxImpl extends FirefoxDriver implements GenericDriver {
 
 
 		String pathToBinaryS = new String("C:\\Users\\levieilfa\\AppData\\Local\\Mozilla Firefox\\firefox.exe");
+		//String pathToBinaryS = new String("C:\\Users\\levieilfa\\AppData\\Local\\firefox\\firefox.exe");
 		File pathToBinary = new File(pathToBinaryS);
 		FirefoxBinary ffBinary = new FirefoxBinary(pathToBinary);
 		//Process proc = Runtime.getRuntime().exec("cmd set PATH=%PATH%;" + pathToBinary);
@@ -284,6 +285,9 @@ public class FirefoxImpl extends FirefoxDriver implements GenericDriver {
 		//driver.getKeyboard().sendKeys("test");
 		
 		WebElement test = outil.obtenirElementVisible(new CibleBean(Clefs.NAME, "reroutage:data:data"));
+		
+		outil.cliquer("Reroutage");
+		
 		System.out.println(test.getText());
 		
 		//outil.presserEnter();

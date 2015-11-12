@@ -81,6 +81,31 @@ public class CasEssaiBean implements Serializable {
 	private HashMap<String, ObjectifBean> parcours = new LinkedHashMap<String, ObjectifBean>();
 
 	/**
+	 * Log d'execution du test.
+	 */
+	public String logs = "";
+	
+	/**
+	 * Permet d'obtenir le registre d'execution du test.
+	 * @return le registre d'execution.
+	 */
+	public String getLogs() {
+		return logs;
+	}
+
+	public String getTime() {
+		return String.valueOf(getDateCreation().getTime());
+	}
+
+	/**
+	 * Setter pour le registre d'execution.
+	 * @param logs le nouveau registre d'execution.
+	 */
+	public void setLogs(String logs) {
+		this.logs = logs;
+	}
+	
+	/**
 	 * Ajoute un objectif au cas d'essai
 	 * @param objectif object à ajouter.
 	 */
@@ -127,7 +152,19 @@ public class CasEssaiBean implements Serializable {
 	public void validerObjectif(GenericDriver driver, String clef, Boolean etat) {
 		validerObjectif(clef, etat);
 		if (driver != null) {
-			new SeleniumOutils(driver).captureEcran(clef);
+			new SeleniumOutils(driver).captureEcran(clef, getNomCasEssai());
+		}
+	}
+	
+	/**
+	 * Permet de changer l'état d'un objectif dont le clef contient la date de création (si celui-ci existe).
+	 * @param clef la clef de l'objectif sans la date de création.
+	 * @param etat l'état souhaité de l'objectif.
+	 */
+	public void validerObjectifDate(GenericDriver driver, String clef, Boolean etat) {
+		validerObjectif(clef + getTime(), etat);
+		if (driver != null) {
+			new SeleniumOutils(driver).captureEcran(clef + getTime(), getNomCasEssai());
 		}
 	}
 	

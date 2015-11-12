@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import org.openqa.selenium.interactions.HasInputDevices;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 
@@ -14,7 +15,7 @@ import beans.ObjectifBean;
  * @author kcw293
  *
  */
-public interface GenericDriver extends WebDriver, TakesScreenshot, HasInputDevices {
+public interface GenericDriver extends WebDriver, TakesScreenshot, HasInputDevices, JavascriptExecutor {
 
 	/**
 	 * Registre d'execution du driver.
