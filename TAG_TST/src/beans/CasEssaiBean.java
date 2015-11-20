@@ -6,9 +6,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import moteurs.GenericDriver;
-
-import org.openqa.selenium.WebDriver;
-
 import outils.SeleniumOutils;
 
 /**
@@ -55,6 +52,34 @@ public class CasEssaiBean implements Serializable {
 	private Boolean etatFinal = false;
 	
 	/**
+	 * Le cas de test existe t'il dans ALM.
+	 */
+	private Boolean alm = false;
+	
+	
+	// DONNEES ALM
+	/**
+	 * Identifiant du cas de test dans TESTLAB
+	 */
+	private Integer idUniqueTestLab = -1;
+	
+	/**
+	 * Chemin dans le test LAB vers le cas de test sans inclure le root.
+	 * EX : POC Selenium\\IZIVENTE
+	 */
+	private String cheminTestLab;
+	
+	/**
+	 * Nom exact du cas de test dans test Lab
+	 */
+	private String nomTestLab;
+	
+	/**
+	 * Nom exact du cas de test dans test plan (onglet execution_grid du testLab)
+	 */
+	private String nomTestPlan;
+	
+	/**
 	 * Descriptif du cas de test.
 	 */
 	private String descriptif = "";
@@ -66,6 +91,7 @@ public class CasEssaiBean implements Serializable {
 	
 	/**
 	 * Liste des objectifs à atteindre pour la réalisation complète du cas d'essai.
+	 * Les objectifs peuvent être utilisés comme step dans des cas ALM.
 	 */
 	private HashMap<String, ObjectifBean> objectifs = new LinkedHashMap<String, ObjectifBean>();
 
@@ -139,8 +165,12 @@ public class CasEssaiBean implements Serializable {
 	 * @param etat l'état souhaité de l'objectif.
 	 */
 	public void validerObjectif(String clef, Boolean etat) {
-		if (getObjectifs().get(clef) != null) {
+		ObjectifBean bean = getObjectifs().get(clef);
+		if (bean != null) {
 			getObjectifs().get(clef).setEtat(etat);
+			if (bean.isStep() && etat) {
+				getObjectifs().get(clef).setObtenu("Conforme à l'attendu");
+			}
 		}
 	}
 	
@@ -348,6 +378,47 @@ public class CasEssaiBean implements Serializable {
 	public void setCommentaire(String commentaire) {
 		this.commentaire = commentaire;
 	}
+
+	public Boolean getAlm() {
+		return alm;
+	}
+
+	public void setAlm(Boolean alm) {
+		this.alm = alm;
+	}
+
+	public Integer getIdUniqueTestLab() {
+		return idUniqueTestLab;
+	}
+
+	public void setIdUniqueTestLab(Integer idUniqueTestLab) {
+		this.idUniqueTestLab = idUniqueTestLab;
+	}
+
+	public String getCheminTestLab() {
+		return cheminTestLab;
+	}
+
+	public void setCheminTestLab(String cheminTestLab) {
+		this.cheminTestLab = cheminTestLab;
+	}
+
+	public String getNomTestLab() {
+		return nomTestLab;
+	}
+
+	public void setNomTestLab(String nomTestLab) {
+		this.nomTestLab = nomTestLab;
+	}
+
+	public String getNomTestPlan() {
+		return nomTestPlan;
+	}
+
+	public void setNomTestPlan(String nomTestPlan) {
+		this.nomTestPlan = nomTestPlan;
+	}
 	
 	////////////////////////////////////////////////////////////////
+	
 }

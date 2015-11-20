@@ -39,6 +39,21 @@ public class ObjectifBean implements Serializable {
 	 * Capture d'écran associée à l'objectif.
 	 */
 	private String capture = "";
+	
+	/**
+	 * Descriptif de l'attendu
+	 */
+	private String attendu = "";
+	
+	/**
+	 * Descriptif de l'obtenu.
+	 */
+	private String obtenu = "";
+	
+	/**
+	 * Indique si l'objectif est un step.
+	 */
+	private boolean step = false;
 
 	/**
 	 * Construit un objectif à partir de données de base.
@@ -96,6 +111,25 @@ public class ObjectifBean implements Serializable {
 		this.clefUnique = code;
 	}
 	
+	/**
+	 * Construit un objectif de catégorie step (pour une synchronisation ALM).
+	 * @param descriptif descriptif de l'objectif.
+	 * @param code code de l'objectif.
+	 * @param clef la clef unique de l'objectif.
+	 * @param attendu l'attendu de l'étape
+	 * @param l'obtenu par défaut (à modifier ultérieurement).
+	 */
+	public ObjectifBean(String descriptif, String code,  String clef, String attendu, String obtenu) {
+		super();
+		this.descriptif = descriptif;
+		this.code = code;
+		this.etat = false;
+		this.clefUnique = clef;
+		this.step = true;
+		this.attendu = attendu;
+		this.obtenu = obtenu;
+	}
+	
 	////////////////////////////////////////////////////////////////
 	// GETTERS & SETTERS 										////
 	////////////////////////////////////////////////////////////////
@@ -140,6 +174,30 @@ public class ObjectifBean implements Serializable {
 		this.capture = capture;
 	}
 	
+	public String getAttendu() {
+		return attendu;
+	}
+
+	public void setAttendu(String attendu) {
+		this.attendu = attendu;
+	}
+
+	public String getObtenu() {
+		return obtenu;
+	}
+
+	public void setObtenu(String obtenu) {
+		this.obtenu = obtenu;
+	}
+
+	public boolean isStep() {
+		return step;
+	}
+
+	public void setStep(boolean step) {
+		this.step = step;
+	}
+
 	/**
 	 * Permet de creer un lien hypertexte pour un rapport excel à partir du chemin présumé de la capture d'écran.
 	 * Cette fonction ne vérifie pas si une capture existe , elle creer juste le lien vers la capture.

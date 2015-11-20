@@ -47,6 +47,13 @@ public class CibleBean implements Serializable {
 	 * Indicateur de recherche pere.
 	 */
 	public final static String PERE = "pere";
+	
+	/**
+	 * Indicateur de recherche à inserer entre deux éléments imbriqués dont on ignore la distance l'un de l'autre.
+	 * EX : .//*[@id='popupSyntheseContentTable']//*[@value='Valider']
+	 */
+	public final static String RECHERCHE = "/*";
+	
 	/**
 	 * Indicateur de recherche par texte.
 	 */

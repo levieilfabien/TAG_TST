@@ -10,6 +10,7 @@ import java.util.Properties;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
+import beans.CasEssaiBean;
 import constantes.Erreurs;
 import exceptions.SeleniumException;
 
@@ -26,6 +27,69 @@ public class PropertiesOutil {
 	 */
 	public PropertiesOutil(String nom) {
 		fichierProperties = nom;
+	}
+	
+	/**
+	 * Fonction pour l'initialisation d'une constante.
+	 * ATTENTION : Cette fonction bypass la gestion d'erreur, à n'utiliser qu'en cas de certitude de la disponibilité de la propriété.
+	 * @param clef la clef dans le fichier properties.
+	 * @return la valeur associée à la clef ou null si la valeur n'est pas trouvée.
+	 */
+	public static String getInfoConstante(final String clef) {
+		try {
+			return getInfo(clef);
+		} catch (SeleniumException e) {
+			return "";
+		}
+	}
+	
+	/**
+	 * Renvoie la clef associée à l'environement par défaut.
+	 * ATTENTION : Cette fonction bypass la gestion d'erreur, à n'utiliser qu'en cas de certitude de la disponibilité de la propriété.
+	 * @param clef la clef à recupérée.
+	 * @return la chaine résultat.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public static String getInfoEnvConstante(String clef) {
+		try {
+			return getInfoEnv(clef, null);
+		} catch (SeleniumException e) {
+			return "";
+		}
+	}
+	
+	/**
+	 * Renvoie la clef associée à l'environement par défaut qui est passer en paramètre.
+	 * Cet environement doit exister dans le fichier properties et doit respecter le format EnvTestPreConstruit = <Valeur>.
+	 * @param clef la clef à recupérée on fera <clef>.
+	 * @return la chaine résultat.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public static String getInfoEnv(String clef, CasEssaiBean casEssai) throws SeleniumException {
+		String envDefaut = "";
+		if (casEssai != null && casEssai.getEnvironement() != null) {
+			// Si l'environement est préciser dans le cas d'essai, on l'utilise comme environement de référence.
+			envDefaut = getInfo(casEssai.getEnvironement().getNom());
+		} else {
+			// Sinon on récupère celui dans la propriété "EnvTestPreConstruit" du properties..
+			envDefaut = getInfo("EnvTestPreConstruit");
+		}
+		if (envDefaut != null && !"".equals(envDefaut)) {
+			// On recupère la clef associée à l'environement trouver.
+			return getInfo(envDefaut + "." + clef);
+		} else {
+			return getInfo("RECETTE." + clef);
+		}
+	}
+	
+	/**
+	 * Renvoie la clef associée à l'environement par défaut.
+	 * @param clef la clef à recupérée.
+	 * @return la chaine résultat.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public static String getInfoEnv(String clef) throws SeleniumException {
+		return getInfoEnv(clef, null);
 	}
 	
 	/**

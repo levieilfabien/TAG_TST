@@ -473,23 +473,42 @@ public class SeleniumOutils {
 	    }
 	}
 	
-
+	/**
+	 * Fait attendre le driver le temps de l'affichage d'un texte pour une période maximale de 10 secondes.
+	 * @param texte le texte.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public void attendrePresenceTexte(final String texte) throws SeleniumException {
 		attendrePresenceTexte(null, texte);
 	}
 	
-
+	/**
+	 * Fait attendre le driver le temps de l'affichage d'un texte pour une période maximale précisée.
+	 * @param texte le texte.
+	 * @param attente le temps d'attente maximal.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public void attendrePresenceTexte(final String texte, final long attente) throws SeleniumException {
 		attendrePresenceTexte(null, texte, attente);
 	}
 	
-	
-
+	/**
+	 * Fait attendre le driver le temps de l'affichage d'un texte pour une période maximale de 10 secondes.
+	 * @param frame la frame contenant le texte.
+	 * @param texte le texte.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public void attendrePresenceTexte(final String frame, final String texte) throws SeleniumException {
 		attendrePresenceTexte(frame, texte, 10);
 	}
 	
-
+	/**
+	 * Fait attendre le driver le temps de l'affichage d'un texte.
+	 * @param frame la frame contenant le texte.
+	 * @param texte le texte.
+	 * @param attente le temps d'attente maximal.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public void attendrePresenceTexte(final String frame, final String texte, final long attente) throws SeleniumException {
 		final Long timestamp = new Date().getTime();
 	    try {
@@ -512,7 +531,6 @@ public class SeleniumOutils {
 	    	return;
 	    }
 	}
-	
 
 	/**
 	 * Attend la disparition d'un texte pendant 30 seconde maximum.
@@ -714,6 +732,11 @@ public class SeleniumOutils {
 	    } 
 	}
 	
+	/**
+	 * Fait attendre le drive le temps que la cible disparaisse.
+	 * @param cible la cible dont on attend la disparition.
+	 * @throws SeleniumException en cas d'erreur (ou si la cible ne disparais pas).
+	 */
 	public void attendreDisparitionElement(final CibleBean cible) throws SeleniumException {
 		attendreDisparitionElement(cible, 10);
 	}
@@ -825,7 +848,6 @@ public class SeleniumOutils {
 				return driver;
 			}
     	}
-    	
     	
 		Iterator<String> i = driver.getWindowHandles().iterator();
 		GenericDriver retour = driver;
@@ -1066,6 +1088,16 @@ public class SeleniumOutils {
 	}
 	
 	/**
+	 * Permet un clic sur un élément désigné après attente d'affichage.
+	 * @param cible la cible du clic.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public void attendreEtCliquer(CibleBean cible) throws SeleniumException {
+		attendreChargementElement(cible, true, true);
+		cliquer(cible);
+	}
+	
+	/**
 	 * Permet de cliquer sur autant d'éléments que possible répondant aux critères de ciblage.
 	 * @param cible la cible des clics.
 	 * @return le nombre de clics effectués.
@@ -1203,18 +1235,41 @@ public class SeleniumOutils {
 	}
 	
 	/**
-	 * Permet d'obtenir la valeur associée à une cible.
+	 * Permet d'obtenir la valeur associée à une cible visible.
 	 * @param cible la cible.
 	 * @return la valeur associée à la cible (si la value est vide alors on renvoie le texte).
 	 * @throws SeleniumException en cas d'erreur.
 	 */
 	public String obtenirValeur(CibleBean cible) throws SeleniumException {
-		WebElement element = obtenirElementVisible(cible);
+		return obtenirValeur(obtenirElementVisible(cible));
+	}
+	
+	/**
+	 * Permet d'obtenir la valeur associée à une cible visible ou pas.
+	 * @param cible la cible.
+	 * @param visibilite true si la cible est attendues visible.
+	 * @return la valeur associée à la cible (si la value est vide alors on renvoie le texte).
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public String obtenirValeur(CibleBean cible, boolean visibilite) throws SeleniumException {
+		if (visibilite) {
+			return obtenirValeur(cible);
+		} else {
+			return obtenirValeur(obtenirElement(cible));
+		}
+	}
+	
+	/**
+	 * Permet d'obtenir la valeur d'un element.
+	 * @param element l'element.
+	 * @return la valeur (value) d'un élément ou son contenu texte.
+	 */
+	public String obtenirValeur(WebElement element) {
 		String retour = null;
 		if (element != null) {
-			retour = obtenirElementVisible(cible).getAttribute("value");
+			retour = element.getAttribute("value");
 			if (retour == null || "".equals(retour.trim())) {
-				retour = obtenirElementVisible(cible).getText();
+				retour = element.getText();
 			}
 		}
 		return retour;
@@ -1288,7 +1343,7 @@ public class SeleniumOutils {
 	}
 	
 	/**
-	 * Cette fonction supprime les caractères spéciaux des chaines de caractères pour faciliter les comporaisons.
+	 * Cette fonction supprime les caractères spéciaux des chaines de caractères pour faciliter les comparaisons.
 	 * @param s la chaine de caractères à normaliser.
 	 * @return le resultat de la normalisation.
 	 */
@@ -1568,6 +1623,12 @@ public class SeleniumOutils {
         ((JavascriptExecutor) this).executeScript("arguments[0].value = arguments[1]", obtenirElement(cible), valeur);
     }
 
+	/**
+	 * Permet d'obtenir les différentes valeurs possibles pour un selecteur visible dans l'IHM.
+	 * @param cible la cible désignant le selecteur visible.
+	 * @return la liste des valeurs possibles sous forme de tableau.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public String[] obtenirValeurs(CibleBean cible) throws SeleniumException {
 		try {
 			Select element = new Select(obtenirElementVisible(cible));

@@ -52,11 +52,13 @@ public enum Clefs {
 	XPATH(10),
 	/**
 	 * Permet une recherche via des criteres libres formulés par un critère général (ex : input) et des paires de critères (ex : id, monID).
+	 * Les critères libres associent plusieurs condition pour un même objet.
+	 * Exemple : "//input[@name='Enregistrer' and @value='Valider' and @type='submit']"
 	 */
 	CRITERES_LIBRES(11),
 	/**
-	 * Une recherche par paire de valeurs, 
-	 * Exemple : td, class=classe, id=IDENTIFIANT, pere, td[2].
+	 * Une recherche par paire de valeurs séparé éventuellement (td, class=classe, id=IDENTIFIANT, pere, td[2])
+	 * Exemple : (*, id=popup, /*, value=valider) => //*[@id="popup"]//*[@value="Valider"]
 	 */
 	CRITERES_ITERATIF(12);
 	

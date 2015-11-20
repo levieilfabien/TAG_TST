@@ -35,7 +35,9 @@ public enum Erreurs {
 	E027("E027", "Impossible de parsé une date", "Date non valide", true),
 	E029("E029", "Une information dans le fichier XML est incorrecte", "Balise incorrecte ou inexistante", true),
 	E030("E030", "Une action n'as pas pu s'executée", "Action impossible", false),
-	E031("E031", "Un élément sur la page ne devrait pas s'afficher", "Elément inattendu", true);
+	E031("E031", "Un élément sur la page ne devrait pas s'afficher", "Elément inattendu", true),
+	E032("E032", "Impossible de communiquer correctement avec ALM", "Erreur ALM", true),
+	E033("E033", "Element mal configuré pour une communication avec ALM", "Erreur ALM", true);
 	
 	/**
 	 * Le code associé a l'erreur.

@@ -54,4 +54,10 @@ public interface EnvironementDeTest {
 	 * @return la chaine représentant l'environement.
 	 */
 	public String toString();
+	
+	/**
+	 * Permet d'obtenir le nom de l'environement.
+	 * @return le nom de l'environement.
+	 */
+	public String getNom();
 }

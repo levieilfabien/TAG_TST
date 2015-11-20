@@ -19,5 +19,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/com.mercury.qualitycenter.otaclient-9.2.jar"/>
+	<classpathentry kind="lib" path="lib/ATU_ALM_ServiceWrapper_2.0.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
