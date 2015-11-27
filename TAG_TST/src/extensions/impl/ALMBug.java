@@ -10,39 +10,44 @@ import com.jacob.com.Variant;
 import constantes.ALMDefectField;
 import extensions.interfaces.IALMDefect;
 
-@Deprecated
-public class ALMDefect implements IALMDefect {
-
+/**
+ * Classe d'extension de la classe Bug.
+ * Cette classe réprésente un defect dans ALM.
+ * @author levieilfa
+ *
+ */
+public class ALMBug implements IALMDefect {
+	
+	/**
+	 * L'objet permettant la manipulation de nouveaux defect.
+	 */
 	private Dispatch bugFactory;
+	
+	/**
+	 * L'objet defect en cours de manipulation.
+	 */
 	private Dispatch bug;
 
-	// 1) The NULL parameter for "AddItem" method should be set as follows:
-	// Variant paramVal = new Variant();
-	// paramVal.putNull();
-	//
-	// Dispatch bug = Dispatch.call(bugFactory, "AddItem",
-	// paramVall).getDispatch(); // Returns referecne to Bug Object in QC
-	//
-	// 2) 'Field' on Bug object is set as follows:
-	// Variant v = Dispatch.invoke(bug, "Field", Dispatch.Put,
-	// new Object {new Variant("BG_DETECTION_DATE"), new Variant(new
-	// java.util.Date()) }, new int);
-	//
-	// Retrieve value of above 'Field' as below:
-	// Variant v = Dispatch.invoke(bug, "Field", Dispatch.Get,
-	// new Object {new Variant("BG_DETECTION_DATE") }, new int);
-
 	/**
-	 * Constructeur de base à partir d'une factory (un dispatch).
-	 * 
+	 * Le constructeur permettant de créer un nouveau defect à partir de la factory.
 	 * @param bugFactory
 	 */
-	public ALMDefect(Dispatch bugFactory) {
-		super();
+	public ALMBug(Dispatch bugFactory) {
 		this.bugFactory = bugFactory;
 		this.bug = init();
 	}
 
+	/**
+	 * Permet de manipuler les pièces jointes du defect.
+	 */
+	public ALMAttachementFactory getAttachments() {
+		return new ALMAttachementFactory(this.bug);
+	}
+
+	/**
+	 * Constructeur privé pour la création d'un nouveau defect.
+	 * @return un nouveau defect "coquille vide".
+	 */
 	private Dispatch init() {
 		// On créer une coquille vide
 		Variant paramVal = new Variant();
@@ -55,7 +60,11 @@ public class ALMDefect implements IALMDefect {
 		Dispatch bug = Dispatch.call(this.bugFactory, "AddItem", paramVal).toDispatch();
 		return bug;
 	}
-
+	
+	/**
+	 * Permet d'affecter un cycle de détection au defect.
+	 * @param paramString le nom exact du cycle de detection.
+	 */
 	@Override
 	public void setCycle(String paramString) {
 		//Dispatch.put(this.bug, ALMDefectField.CYCLE_DETECTION.getCode(), paramString);
@@ -114,16 +123,25 @@ public class ALMDefect implements IALMDefect {
 		Dispatch.invoke(this.bug, "Field", 4, new Object[] { ALMDefectField.VERSION_DETECTION.getCode(), new Variant(paramString) }, new int[1]);
 	}
 
+	@Override
+	public void setEtat(String paramString) {
+		Dispatch.invoke(this.bug, "Field", 4, new Object[] { ALMDefectField.STATUT, new Variant(paramString) }, new int[1]);
+	}
+
+	public void setSeverity(String severity) {
+		Dispatch.invoke(this.bug, "Field", 4, new Object[] { "BG_SEVERITY", new Variant(severity) }, new int[1]);
+	}
+
+	public void setPriority(String priority) {
+		Dispatch.put(this.bug, "Priority", priority);
+	}
+
 	public void setAssignedTo(String assignedTo) {
 		Dispatch.put(this.bug, "AssignedTo", assignedTo);
 	}
 
 	public void setSeverity(DefectSeverity severity) {
 		Dispatch.invoke(this.bug, "Field", 4, new Object[] { "BG_SEVERITY", new Variant(severity.getSeverity()) }, new int[1]);
-	}
-	
-	public void setSeverity(String severity) {
-		Dispatch.invoke(this.bug, "Field", 4, new Object[] { "BG_SEVERITY", new Variant(severity) }, new int[1]);
 	}
 
 	public void setDescription(String description) {
@@ -160,10 +178,6 @@ public class ALMDefect implements IALMDefect {
 	public void setPriority(DefectPriority priority) {
 		Dispatch.put(this.bug, "Priority", priority.getPriority());
 	}
-	
-	public void setPriority(String priority) {
-		Dispatch.put(this.bug, "Priority", priority);
-	}
 
 	public void setSummary(String summary) {
 		Dispatch.put(this.bug, "Summary", summary);
@@ -173,22 +187,27 @@ public class ALMDefect implements IALMDefect {
 		Dispatch.put(this.bug, "DetectedBy", detectedBy);
 	}
 
+	/**
+	 * Permet de sauvegarder dans ALM (via une commande "Post") le defect en cours de manipulation.
+	 */
 	public void save() {
 		Dispatch.call(this.bug, "Post");
 	}
 
-//	  public AttachmentFactory getAttachments() {
-//		    return new AttachmentFactory(this.bug);
-//		  }
-
-	@Override
-	public void setEtat(String paramString) {
-		Dispatch.invoke(this.bug, "Field", 4, new Object[] { ALMDefectField.STATUT, new Variant(paramString) }, new int[1]);
+	public Dispatch getBugFactory() {
+		return bugFactory;
 	}
 
-	@Override
-	public ALMAttachementFactory getAttachments() {
-		return new ALMAttachementFactory(this.bug);
+	public void setBugFactory(Dispatch bugFactory) {
+		this.bugFactory = bugFactory;
 	}
 
+	public Dispatch getBug() {
+		return bug;
+	}
+
+	public void setBug(Dispatch bug) {
+		this.bug = bug;
+	}
+	
 }

@@ -213,7 +213,7 @@ public class CibleBean implements Serializable {
 				chaineXpath = chaineXpath.concat("/..");
 			}
 			// On creer le by correspondant au XPATH construit.
-			System.out.println(chaineXpath);
+			//System.out.println(chaineXpath);
 			by = By.xpath(chaineXpath);
 			
 		} else if (Clefs.CRITERES_ITERATIF == identification) {
@@ -257,7 +257,7 @@ public class CibleBean implements Serializable {
 				chaineXpath = chaineXpath.concat("]");
 			}
 			// On creer le by correspondant au XPATH construit.
-			System.out.println(chaineXpath);
+			//System.out.println(chaineXpath);
 			by = By.xpath(chaineXpath);
 		}
 		return by;
@@ -300,11 +300,10 @@ public class CibleBean implements Serializable {
 		} else if (Clefs.CLASSE == identification) {
 			by = By.className(valeur);
 		} else {
-			
+			// On remplace les simple quote par des doubles.
 			if (valeur.contains("'")) {
 				temp = "\"";
 			} 
-			
 			if (Clefs.TEXTE_TAG == identification) {
 				by = By.xpath(".//*[normalize-space()=" + temp + valeur + temp + "]");
 			} else if (Clefs.TEXTE_COMPLET == identification) {

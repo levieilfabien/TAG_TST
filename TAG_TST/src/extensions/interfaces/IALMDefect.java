@@ -1,10 +1,9 @@
 package extensions.interfaces;
 
-import atu.alm.wrapper.IDefect;
-import atu.alm.wrapper.classes.AttachmentFactory;
 import atu.alm.wrapper.enums.DefectPriority;
 import atu.alm.wrapper.enums.DefectSeverity;
 import atu.alm.wrapper.enums.DefectStatus;
+import extensions.impl.ALMAttachementFactory;
 
 /**
  * Classe d'interface étendant le modèle ALMWrapper pour indexer plus de champs.
@@ -12,7 +11,7 @@ import atu.alm.wrapper.enums.DefectStatus;
  * @author levieilfa
  * 
  */
-public interface IALMDefect extends IDefect {
+public interface IALMDefect {
 
 	// Nouvelles fonction
 
@@ -68,5 +67,7 @@ public interface IALMDefect extends IDefect {
 
 	public abstract int getDefectID();
 
-	public abstract AttachmentFactory getAttachments();
+	//public abstract AttachmentFactory getAttachments();
+	
+	public abstract ALMAttachementFactory getAttachments();
 }

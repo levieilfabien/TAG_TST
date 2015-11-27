@@ -82,6 +82,11 @@ public class SeleniumOutils {
 	 */
 	private String typeImpl = null;
 	
+	/**
+	 * Le repertoire racine pour l'écriture d'objet.
+	 */
+	private String repertoireRacine = ".";
+	
 	public void ajouterListener() {
 		EventFiringWebDriver eventDriver = new EventFiringWebDriver(driver);
 		eventDriver.register(new SeleniumListener());
@@ -187,7 +192,11 @@ public class SeleniumOutils {
 	 */
 	public void captureEcran(String nomCapture) {
 		//logger("Capture d'écran : " + nomCapture);
-		captureEcran(nomCapture, null);
+		if (repertoireRacine != null) {
+			captureEcran(nomCapture, repertoireRacine);
+		} else {
+			captureEcran(nomCapture, null);
+		}
 	}
 	
 	/**
@@ -212,7 +221,7 @@ public class SeleniumOutils {
 		}
 	}
 	
-	// TODO Quant l'élément est dans un frame, ca décale les captures d'écrans.
+	// TODO Quand l'élément est dans un frame, ca décale les captures d'écrans.
 	
 	/**
 	 * Réalise une capture d'écran pour un élément donné uniquement.
@@ -231,8 +240,8 @@ public class SeleniumOutils {
 		        BufferedImage ecranComplet = ImageIO.read(screenShot);
 		        BufferedImage imageElement = ecranComplet.getSubimage(positionElement.getX(), positionElement.getY(), surfaceElement.width, surfaceElement.height);
 		        ImageIO.write(imageElement, "png", screenShot);
-				FileUtils.forceMkdir(new File(".\\captures\\"));
-				FileUtils.copyFile(screenShot, new File(".\\captures\\" + nomCapture + ".png"));
+				FileUtils.forceMkdir(new File(repertoireRacine + "\\captures\\"));
+				FileUtils.copyFile(screenShot, new File(repertoireRacine + "\\captures\\" + nomCapture + ".png"));
 				retour = true;
 			} catch (IOException e1) {
 				logger("Impossible de faire une capture d'écran de l'élément (" + e1.getMessage() +")");
@@ -681,7 +690,7 @@ public class SeleniumOutils {
 		        }
 		    });
 	    } catch (TimeoutException e) {
-	    	throw new SeleniumException(Erreurs.E009, "Element introuvable : " + cible.lister());
+	    	throw new SeleniumException(Erreurs.E009, "Element introuvable (ou désactivé) : " + cible.lister());
 	    }
 	}
 	
@@ -698,7 +707,7 @@ public class SeleniumOutils {
 		        }
 		    });
 	    } catch (TimeoutException e) {
-	    	logger("Le temps d'attente est écouler.");
+	    	logger("Le temps d'attente est écoulé.");
 	    }
 	}
 	
@@ -1107,6 +1116,12 @@ public class SeleniumOutils {
 		return cliquerMultiple(cible, null);	
 	}
 
+	/**
+	 * Saisie à la suite du texte présent dans une cible d'une nouvelle chaine.
+	 * @param texte le texte à saisir
+	 * @param cible la cible de la saisie
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public void saisir(String texte, CibleBean cible) throws SeleniumException {
 		saisir(texte, cible, false);	
 	}
@@ -1116,10 +1131,22 @@ public class SeleniumOutils {
 		logger("Saisie de " + texte + " dans le champ visible (" + cible.lister() + ") " + (cible.getFrame() != null?("pour la frame "+ cible.getFrame()):""));
 	}
 
+	/**
+	 * Saisie à la place du texte présent dans une cible d'une nouvelle chaine.
+	 * @param texte le texte à saisir
+	 * @param cible la cible de la saisie
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public void viderEtSaisir(String texte, CibleBean cible) throws SeleniumException {
 		saisir(texte, cible, true);
 	}
 	
+	/**
+	 * Saisie à la suite du texte présent dans une cible d'une nouvelle chaine.
+	 * @param texte le texte à saisir
+	 * @param valeur l'id de la cible
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public void saisir(String valeur, String texte) throws SeleniumException {
 		saisir(texte, new CibleBean(null, Clefs.ID, valeur), false);
 	}
@@ -1138,12 +1165,23 @@ public class SeleniumOutils {
 //		}
 //	}
 	
+	/**
+	 * Saisie dans la cible désignée d'un texte à la place du texte présent.
+	 * @param libelle le texte à saisir
+	 * @param cible la cible de la saisie
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public void selectionner(String libelle, CibleBean cible) throws SeleniumException {
 		selectionner(libelle, cible, true);
 	}
 	
-	/* (non-Javadoc)
-	 * @see moteur.GenericDriver#selectionner(java.lang.String, java.lang.String, beans.Clefs, java.lang.String)
+	/**
+	 * Permet la selection d'une valeur dans une balise "select". On tente une selection directe vis à vis de la valeur ou du texte.
+	 * Si cela ne fonctionne pas, une selection via le "innerhtml" aura lieu si le top vérificaiton est à true.
+	 * @param libelle le libelle ou la valeur à selectionner.
+	 * @param cible la cible désignant le selecteur
+	 * @param verification true si on souhaites vérifier que la selection est effective, false sinon.
+	 * @throws SeleniumException en cas d'erreur.
 	 */
 	public void selectionner(String libelle, CibleBean cible, boolean verification) throws SeleniumException {
 		Boolean success = false;
@@ -1226,6 +1264,9 @@ public class SeleniumOutils {
 		} catch (SeleniumException ex) {
 			ex.printStackTrace();
 			throw new SeleniumException(ex, "(Selecteur : " + cible.lister() + ", Valeur : " + libelle + ")");
+		} catch (StaleElementReferenceException ex) {
+			//ex.printStackTrace();
+			throw new SeleniumException(Erreurs.E023, "(Selecteur : " + cible.lister() + ", Valeur : " + libelle + ")");
 		}
 		
 		if (!success) {
@@ -1261,16 +1302,27 @@ public class SeleniumOutils {
 	
 	/**
 	 * Permet d'obtenir la valeur d'un element.
+	 * Si celui ci est un select, on récupère la valeur de la première option selectionnée.
 	 * @param element l'element.
 	 * @return la valeur (value) d'un élément ou son contenu texte.
 	 */
 	public String obtenirValeur(WebElement element) {
 		String retour = null;
 		if (element != null) {
-			retour = element.getAttribute("value");
-			if (retour == null || "".equals(retour.trim())) {
-				retour = element.getText();
-			}
+			// Le cas ou c'est un select
+    		if ("select".equals(element.getTagName().toLowerCase())) {
+    			WebElement option = new Select(element).getFirstSelectedOption();
+    			retour = option.getAttribute("value");
+    			if (retour == null || "".equals(retour.trim())) {
+    				retour = option.getText();
+    			}
+    		} else {		
+				// Le cas où ce n'est pas un select
+				retour = element.getAttribute("value");
+				if (retour == null || "".equals(retour.trim())) {
+					retour = element.getText();
+				}
+    		}
 		}
 		return retour;
 	}
@@ -1814,4 +1866,67 @@ public class SeleniumOutils {
 	public void setDriver(GenericDriver driver) {
 		this.driver = driver;
 	}
+
+	/**
+	 * Fonction d'attente permettant de vérifier la valeur d'un champ comme prérequis d'autres actions.
+	 * On s'intérresse ici au paramètre "value" du champs.
+	 * @param cible la cible dont on vérifie la valeur.
+	 * @param valeur la valeur attendue pour cette cible.
+	 * @param temps le temps d'attente maximal
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public void attendreValeur(final CibleBean cible, final String valeur, int temps) throws SeleniumException {
+	    try {
+			(new WebDriverWait(driver, temps)).until(new ExpectedCondition<Boolean>() {
+		        public Boolean apply(WebDriver d) {
+		            try {
+		            	return valeur.equals(obtenirValeur(cible, false));
+					} catch (SeleniumException e) {
+						// Pour une raison inconnue il n'as pas été possible d'établir la valeur de l'élément.
+						return false;
+					}
+		        }
+		    });
+	    } catch (TimeoutException e) {
+	    	logger("L'attente de la valorisation (" + valeur + ") est arrivée à son terme sans succès.");
+	    	throw new SeleniumException(Erreurs.E034, valeur);
+	    	//Assert.fail("Le texte " + texte + " est présent et visible sur la page.");
+	    } catch (UnhandledAlertException e) {
+	    	// Une popup est présente à l'écran, le texte n'est probablement plus présent à l'écran.
+	    	logger("Lors de l'attente de la valorisation (" + valeur + "), une popup est apparue.");
+	    	throw new SeleniumException(Erreurs.E034, valeur);
+	    } catch (Exception ex) {
+	    	// Une erreur technique inconnue à eu lieue, cela ne doit pas stopper le test.
+	    	logger("Lors de l'attente de la valorisation (" + valeur + "), une erreur inconnue est survenue.");
+	    	throw new SeleniumException(Erreurs.E034, valeur);
+	    }
+	}
+	
+	/**
+	 * Fonction d'attente permettant de vérifier la valeur d'un champ comme prérequis d'autres actions.
+	 * On s'intérresse ici au paramètre "value" du champs. L'attente max est de 5 secondes.
+	 * @param cible la cible dont on vérifie la valeur.
+	 * @param valeur la valeur attendue pour cette cible.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public void attendreValeur(final CibleBean cible, final String valeur) throws SeleniumException {
+		attendreValeur(cible, valeur, 5);
+	}
+
+	/**
+	 * Permet d'obtenir le repertoire racine.
+	 * @return le repertoire racine.
+	 */
+	public String getRepertoireRacine() {
+		return repertoireRacine;
+	}
+
+	/**
+	 * Permet de fixer le repertoire racine.
+	 * @param repertoireRacine le nouveau repertoire racine.
+	 */
+	public void setRepertoireRacine(String repertoireRacine) {
+		this.repertoireRacine = repertoireRacine;
+	}
+	
 }

@@ -1,7 +1,5 @@
 package extensions.impl;
 
-import atu.alm.wrapper.classes.TestSet;
-
 import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.Dispatch;
 import com.jacob.com.Variant;
@@ -9,15 +7,27 @@ import com.jacob.com.Variant;
 import constantes.ALMTestSetField;
 import extensions.interfaces.IALMTestSet;
 
-public class ALMTestSet extends TestSet implements IALMTestSet {
+public class ALMTestSet implements IALMTestSet {
 
 	private ActiveXComponent almObject;
 	private Dispatch testSet;
 
 	public ALMTestSet(ActiveXComponent almObject, Dispatch testSet) {
-		super(almObject, testSet);
 		this.almObject = almObject;
 		this.testSet = testSet;
+	}
+
+	public ALMTSTestFactory getTSTestFactory() {
+		return new ALMTSTestFactory(this.almObject, this.testSet);
+	}
+
+	public String getName() {
+		String name = Dispatch.call(this.testSet, "Name").getString();
+		return name;
+	}
+
+	public ALMAttachementFactory getAttachments() {
+		return new ALMAttachementFactory(this.testSet);
 	}
 
 	@Override
@@ -28,5 +38,21 @@ public class ALMTestSet extends TestSet implements IALMTestSet {
 	@Override
 	public void setChampObjet(ALMTestSetField champ, String paramString) {
 		Dispatch.invoke(this.testSet, "Field", 4, new Object[] { champ.getCode(), new Variant(paramString) }, new int[1]);
+	}
+
+	public ActiveXComponent getAlmObject() {
+		return almObject;
+	}
+
+	public void setAlmObject(ActiveXComponent almObject) {
+		this.almObject = almObject;
+	}
+
+	public Dispatch getTestSet() {
+		return testSet;
+	}
+
+	public void setTestSet(Dispatch testSet) {
+		this.testSet = testSet;
 	}
 }

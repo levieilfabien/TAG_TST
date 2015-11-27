@@ -1,11 +1,11 @@
 package outils;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
-import atu.alm.wrapper.ALMServiceWrapper;
-import atu.alm.wrapper.ITestCase;
-import atu.alm.wrapper.ITestCaseRun;
+import org.apache.log4j.Logger;
+
 import atu.alm.wrapper.enums.StatusAs;
 import atu.alm.wrapper.exceptions.ALMServiceException;
 import beans.ALMBean;
@@ -18,8 +18,9 @@ import com.jacob.com.LibraryLoader;
 
 import constantes.Erreurs;
 import exceptions.SeleniumException;
-import extensions.impl.ALMDefect;
-import extensions.interfaces.IALMDefect;
+import extensions.SeleniumALMWrapper;
+import extensions.interfaces.IALMRun;
+import extensions.interfaces.IALMTestCase;
 
 //regsvr32.exe C:\Users\levieilfa\AppData\Local\HP\ALM-Client\qc\OTAClient.dll
 
@@ -30,6 +31,8 @@ import extensions.interfaces.IALMDefect;
  *
  */
 public class ALMOutils {
+	
+	static Logger logger = Logger.getLogger(ALMOutils.class);
 	
 	private static final String JACOB_X86 = "resources\\jacob-1.18-x86.dll";
 	private static final String JACOB_X64 = "resources\\jacob-1.18-x64.dll";
@@ -117,8 +120,8 @@ public class ALMOutils {
 	 * @return une instance de ALMWrapper.
 	 * @throws ALMServiceException
 	 */
-	public static ALMServiceWrapper connectionALMWrapper() throws ALMServiceException {
-		return connectionALMWrapper(ALMBean.LOGIN_ALM, ALMBean.PASSWORD_ALM, ALMBean.DOMAIN_ALM, ALMBean.PROJECT_ALM, ALMBean.URL_ALM);
+	public static SeleniumALMWrapper myConnectionALMWrapper() throws ALMServiceException {
+		return myConnectionALMWrapper(ALMBean.LOGIN_ALM, ALMBean.PASSWORD_ALM, ALMBean.DOMAIN_ALM, ALMBean.PROJECT_ALM, ALMBean.URL_ALM);
 	}
 	
 	/**
@@ -131,50 +134,50 @@ public class ALMOutils {
 	 * @return une instance de ALMWrapper.
 	 * @throws ALMServiceException en cas d'erreur.
 	 */
-	public static ALMServiceWrapper connectionALMWrapper(String login, String password, String domain, String project, String url) throws ALMServiceException {
+	private static SeleniumALMWrapper myConnectionALMWrapper(String login, String password, String domain, String project, String url) throws ALMServiceException {
 		// Instanciation du wrapper.
-		ALMServiceWrapper wrapper = new ALMServiceWrapper(url);
+		SeleniumALMWrapper wrapper = new SeleniumALMWrapper(url);
 		// Connection avec les identifiants.
 		wrapper.connect(login, password, domain, project);
 		return wrapper;
 	}
 	
 
-	/**
-	 * Création d'un defect de base (fonction exemple)
-	 * @param wrapper le wrapper initialisé précédement.
-	 * @throws ALMServiceException en cas d'impossibilité.
-	 */
-	public static void createDefect(ALMServiceWrapper wrapper) throws ALMServiceException {
-
-		Dispatch bugFactory = Dispatch.call(wrapper.getAlmObj().getAlmObject(), "BugFactory").toDispatch();
-		IALMDefect defect = new ALMDefect(bugFactory);
-		defect.isReproducible(true);
-		defect.setAssignedTo("levieilfa");
-		defect.setDetectedBy("levieilfa");
-		defect.setSummary("[POC] Defect automatisé");
-		defect.setDetectionDate("13/11/2015");
-		defect.setPriority("1-Basse");
-		defect.setSeverity("Mineure");
-		defect.setEtat("10-Nouveau");
-		defect.setDescription("Ceci est un faux defect à supprimer");
-		defect.setCycle("961"); // POC
-		defect.setRelease("209"); // POC
-		defect.setVersion("v15.11");
-		defect.setApplication("ALM");
-		defect.setEnvironement("Développement");
-		defect.setProjetEvolution("N/A");
-		defect.setEntiteResponsable("Equipe T&R");
-		defect.setNiveauDeTest("03 - Tests de Vérification");
-		defect.setEmetteur("Equipe T&R");
-		defect.setType("Anomalie");
-		System.out.println(defect.getDefectID());
-		//wrapper.newAttachment(getJacobDll(true), "Attachement test", defect);
-		
-		defect.save();
-		System.out.println(defect.getDefectID());
-		wrapper.close();
-	}
+//	/**
+//	 * Création d'un defect de base (fonction exemple)
+//	 * @param wrapper le wrapper initialisé précédement.
+//	 * @throws ALMServiceException en cas d'impossibilité.
+//	 */
+//	public static void createDefect(ALMServiceWrapper wrapper) throws ALMServiceException {
+//
+//		Dispatch bugFactory = Dispatch.call(wrapper.getAlmObj().getAlmObject(), "BugFactory").toDispatch();
+//		IALMDefect defect = new ALMDefect(bugFactory);
+//		defect.isReproducible(true);
+//		defect.setAssignedTo("levieilfa");
+//		defect.setDetectedBy("levieilfa");
+//		defect.setSummary("[POC] Defect automatisé");
+//		defect.setDetectionDate("13/11/2015");
+//		defect.setPriority("1-Basse");
+//		defect.setSeverity("Mineure");
+//		defect.setEtat("10-Nouveau");
+//		defect.setDescription("Ceci est un faux defect à supprimer");
+//		defect.setCycle("961"); // POC
+//		defect.setRelease("209"); // POC
+//		defect.setVersion("v15.11");
+//		defect.setApplication("ALM");
+//		defect.setEnvironement("Développement");
+//		defect.setProjetEvolution("N/A");
+//		defect.setEntiteResponsable("Equipe T&R");
+//		defect.setNiveauDeTest("03 - Tests de Vérification");
+//		defect.setEmetteur("Equipe T&R");
+//		defect.setType("Anomalie");
+//		System.out.println(defect.getDefectID());
+//		//wrapper.newAttachment(getJacobDll(true), "Attachement test", defect);
+//		
+//		defect.save();
+//		System.out.println(defect.getDefectID());
+//		wrapper.close();
+//	}
 	
 	/**
 	 * Fonction permettant la mise à jour dans ALM du cas de test à partir des inforations saisies.
@@ -184,38 +187,70 @@ public class ALMOutils {
 	 * @param etat l'état final du cas de test.
 	 * @throws SeleniumException en cas d'erreur.
 	 */
-	public static void miseAJourTest(CasEssaiBean casEssai, boolean etat) throws SeleniumException {
+	public static void miseAJourTestSet(CasEssaiBean casEssai, boolean etat) throws SeleniumException {
 		boolean valide = false;
+		boolean casUnique = false;
 		// On vérifie les données pour ALM.
 		if (casEssai.getAlm()) {
-			if (casEssai.getNomTestLab() != null && casEssai.getCheminTestLab() != null && casEssai.getIdUniqueTestLab() != 0 && casEssai.getNomTestPlan() != null) {
+			// Si le test plan n'est pas renseigner c'est qu'on est sur un scénario. Mais les autres informations sont requises/
+			if (casEssai.getNomTestLab() != null && casEssai.getCheminTestLab() != null && casEssai.getIdUniqueTestLab() != 0) {
 				valide = true;
 			}
 		}
+		// On vérifie si le cas d'essai est unique ou pas. Le test plan n'est renseigner que pour un "Cas de Test" pas un "Scénario".
+		if (casEssai.getNomTestPlan() != null) {
+			casUnique = true;
+		}
 		// On ne fait l'injection dans l'ALM que si le cas d'essai est correcttement paramètré.
 		if (valide) {
-			try {
-				// TODO Faire une version paramètrable
-				ALMServiceWrapper wrapper = connectionALMWrapper();
-				// Mise à jour de l'état général du cas de test.
-				ITestCase execution = wrapper.updateResult(casEssai.getCheminTestLab(), casEssai.getNomTestLab(), casEssai.getIdUniqueTestLab(), casEssai.getNomTestPlan(), etat?StatusAs.PASSED:StatusAs.FAILED);
-				// Mise à jour des steps via l'ajout d'une execution
-				ITestCaseRun execution_run = wrapper.createNewRun(execution, "RUN AUTO " + casEssai.getTime(), etat?StatusAs.PASSED:StatusAs.FAILED);
-				for (ObjectifBean step : casEssai.getObjectifs().values()) {
-					if (step.isStep()) {
-						wrapper.addStep(execution_run, step.getCode(), step.getEtat()?StatusAs.PASSED:StatusAs.FAILED, step.getDescriptif(), step.getAttendu(), step.getObtenu());
+			// Si le cas est unique on met à jour le "Cas de test" (Test) dans le "scénario" (Test Set) en lui ajoutant un "Run".
+			if (casUnique) {
+				try {
+					// TODO Faire une version paramètrable
+					SeleniumALMWrapper wrapper = myConnectionALMWrapper();
+					// Mise à jour de l'état général du cas de test.
+					IALMTestCase execution = wrapper.miseAJourTest(casEssai.getCheminTestLab(), casEssai.getNomTestLab(), casEssai.getIdUniqueTestLab(), casEssai.getNomTestPlan(), etat?StatusAs.PASSED:StatusAs.FAILED);
+					// Mise à jour des steps via l'ajout d'une execution
+					IALMRun execution_run = wrapper.creationNouveauRun(execution, "RUN AUTO " + casEssai.getTime(), etat?StatusAs.PASSED:StatusAs.FAILED);
+					// Si le cas d'essai est associé à un repertoire on cherche à obtenir les pièces jointes.
+					if (casEssai.getRepertoireTelechargement() != null) {
+						File repertoire = new File(casEssai.getRepertoireTelechargement());
+						// On vérifie qu'il s'agit bien d'un repertoire
+						if (repertoire.isDirectory()) {
+							// Pour chaque fichier non repertoire dans le repertoire, on met en pièce jointe.
+							for (File file : repertoire.listFiles()) {
+								if (!file.isDirectory()) {
+									String chemin = file.getAbsolutePath();
+									// On remplace les référence au repertoire local \.\ par un simple \
+									chemin = chemin.replaceAll("\\\\.\\\\", "\\\\");
+									SeleniumALMWrapper.ajouterPieceJointe(chemin, execution_run.getRun());
+								}
+							}
+						}
 					}
+					// On met à jour les STEP (sous forme d'ajout)
+					for (ObjectifBean step : casEssai.getObjectifs().values()) {
+						if (step.isStep()) {
+							wrapper.addStep(execution_run, step.getCode(), step.getEtat()?StatusAs.PASSED:StatusAs.FAILED, step.getDescriptif(), step.getAttendu(), step.getObtenu());
+						}
+					}
+					// On ferme la connexion avec ALM.
+					wrapper.close();
+				} catch (ALMServiceException e) {
+					e.printStackTrace();
+					throw new SeleniumException(Erreurs.E032, "Impossible de mettre à jour l'état du cas de test dans ALM.");
 				}
-				// On ferme la connexion avec ALM.
-				wrapper.close();
-			} catch (ALMServiceException e) {
-				e.printStackTrace();
-				throw new SeleniumException(Erreurs.E032, "Impossible de mettre à jour l'état du cas de test dans ALM.");
+			} else {
+				// Si le cas d'essai en contient d'autres, on boucle sur chaucun d'entre eux.
+				for (CasEssaiBean sousCas : casEssai.getTests()) {
+					miseAJourTestSet(sousCas, sousCas.getEtatFinal());
+				}
 			}
 		} else {
 			throw new SeleniumException(Erreurs.E033, "Impossible de mettre à jour l'état du cas de test dans ALM.");
 		}
 	}
+	
 	
 //	public static void miseAJourTest(ALMServiceWrapper wrapper, String cheminTest, String nomTestSet, String nomTest, int id, StatusAs etat) throws ALMServiceException {
 //		ITestCase execution = wrapper.updateResult(cheminTest, nomTestSet, id, nomTest, etat);
@@ -227,7 +262,7 @@ public class ALMOutils {
 //		wrapper.close();
 //	}
 	
-	public static void main(String argv[]) throws ALMServiceException {
+	public static void main(String argv[]) {
 		//ALMOutils.connectionALM("levieilfa", "Sombros99", "NATIXIS_FINANCEMENT", "CREDIT_CONSOMMATION");
 		//Dispatch connection = ALMOutils.connectionALMJacob("levieilfa", "Sombros99", "NATIXIS_FINANCEMENT", "CREDIT_CONSOMMATION");
 		//Dispatch scenario3 = ALMOutils.obtenirTest(ALMOutils.obtenirListeElement("Root\\POC Selenium\\IZIVENTE", connection), "SC03 - Souscription distributeur TRAVAUX CE");
@@ -237,5 +272,6 @@ public class ALMOutils {
 		
 		//miseAJourTest(wrapper, "POC Selenium\\IZIVENTE", "SC03 - Souscription distributeur TRAVAUX CE", "SC03 - IZIVENTE_Distributeur_Travaux", 49375, StatusAs.PASSED);
 		//wrapper.close();
+		
 	}
 }

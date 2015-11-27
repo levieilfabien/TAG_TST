@@ -4,12 +4,14 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import moteurs.GenericDriver;
 import outils.SeleniumOutils;
 
 /**
- * Classe générique de cas d'essai.
+ * Classe générique de cas d'essai. Représente aussi bien un scénario qu'un cas de test unitaire.
  * Cette classe est étendue dans les autres cas d'essai spécifique à chaque projet.
  * @author levieil_f
  *
@@ -56,6 +58,10 @@ public class CasEssaiBean implements Serializable {
 	 */
 	private Boolean alm = false;
 	
+	/**
+	 * Repertoire de téléchargement.
+	 */
+	private String repertoireTelechargement = null;
 	
 	// DONNEES ALM
 	/**
@@ -78,6 +84,11 @@ public class CasEssaiBean implements Serializable {
 	 * Nom exact du cas de test dans test plan (onglet execution_grid du testLab)
 	 */
 	private String nomTestPlan;
+	
+	/**
+	 * Sous cas d'essai ayant leurs propres objectifs.
+	 */
+	private List<CasEssaiBean> tests = new LinkedList<CasEssaiBean>();
 	
 	/**
 	 * Descriptif du cas de test.
@@ -119,6 +130,10 @@ public class CasEssaiBean implements Serializable {
 		return logs;
 	}
 
+	/**
+	 * Permet d'obtenir le timestamp unique du cas de test.
+	 * @return le timestamp unique du cas de test.
+	 */
 	public String getTime() {
 		return String.valueOf(getDateCreation().getTime());
 	}
@@ -143,10 +158,20 @@ public class CasEssaiBean implements Serializable {
 	 * Ajoute un objectif au cas d'essai
 	 * @param objectif object à ajouter.
 	 */
+	public void ajouterStep(String descriptif, String code, String attendu) {
+		this.objectifs.put(code, new ObjectifBean(descriptif, code, code + getTime(), attendu, ""));
+	}
+	
+	/**
+	 * Ajoute un objectif au cas d'essai
+	 * @param objectif object à ajouter.
+	 */
 	public void ajouterEcran(GenericDriver driver,String clef, ObjectifBean objectif) {
 		if (driver != null) {
 			objectif.setClefUnique(clef);
-			new SeleniumOutils(driver).captureEcran(clef);
+			SeleniumOutils outil = new SeleniumOutils(driver);
+			outil.setRepertoireRacine(getRepertoireTelechargement());
+			outil.captureEcran(clef);
 		}
 		this.objectifs.put(clef, objectif);
 	}
@@ -182,7 +207,14 @@ public class CasEssaiBean implements Serializable {
 	public void validerObjectif(GenericDriver driver, String clef, Boolean etat) {
 		validerObjectif(clef, etat);
 		if (driver != null) {
-			new SeleniumOutils(driver).captureEcran(clef, getNomCasEssai());
+			SeleniumOutils outil = new SeleniumOutils(driver);
+			if (getRepertoireTelechargement() != null) {
+				outil.setRepertoireRacine(getRepertoireTelechargement());
+				outil.captureEcran(clef);
+			} else {
+				outil.captureEcran(clef, getNomCasEssai());
+			}
+			
 		}
 	}
 	
@@ -194,7 +226,13 @@ public class CasEssaiBean implements Serializable {
 	public void validerObjectifDate(GenericDriver driver, String clef, Boolean etat) {
 		validerObjectif(clef + getTime(), etat);
 		if (driver != null) {
-			new SeleniumOutils(driver).captureEcran(clef + getTime(), getNomCasEssai());
+			SeleniumOutils outil = new SeleniumOutils(driver);
+			if (getRepertoireTelechargement() != null) {
+				outil.setRepertoireRacine(getRepertoireTelechargement());
+				outil.captureEcran(clef + getTime());
+			} else {
+				outil.captureEcran(clef + getTime(), getNomCasEssai());
+			}
 		}
 	}
 	
@@ -418,6 +456,24 @@ public class CasEssaiBean implements Serializable {
 	public void setNomTestPlan(String nomTestPlan) {
 		this.nomTestPlan = nomTestPlan;
 	}
+
+	public String getRepertoireTelechargement() {
+		return repertoireTelechargement;
+	}
+
+	public void setRepertoireTelechargement(String repertoireTelechargement) {
+		this.repertoireTelechargement = repertoireTelechargement;
+	}
+
+	public List<CasEssaiBean> getTests() {
+		return tests;
+	}
+
+	public void setTests(List<CasEssaiBean> tests) {
+		this.tests = tests;
+	}
+
+
 	
 	////////////////////////////////////////////////////////////////
 	

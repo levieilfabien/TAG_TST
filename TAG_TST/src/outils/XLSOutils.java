@@ -42,8 +42,12 @@ public class XLSOutils {
 	        	objectif.setCapture(chemin + objectif.getClefUnique() + ".png");
 	        }
 	        beans.put("casEssai", casEssai);
-
-	        XLSOutils.generationExcel("exportTemplate.xls", ".\\" + casEssai.getNomCasEssai() + "\\export" + casEssai.getNomCasEssai() + ".xls", beans);
+	        // Si le repertoire de téléchargement est connu, on met le fichier de rapport dedans.
+	        if (casEssai.getRepertoireTelechargement() != null) {
+	        	XLSOutils.generationExcel("exportTemplate.xls", casEssai.getRepertoireTelechargement() + "\\export" + casEssai.getNomCasEssai() + ".xls", beans);
+	        } else {
+	        	XLSOutils.generationExcel("exportTemplate.xls", ".\\" + casEssai.getNomCasEssai() + "\\export" + casEssai.getNomCasEssai() + ".xls", beans);
+	        }
 		}
 		
 	}
