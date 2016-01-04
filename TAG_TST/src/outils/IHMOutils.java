@@ -5,6 +5,7 @@ import interfaces.WrapLayout;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.lang.reflect.Field;
@@ -29,13 +30,30 @@ import elements.LinkedTextField;
 public class IHMOutils {
 
 	// Liste des sous panneau à masquer/afficher
+	/**
+	 * Liste des sous panneaux.
+	 */
 	public List<JComponent> subPans = new LinkedList<JComponent>();
 	
+	/**
+	 * Liste des champs de saisies.
+	 */
 	public List<JComponent> listeSaisies = new LinkedList<JComponent>();
 	
+	/**
+	 * Les instances balisées utilisées pour la génération de l'IHM.
+	 */
 	public Object[] instanceReference;
 	
+	/**
+	 * L'ihm générée.
+	 */
 	public JFrame ihmGeneree;
+	
+	/**
+	 * La portion de l'IHM qui accueuille les boutons d'intéraction.
+	 */
+	public JPanel bouton;
 	
 	private void genererTabulation(Object instanceAnnotee, JComponent contenant, String nom) {
 		JTabbedPane sous_Tabulation = new JTabbedPane();
@@ -87,7 +105,7 @@ public class IHMOutils {
 						nouveau_panel.setLayout(new WrapLayout());
 						//nouveau_panel.setLayout(new GridLayout(0,1));
 						//JScrollPane nouveau_panel = new JScrollPane(new JPanel(),  JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-						nouveau_panel.setPreferredSize(new Dimension(900, 1500));
+						//nouveau_panel.setPreferredSize(new Dimension(900, 1500));
 						nouveau_panel.setName(annotation.libelle());
 						
 						// Si multiple il faudras prévoir un bouton ajouter/retirer
@@ -109,8 +127,8 @@ public class IHMOutils {
 							}
 							// On alimente le panneau pour chaque élément de la liste
 							for(Object objet : (List) champ.get(instanceAnnotee)) {
-								nouveau_panel.add(new JLabel(champ.getName()));
-								nouveau_panel.add(new JLabel("N°" + i));
+								nouveau_panel.add(new JLabel(champ.getName() + "N°" + i));
+								//nouveau_panel.add(new JLabel("N°" + i));
 								JTabbedPane sousTab = genererPanneau(objet, nouveau_panel, annotation.libelle());
 								if (sousTab.getName() != null && !"".equals(sousTab.getName())) {
 									contientComplexe = true;
@@ -128,14 +146,38 @@ public class IHMOutils {
 									BaliseXml annotation = champ.getAnnotation(BaliseXml.class);
 									//((List) champ.get(instanceAnnotee)).add(annotation.contenu().newInstance());
 									JPanel micro_panel = new JPanel();
+									JPanel macro_panel = new JPanel();
 									micro_panel.setLayout(new GridLayout(0,2));
-									micro_panel.add(new JLabel(champ.getName()));
-									micro_panel.add(new JLabel("Suppl"));
-									leBouton.getContenant().add(micro_panel);
+									macro_panel.setLayout(new WrapLayout());
+									LinkedButton supprimer;	
+									//leBouton.getContenant().add(micro_panel);
+									macro_panel.add(micro_panel);
+									leBouton.getContenant().add(macro_panel);
 									try {
+										// Création d'une nouvelle instance
 										Object nouvelleInstance = annotation.contenu().newInstance();
-										((List) champ.get(((Object[]) leBouton.getLink())[1])).add(nouvelleInstance);
-										genererPanneau(nouvelleInstance, leBouton.getContenant(), annotation.libelle());
+										Object instancePere = champ.get(((Object[]) leBouton.getLink())[1]);
+										((List) instancePere).add(nouvelleInstance);
+										//Integer position = ((List) instancePere).indexOf(nouvelleInstance);
+										genererPanneau(nouvelleInstance, macro_panel, annotation.libelle());
+										// Prévoir le bouton de suppression si l'instance est ajoutée.
+										supprimer = new LinkedButton(new Object[] {champ, instancePere, nouvelleInstance}, macro_panel, new AbstractAction() {
+											
+											@Override
+											public void actionPerformed(ActionEvent e) {
+												LinkedButton leBouton = (LinkedButton) e.getSource();
+												//JComponent zone = ((JComponent) ((Object[]) leBouton.getLink())[3]);
+												Object instanceAnnotee = ((Object) ((Object[]) leBouton.getLink())[1]);
+												Object nouvelleInstance = ((Object) ((Object[]) leBouton.getLink())[2]);
+												//((List) instanceAnnotee).set(position.intValue(), null);
+												((List) instanceAnnotee).remove(nouvelleInstance);
+												leBouton.getContenant().removeAll();
+												leBouton.getContenant().setVisible(false);
+											}
+										});
+										supprimer.setText("X");
+										micro_panel.add(supprimer);
+										micro_panel.add(new JLabel(champ.getName() + "Suppl"));
 									} catch (InstantiationException e1) {
 										System.out.println("Impossible d'ajouter un élément");
 									} catch (IllegalAccessException e1) {
@@ -147,7 +189,7 @@ public class IHMOutils {
 							ajouter.setSize(100, 50);
 							sousPanel.add(ajouter);
 							// Préparation du bouton retirer (ne fonctionne pas pour le moment)
-							sousPanel.add(new JButton("Retirer"));
+							//sousPanel.add(new JButton("Retirer"));
 							// Positionnement des panneaux et sous panneau ensemble dans le contenant.
 							nouveau_panel_englobant.add(nouveau_panel, BorderLayout.CENTER);
 							nouveau_panel_englobant.add(sousPanel, BorderLayout.NORTH);
@@ -157,28 +199,55 @@ public class IHMOutils {
 					} else {
 						// Sinon on récupère la valeur telle quelle comme contenu de balise
 						// Si l'annotation est simple, on ne créer par de sous panneau, on renseigne le contenant.
+						JComponent zone;
 						if (!annotation.multiple()) {
 							JPanel micro_panel = new JPanel();
-							micro_panel.setLayout(new GridLayout(0,2));
+							micro_panel.setLayout(new FlowLayout());
 							micro_panel.add(new JLabel(annotation.libelle()));
 							if (annotation.enumeration().isEnum()) {
-								LinkedComboBox zone = new LinkedComboBox(new Object[] {champ, instanceAnnotee}, contenant, annotation.enumeration().getEnumConstants());
+								zone = new LinkedComboBox(new Object[] {champ, instanceAnnotee}, contenant, annotation.enumeration().getEnumConstants());
 								micro_panel.add(zone);
-								zone.setStringValue(champ.get(instanceAnnotee).toString());
+								((LinkedComboBox) zone).setStringValue(champ.get(instanceAnnotee).toString());
 								zone.setToolTipText(annotation.libelle());
 								listeSaisies.add(zone);
 							} else if (annotation.listeValeur().length > 0) {
-								LinkedComboBox zone = new LinkedComboBox(new Object[] {champ, instanceAnnotee}, contenant, annotation.listeValeur());
-								zone.setStringValue(champ.get(instanceAnnotee).toString());
+								zone = new LinkedComboBox(new Object[] {champ, instanceAnnotee}, contenant, annotation.listeValeur());
+								((LinkedComboBox) zone).setStringValue(champ.get(instanceAnnotee).toString());
 								micro_panel.add(zone);
 								zone.setToolTipText(annotation.libelle());
 								listeSaisies.add(zone);
 							} else {
-								LinkedTextField zone = new LinkedTextField(new Object[] {champ, instanceAnnotee}, contenant, champ.get(instanceAnnotee).toString());
+								zone = new LinkedTextField(new Object[] {champ, instanceAnnotee}, contenant, champ.get(instanceAnnotee).toString());
 								zone.setPreferredSize(new Dimension(400, 40));
 								micro_panel.add(zone);
 								zone.setToolTipText(annotation.libelle());
 								listeSaisies.add(zone);
+							}
+							
+							if (!annotation.obligatoire()) {
+								// On prévoit la suppression de la zone ajoutée au besoin
+								LinkedButton retirer = new LinkedButton(new Object[] {champ, instanceAnnotee, null, zone}, micro_panel, new AbstractAction() {
+									
+									@Override
+									public void actionPerformed(ActionEvent e) {
+										LinkedButton leBouton = (LinkedButton) e.getSource();
+										Field champ = ((Field) ((Object[]) leBouton.getLink())[0]);
+										JComponent zone = ((JComponent) ((Object[]) leBouton.getLink())[3]);
+										//Object instanceAnnotee = ((Object) ((Object[]) leBouton.getLink())[1]);
+										if (zone.getClass().equals(LinkedTextField.class)) {
+											((LinkedTextField) zone).killInstance();
+										} else if (zone.getClass().equals(LinkedComboBox.class)) {
+											((LinkedComboBox) zone).killInstance();
+										}
+										listeSaisies.remove(zone);
+										leBouton.getContenant().removeAll();
+										leBouton.getContenant().setVisible(false);
+									}
+								});
+								retirer.setText("X");
+								retirer.setPreferredSize(new Dimension(30, 40));
+								retirer.setBackground(Color.RED);
+								micro_panel.add(retirer);
 							}
 							// On différencie l'affichage des champs obligatoire
 							if (annotation.obligatoire()) {
@@ -204,7 +273,7 @@ public class IHMOutils {
 //								} else if (annotation.listeValeur().length > 0) {
 //									contenant.add(new JComboBox(annotation.listeValeur()));
 //								} else {
-									LinkedTextField zone = new LinkedTextField(new Object[] {champ, instanceAnnotee, i}, contenant, objet.toString());
+									zone = new LinkedTextField(new Object[] {champ, instanceAnnotee, i}, contenant, objet.toString());
 									zone.setPreferredSize(new Dimension(400, 40));
 									contenant.add(zone);
 									listeSaisies.add(zone);
@@ -262,28 +331,26 @@ public class IHMOutils {
 		}
 		
 		// On prépare le panel des bouton
-		JPanel bouton = new JPanel();
+		bouton = new JPanel();
 		
 		// On ajoute le bouton pour sauvegarder les changements
-		JButton sauvegarder = new JButton(new AbstractAction() {	
+		JButton afficher = new JButton(new AbstractAction() {	
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				sauvegarder();
+				afficher();
 			}
 		});
-		sauvegarder.setText("Sauvegarder");
+		afficher.setText("Afficher");
 		// On ajoute un bouton qui rafraichie l'IHM
 		JButton rafraichir = new JButton(new AbstractAction() {	
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				ihmGeneree.setVisible(false);
-				ihmGeneree.pack();
-				ihmGeneree.setVisible(true);
+				rafraichir();
 			}
 		});
 		rafraichir.setText("Rafraichir");
 		
-		bouton.add(sauvegarder);
+		bouton.add(afficher);
 		bouton.add(rafraichir);
 		retour.add(bouton, BorderLayout.NORTH);
 		
@@ -293,9 +360,27 @@ public class IHMOutils {
 	}
 	
 	/**
-	 * Fonction de sauvegarde des saisies dans l'objet instancié.
+	 * Permet d'ajouter un bouton personalisé dans la barre de bouton.
+	 * @param boutonAAjouter le bouton personalisé.
 	 */
-	public void sauvegarder() {
+	public void ajouterBouton(JButton boutonAAjouter) {
+		this.bouton.add(boutonAAjouter);
+		rafraichir();
+	}
+	
+	/**
+	 * Fonction de rafraichissement de l'affichage.
+	 */
+	public void rafraichir() {
+		ihmGeneree.setVisible(false);
+		ihmGeneree.pack();
+		ihmGeneree.setVisible(true);
+	}
+	
+	/**
+	 * Mettre à jour les valeurs des instances à partir des données saisies.
+	 */
+	public void majSaisies() {
 		// Sauvegarde des instances à partir des saisies
 		for (JComponent composant : listeSaisies) {
 			if (composant.getClass().equals(LinkedTextField.class)) {
@@ -304,6 +389,13 @@ public class IHMOutils {
 				((LinkedComboBox) composant).majChampInstance();
 			}
 		}
+	}
+	
+	/**
+	 * Fonction d'affichage des saisies dans l'objet instancié sous forme de fenêtre à part.
+	 */
+	public void afficher() {
+		majSaisies();
 		// Affichage du contenu des XML obtenus
 		for (Object instance : instanceReference) {
 			JFrame affichage = new JFrame(instance.getClass().getCanonicalName());

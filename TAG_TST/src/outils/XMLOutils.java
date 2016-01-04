@@ -554,7 +554,8 @@ public class XMLOutils {
 						} else {
 							// Sinon on récupère la valeur telle quelle comme contenu de balise
 							if (!annotation.multiple()) {
-								retour = retour.concat("<" + annotation.prefixe() + ":" + annotation.nom() + ">" + champ.get(instanceAnnotee) + "</" + annotation.prefixe() + ":" + annotation.nom() +">\n");
+								Object valeur = champ.get(instanceAnnotee);
+								retour = retour.concat("<" + annotation.prefixe() + ":" + annotation.nom() + ">" + ((valeur == null)?"":valeur) + "</" + annotation.prefixe() + ":" + annotation.nom() +">\n");
 							} else {
 								for(Object objet : (List) champ.get(instanceAnnotee)) {
 									retour = retour.concat(toXml(objet));

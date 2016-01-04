@@ -1,6 +1,7 @@
 package elements;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -83,5 +84,20 @@ public class LinkedComboBox extends JComboBox {
 		}
 		
 		//setLink(this.getStringValue());
+	}
+	
+	public void killInstance() {
+		
+		Object instance = ((Object[]) getLink())[1];
+		Field champ = (Field) ((Object[]) getLink())[0];
+		
+		try {
+			champ.set(instance, null);
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			System.out.println("Impossible de supprimer le champ");
+		}
+		
+		
+		//setLink(this.getText());
 	}
 }

@@ -8,6 +8,11 @@ import java.util.List;
 
 public class LinkedTextField extends JTextField {
 	/**
+	 * Id de serialisation.
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
 	 * L'objet lien.
 	 */
 	private Object link;
@@ -68,6 +73,33 @@ public class LinkedTextField extends JTextField {
 			}
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			System.out.println("Impossible de mettre à jour le champ");
+		}
+		
+		//setLink(this.getText());
+	}
+	
+	public void killInstance() {
+		// Récupération des liens
+		Object[] tabLink = ((Object[]) getLink());
+		Object instance = tabLink[1];
+		Field champ = (Field) tabLink[0];
+		Integer position = null;
+		
+		// Si le nombre de lien le suggère on récupère la position
+		if (tabLink.length >= 3) {
+			position = (Integer) tabLink[2];
+		}
+		// Mise à vide du champ de l'instance.
+		try {
+			if (position == null) {
+				champ.set(instance, null);
+			} else {
+				List<String> tempList = (List<String>) champ.get(instance);
+				tempList.remove(position);
+				champ.set(instance, tempList);
+			}
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			System.out.println("Impossible de supprimer le champ");
 		}
 		
 		//setLink(this.getText());

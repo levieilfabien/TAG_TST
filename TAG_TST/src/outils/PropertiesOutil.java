@@ -99,17 +99,84 @@ public class PropertiesOutil {
 	 * @throws SeleniumException en cas d'erreur (notament absence du fichier de propriété dans le même répertoire que le fichier jar)
 	 */
 	public static String getInfo(final String clef) throws SeleniumException {
+		return getInfo(PropertiesOutil.class, clef);
+	}
+	
+	/**
+	 * Récupère les infos du fichier de propriétés.
+	 * @param clef la clef à rechercher dans le fichier de propriétés.
+	 * @return la chain associée à la clef passée en paramètre.
+	 * @throws SeleniumException en cas d'erreur (notament absence du fichier de propriété dans le même répertoire que le fichier jar)
+	 */
+	public static String getInfo(Class classe, final String clef) throws SeleniumException {
 		try {
 			// Accède au fichier de properties et extrait le libelle associé au code demandé.
 		    Properties properties = new Properties();
-		    String fichier = getProperties();
+		    String retour = null;
+		    InputStream fip = null;
+		    // On récupère le fichier de propriété sous forme de "stream".
+		    fip = getPropertiesAsStream(classe);
+
+		    // Si on a bien ouvert le flux vers l'objet on extrait la properties.
+		    if (fip != null) {
+		    	properties.load(fip);
+		    	retour = properties.getProperty(clef);
+		    	System.out.println(clef + " = " + retour);	
+				return properties.getProperty(clef);
+		    } else {
+		    	return null;
+		    }
+		} catch (IOException e) {
+			e.printStackTrace();
+			// Si le fichier n'est pas trouvé on lance une erreur.
+			throw new SeleniumException(Erreurs.E010, "Vérifiez la présence du fichier de propriétées. " + fichierProperties);
+		}
+	}
+	
+	/**
+	 * Permet d'obtenir le chemin vers le fichier de properties.
+	 * @param classe une classe de référence du projet de test pour retrouver l'arborescence des resources
+	 * @return le chemin vers le fichier de properties.
+	 */
+	private static InputStream getPropertiesAsStream(Class classe) {
+		InputStream retour = null;
+		try {		
+			// On tente de récuperer la resource directement (racine du jar/repertoire de resource déclaré)
+			retour = classe.getClassLoader().getResourceAsStream(fichierProperties);
+		} catch (NullPointerException ex) {
+			// Si elle n'est pas disponible dans le repertoire de resource par défaut, on regarde dans le main.
+			retour = classe.getResourceAsStream("/main/resources/" + fichierProperties);
+		}
+		return retour;
+	}
+	
+	/**
+	 * Permet d'obtenir le chemin vers le repertoire de properties.
+	 * @return le chemin vers le fichier de properties.
+	 */
+	public static String getRepertoireProjet() {
+		return new File("").getAbsolutePath();
+	}
+	
+	/**
+	 * Récupère les infos du fichier de propriétés.
+	 * @param clef la clef à rechercher dans le fichier de propriétés.
+	 * @return la chain associée à la clef passée en paramètre.
+	 * @throws SeleniumException en cas d'erreur (notament absence du fichier de propriété dans le même répertoire que le fichier jar)
+	 */
+	@Deprecated
+	public static String getInfoOld(Class classe, final String clef) throws SeleniumException {
+		try {
+			// Accède au fichier de properties et extrait le libelle associé au code demandé.
+		    Properties properties = new Properties();
+		    String fichier = getProperties(classe);
 		    String cheminJar = "";
 		    String retour = null;
 		    ZipEntry entry  = null;
 		    File file = new File(fichier);
 		    JarFile zip = null;
 		    InputStream fip = null;
-		   
+		    
 		    if (!file.exists()) {
 		    	// Si le fichier est un fichier dans un jar , il faut l'extraire.
 		    	if (fichier.contains("!")) {
@@ -119,7 +186,8 @@ public class PropertiesOutil {
 		    		entry = zip.getEntry(fichierProperties);
 		    		fip = zip.getInputStream(entry);
 		    	}
-		    } else {
+		    } else if (!file.isDirectory()) {
+		    	// Si ce n'est pas un repertoire ou un jar alors on accède directement au fichier
 		    	fip = new FileInputStream(fichier);
 		    }
 		    // Si on a bien ouvert le flux vers l'objet on extrait la properties.
@@ -141,7 +209,7 @@ public class PropertiesOutil {
 		} catch (IOException e) {
 			e.printStackTrace();
 			// Si le fichier n'est pas trouvé on lance une erreur.
-			throw new SeleniumException(Erreurs.E010, "Vérifiez la présence du fichier de propriétées. " + new File(getProperties()).getAbsolutePath());
+			throw new SeleniumException(Erreurs.E010, "Vérifiez la présence du fichier de propriétées. " + new File(getProperties(classe)).getAbsolutePath());
 		}
 	}
 	
@@ -150,21 +218,32 @@ public class PropertiesOutil {
 	 * @return le chemin vers le fichier de properties.
 	 */
 	@SuppressWarnings("deprecation")
-	private static String getProperties() {
-		String retour = PropertiesOutil.class.getClassLoader().getResource(fichierProperties).getFile().substring(1);
+	@Deprecated
+	private static String getProperties(Class classe) {
+		String retour = null;
+
+		//URL url = classe.getProtectionDomain().getCodeSource().getLocation();
+
+		// On tente de récuperer la resource
+		try {		
+			retour = classe.getClassLoader().getResource(fichierProperties).getFile();
+		} catch (NullPointerException ex) {
+			retour = classe.getResource("main/resources/" + fichierProperties).getFile();
+		}
+		// Si la resource est adressée avec un séparateur, c'est un repertoire ou un jar
+		if (retour.startsWith(File.separator)) {
+			retour = retour.substring(1);
+		}
+		// On décode l'url pour obtenir un chemin exploitable
 		try {
 			retour = URLDecoder.decode(retour, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			retour = URLDecoder.decode(retour);
 		}
+		
+		System.out.println("Fichier : " + retour);
+
 		return retour;
 	}
 	
-	/**
-	 * Permet d'obtenir le chemin vers le repertoire de properties.
-	 * @return le chemin vers le fichier de properties.
-	 */
-	public static String getRepertoireProjet() {
-		return new File("").getAbsolutePath();
-	}
 }
