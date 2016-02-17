@@ -3,6 +3,8 @@ package outils;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.List;
+import java.util.regex.Matcher;
 
 import org.apache.log4j.Logger;
 
@@ -18,6 +20,7 @@ import com.jacob.com.LibraryLoader;
 
 import constantes.Erreurs;
 import exceptions.SeleniumException;
+import extensions.NativeLibraries;
 import extensions.SeleniumALMWrapper;
 import extensions.interfaces.IALMRun;
 import extensions.interfaces.IALMTestCase;
@@ -34,8 +37,9 @@ public class ALMOutils {
 	
 	static Logger logger = Logger.getLogger(ALMOutils.class);
 	
-	private static final String JACOB_X86 = "resources\\jacob-1.18-x86.dll";
-	private static final String JACOB_X64 = "resources\\jacob-1.18-x64.dll";
+	private static final String RESOURCES = "resources\\";
+	private static final String JACOB_X86 = "jacob-1.18-x86.dll";
+	private static final String JACOB_X64 = "jacob-1.18-x64.dll";
 	private static final String URL_ALM = "https://qc.intranatixis.com/qcbin";
 	
 	/**
@@ -65,6 +69,38 @@ public class ALMOutils {
 		    e.printStackTrace();
 		    return null;
 		}
+	}
+	
+	/**
+	 * Permet d'ajouter la librairie Jabob 32 bit dans le system path.
+	 */
+	public static void ajouterJacobSystem() {
+		String path = getJacobDll(true);
+		
+		// On vérifie que la librairie n'est pas déjà chargée
+//		NativeLibraries recuperateur;
+//		try {
+//			recuperateur = new NativeLibraries();
+//			List<String> librairies = recuperateur.getLoadedLibraries();
+//			for (String librairie : librairies) {
+//				System.out.println(librairie);
+//			}
+//		} catch (NoSuchFieldException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+
+		
+//		try {
+			// On essai d'acceder au dll avec l'extension
+			System.setProperty("jacob.dll.path", path);
+			LibraryLoader.loadJacobLibrary();
+//		} catch (UnsatisfiedLinkError ex) {
+//			// On essai d'acceder au dll sans l'extension
+//			//path = path.replaceAll(".dll", "");
+//			System.setProperty("jacob.dll.path", path);
+//			System.load(path);
+//		}
 	}
 	
 //	private static EnumVariant obtenirListeElement(String cheminTestLab, Dispatch disp)
@@ -103,7 +139,7 @@ public class ALMOutils {
 	@SuppressWarnings("deprecation")
 	private static String getJacobDll(Boolean bit32) {
 		// On souhaites utiliser l'implémentation 32bit ou 64bit ?
-		String cheminDll = bit32?JACOB_X86:JACOB_X64;
+		String cheminDll = bit32?RESOURCES + JACOB_X86:RESOURCES + JACOB_X64;
 		// On récupère le dll correspondant dans le répertoire "resources".
 		String retour = PropertiesOutil.class.getClassLoader().getResource(cheminDll).getFile().substring(1);
 		try {
@@ -111,6 +147,29 @@ public class ALMOutils {
 		} catch (UnsupportedEncodingException e) {
 			retour = URLDecoder.decode(retour);
 		}
+		while (!retour.endsWith("dll")) {
+			retour = retour.substring(0, retour.length() - 2);
+		}
+		retour = retour.replaceAll("\\\\", Matcher.quoteReplacement(File.separator));
+		retour = retour.replaceAll(Matcher.quoteReplacement("/"), Matcher.quoteReplacement(File.separator));
+		return retour;
+	}
+	
+	@SuppressWarnings("deprecation")
+	private static String getDllDir(Boolean bit32) {
+		// On souhaites utiliser l'implémentation 32bit ou 64bit ?
+		String cheminDll = bit32?RESOURCES + JACOB_X86:RESOURCES + JACOB_X64;
+		// On récupère le dll correspondant dans le répertoire "resources".
+		String retour = PropertiesOutil.class.getClassLoader().getResource(cheminDll).getFile().substring(1);
+		try {
+			retour = URLDecoder.decode(retour, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			retour = URLDecoder.decode(retour);
+		}
+		retour = retour.replaceAll(JACOB_X86, "");
+		retour = retour.replaceAll(JACOB_X64, "");
+		retour = retour.replaceAll("\\\\", Matcher.quoteReplacement(File.separator));
+		retour = retour.replaceAll(Matcher.quoteReplacement("/"), Matcher.quoteReplacement(File.separator));
 		return retour;
 	}
 	
@@ -243,6 +302,7 @@ public class ALMOutils {
 			} else {
 				// Si le cas d'essai en contient d'autres, on boucle sur chaucun d'entre eux.
 				for (CasEssaiBean sousCas : casEssai.getTests()) {
+					System.out.println("Mise à jour dans ALM de " + sousCas.getNomCasEssai());
 					miseAJourTestSet(sousCas, sousCas.getEtatFinal());
 				}
 			}

@@ -940,7 +940,7 @@ public class SeleniumOutils {
 			clicMax = 999;
 		}
 		for (WebElement element : obtenirElements(cible)) {
-
+			// Pour cliquer sur l'élément il faut qu'il soit visible.
 			if (element.isDisplayed() && element.isEnabled() && clicMax > 0) {
 				//System.out.println("Intéraction avec l'élement " + element.getText());
 				clicMax--;
@@ -1126,6 +1126,12 @@ public class SeleniumOutils {
 		saisir(texte, cible, false);	
 	}
 	
+	/**
+	 * Permet de saisir un texte dans un élément visible.
+	 * @param texte le texte à saisie.
+	 * @param cible l'élement visible cible de la saisie.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
 	public void saisirVisible(String texte, CibleBean cible) throws SeleniumException {
 		obtenirElementVisible(cible).sendKeys(texte);
 		logger("Saisie de " + texte + " dans le champ visible (" + cible.lister() + ") " + (cible.getFrame() != null?("pour la frame "+ cible.getFrame()):""));
@@ -1327,12 +1333,20 @@ public class SeleniumOutils {
 		return retour;
 	}
 	
+	/**
+	 * Si les logs sont activés alors on ajoute la chaine de caractère aux logs.
+	 * @param log la portion de log à ajoutée.
+	 */
 	public void logger(String log) {
 		if (isActivationLog()) {
 			getLog().append("\n"+log);
 		}
 	}
 
+	/**
+	 * Ajoute un objectif obtenu à la liste des objectifs et réalise la capture d'écran associée.
+	 * @param objectif l'objectif à ajouter.
+	 */
 	public void ajouterObjectifObtenu(ObjectifBean objectif) {
 		getObjectifsDriver().put(objectif.getClefUnique(), objectif);
 		captureEcran(objectif.getClefUnique());
@@ -1666,6 +1680,7 @@ public class SeleniumOutils {
 	
 	/**
 	 * Saisie de manière instantannée une chaine de caractère dans le champs.
+	 * Cette saisie s'effectue par injection de code javascript dans le navigateur.
 	 * Attention toutes valeurs préalables est effacée.
 	 * @param cible la cible de la saisie.
 	 * @param valeur la valeur à saisie.
@@ -1760,6 +1775,7 @@ public class SeleniumOutils {
 	
 	/**
 	 * Permet de modifier un élément de style pour une cible donnée.
+	 * Attention cette modification est réalisée par injection javascript dans la navigateur.
 	 * @param cible la cible de la modification.
 	 * @param elementStyle l'élément de style à modifier (ex : display).
 	 * @param valeur la valeur à associé à l'élément à modifier (ex : block)
@@ -1771,6 +1787,7 @@ public class SeleniumOutils {
 	
 	/**
 	 * Permet de modifier un attribut pour une cible donnée.
+	 * Attention cette modification est réalisée par injection javascript dans la navigateur.
 	 * @param cible la cible de la modification.
 	 * @param elementStyle l'attribut à modifier (ex : style.display, value, innerHTML).
 	 * @param valeur la valeur à associé à l'attribut à modifier.
@@ -1782,6 +1799,7 @@ public class SeleniumOutils {
 	
 	/**
 	 * Permet de modifier un attribut pour une cible donnée.
+	 * Attention cette modification est réalisée par injection javascript dans la navigateur.
 	 * @param origine la cible dont on prend l'attribut
 	 * @param destination la cible de la modification.
 	 * @param attribut l'attribut à recopier.

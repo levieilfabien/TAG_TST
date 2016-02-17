@@ -4,6 +4,7 @@ import java.io.File;
 
 import org.apache.log4j.Logger;
 
+import outils.ALMOutils;
 import atu.alm.wrapper.bean.ServerDetails;
 import atu.alm.wrapper.collection.ListWrapper;
 import atu.alm.wrapper.enums.DefectPriority;
@@ -198,6 +199,11 @@ public class SeleniumALMWrapper {
 	 */
 	private void connectToOTA() throws ALMServiceException {
 		try {
+			//Rustine pour forcer la lecture d'une version de Jacob
+			//System.setProperty("jacob.dll.path", "C:\\Windows\\System32\\jacob-1.18-x64.dll");
+			//TODO Mettre en place référence dynamique
+			System.setProperty("jacob.dll.path", "C:\\Users\\levieilfa\\git\\Selenium\\TAG_TST\\src\\resources\\jacob-1.18-x86.dll");
+
 			ActiveXComponent activexObject = new ActiveXComponent("TDApiOle80.TDConnection");
 
 			setAlmObj(new ALMTDConnection(activexObject, getServerDetails()));
@@ -207,9 +213,11 @@ public class SeleniumALMWrapper {
 
 			getAlmObj().connect(getServerDetails().getDomain(), getServerDetails().getProject());
 		} catch (UnsatisfiedLinkError e) {
+			e.printStackTrace();
 			throw new ALMServiceException("Il faut ajouter la librairie jacob-(version-bit-type).dll dans le System path");
 		} catch (ComFailException e) {
-			throw new ALMServiceException("Il faut enregistrer OTAClient.dll/");
+			e.printStackTrace();
+			throw new ALMServiceException("Il faut enregistrer OTAClient.dll et utiliser l'implémentation adaptée l'ALM cible.");
 		}
 	}
 
