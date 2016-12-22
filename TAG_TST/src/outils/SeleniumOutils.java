@@ -972,6 +972,9 @@ public class SeleniumOutils {
 		} catch (InvalidElementStateException ex) {
 			// Si on est ici , alors le champ n'est pas saisissable.
 			throw new SeleniumException(Erreurs.E022, by.toString());
+		} catch (StaleElementReferenceException ex2) {
+			// Si on est ici , alors le champ est pas visible, sans doute rechargé depuis le test.
+			throw new SeleniumException(Erreurs.E023, "L'element " + by.toString() + " n'est plus sur la page");
 		}
 			
 	}
@@ -1172,9 +1175,9 @@ public class SeleniumOutils {
 //	}
 	
 	/**
-	 * Saisie dans la cible désignée d'un texte à la place du texte présent.
-	 * @param libelle le texte à saisir
-	 * @param cible la cible de la saisie
+	 * Selectionne dans la cible désignée le texte choisie.
+	 * @param libelle le texte ou la valeur à selectionner
+	 * @param cible la cible indiquant le sélecteur.
 	 * @throws SeleniumException en cas d'erreur.
 	 */
 	public void selectionner(String libelle, CibleBean cible) throws SeleniumException {
@@ -1539,6 +1542,7 @@ public class SeleniumOutils {
 	 * @param url la nouvelle url à visiter.
 	 */
 	public void chargerUrl(String url) {
+		System.out.println("On charge : " + url);
 		driver.get(url);
 	}
 	

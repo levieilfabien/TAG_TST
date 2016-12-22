@@ -203,7 +203,9 @@ public class SeleniumALMWrapper {
 			//System.setProperty("jacob.dll.path", "C:\\Windows\\System32\\jacob-1.18-x64.dll");
 			//TODO Mettre en place référence dynamique
 			System.setProperty("jacob.dll.path", "C:\\Users\\levieilfa\\git\\Selenium\\TAG_TST\\src\\resources\\jacob-1.18-x86.dll");
-
+			//System.setProperty("jacob.dll.path", "C:\\Users\\levieilfa\\git\\Selenium\\TAG_TST\\src\\resources\\jacob-1.18-x64.dll");
+			//System.setProperty("jacob.dll.path", ALMOutils.getJacobDll(false));
+			
 			ActiveXComponent activexObject = new ActiveXComponent("TDApiOle80.TDConnection");
 
 			setAlmObj(new ALMTDConnection(activexObject, getServerDetails()));

@@ -43,13 +43,13 @@ public @interface BaliseXml {
 	 * Liste des valeurs possibles pour cette balise. L'objet doit être une énumération dont le toString montre le libellé.
 	 * @return la class de la liste des valeurs sous forme d'énumération
 	 */
-	Class enumeration() default Object.class;
+	Class<?> enumeration() default Object.class;
 	
 	/**
 	 * Classe contenue dans une liste
 	 * @return la class des objets contenus dans la liste
 	 */
-	Class contenu() default Object.class;
+	Class<?> contenu() default Object.class;
 	
 	/**
 	 * Liste de valeurs simples en "dur" pour un champ.
@@ -64,7 +64,27 @@ public @interface BaliseXml {
 	String libelle() default "";
 	//enumeration listeValeur() default null;
 	
+	/**
+	 * Un entete ne subissant aucune analyse qui sera concaténer en tant que préfixe au reste du flux.
+	 * @return un entete pour le flux XML.
+	 */
 	String entete() default "";
 	
+	/**
+	 * Un enqueue ne subissant aucune analyse qui sera concaténer en tant que suffixe au reste du flux.
+	 * @return un enqueue pour le flux XML.
+	 */
 	String enqueue() default "";
+
+	/**
+	 * Définie un namespace associé au préfixe de la chaine de caractère si il y a lieu.
+	 * @return le namespace associé au préfixe.
+	 */
+	String nameSpace() default "";
+	
+	/**
+	 * Indique l'objet annoté doit faire l'objet de la génération d'une balise dédié ou nom.
+	 * @return oui si une balise est associée à l'objet, non sinon.
+	 */
+	boolean balisable() default true;
 }

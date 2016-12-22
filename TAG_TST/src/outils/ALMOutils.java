@@ -137,7 +137,7 @@ public class ALMOutils {
 	 * @return le chemin vers le fichier de properties.
 	 */
 	@SuppressWarnings("deprecation")
-	private static String getJacobDll(Boolean bit32) {
+	public static String getJacobDll(Boolean bit32) {
 		// On souhaites utiliser l'implémentation 32bit ou 64bit ?
 		String cheminDll = bit32?RESOURCES + JACOB_X86:RESOURCES + JACOB_X64;
 		// On récupère le dll correspondant dans le répertoire "resources".
@@ -251,17 +251,20 @@ public class ALMOutils {
 		boolean casUnique = false;
 		// On vérifie les données pour ALM.
 		if (casEssai.getAlm()) {
-			// Si le test plan n'est pas renseigner c'est qu'on est sur un scénario. Mais les autres informations sont requises/
+			// Si le test plan n'est pas renseigné c'est qu'on est sur un scénario. Mais les autres informations sont requises
+			System.out.println("Mise à jour dans ALM de " + casEssai.getNomTestLab() + ":" + casEssai.getNomTestPlan() + ":" + casEssai.getIdUniqueTestLab());
 			if (casEssai.getNomTestLab() != null && casEssai.getCheminTestLab() != null && casEssai.getIdUniqueTestLab() != 0) {
 				valide = true;
+				System.out.println("Mise à jour dans ALM de " + casEssai.getNomTestLab() + ":" + casEssai.getNomTestPlan() + ":" + casEssai.getIdUniqueTestLab());
 			}
 		}
-		// On vérifie si le cas d'essai est unique ou pas. Le test plan n'est renseigner que pour un "Cas de Test" pas un "Scénario".
+		// On vérifie si le cas d'essai est unique ou pas. Le test plan n'est renseigné que pour un "Cas de Test" pas un "Scénario".
 		if (casEssai.getNomTestPlan() != null) {
 			casUnique = true;
 		}
 		// On ne fait l'injection dans l'ALM que si le cas d'essai est correcttement paramètré.
 		if (valide) {
+			//System.out.println("Mise à jour dans ALM de " + casEssai.getNomTestLab() + ":" + casEssai.getNomTestPlan());
 			// Si le cas est unique on met à jour le "Cas de test" (Test) dans le "scénario" (Test Set) en lui ajoutant un "Run".
 			if (casUnique) {
 				try {
@@ -302,12 +305,12 @@ public class ALMOutils {
 			} else {
 				// Si le cas d'essai en contient d'autres, on boucle sur chaucun d'entre eux.
 				for (CasEssaiBean sousCas : casEssai.getTests()) {
-					System.out.println("Mise à jour dans ALM de " + sousCas.getNomCasEssai());
+					System.out.println("=> Mise à jour dans ALM de " + sousCas.getNomTestLab() + ":" + sousCas.getNomTestPlan());
 					miseAJourTestSet(sousCas, sousCas.getEtatFinal());
 				}
 			}
 		} else {
-			throw new SeleniumException(Erreurs.E033, "Impossible de mettre à jour l'état du cas de test dans ALM.");
+			throw new SeleniumException(Erreurs.E033, "Impossible de mettre à jour l'état du cas de test dans ALM : Informations manquantes.");
 		}
 	}
 	

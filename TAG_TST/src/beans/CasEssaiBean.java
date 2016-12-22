@@ -197,6 +197,13 @@ public class CasEssaiBean implements Serializable {
 				getObjectifs().get(clef).setObtenu("Conforme à l'attendu");
 			}
 		}
+		
+		// Si toutes les sous étapes du cas de test sont valides (typiquement les steps) alors le cas de test est lui même valide.
+		boolean tousValide = true;
+		for (ObjectifBean objectif : getObjectifs().values()) {
+			tousValide = tousValide && objectif.getEtat();
+		}
+		setEtatFinal(tousValide);
 	}
 	
 	/**

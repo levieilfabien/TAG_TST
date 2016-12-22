@@ -82,6 +82,7 @@ public class IHMOutils {
 		//Tester si on est dans une classe annotée. Si c'est le cas et que le champ est simple, le contenant n'est peu être pas encore un onglet !
 		
 		JTabbedPane sous_Tabulation = new JTabbedPane();
+		if (instanceAnnotee != null) {
 		try {			
 			// On récupère les champs de la classe annotée
 			for (Field champ : instanceAnnotee.getClass().getDeclaredFields()) {
@@ -293,7 +294,7 @@ public class IHMOutils {
 		if (sous_Tabulation != null && !sous_Tabulation.equals(new JTabbedPane())) {
 			subPans.add(sous_Tabulation);
 		}
-		
+		}
 		return sous_Tabulation;
 	}
 	
