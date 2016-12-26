@@ -84,6 +84,7 @@ public class PDFUtil {
 		this.optionSurlignerDifferences = false;
 		this.couleurDiff = Color.MAGENTA;
 		this.couleurAjout = Color.GREEN;
+		this.couleurSuppression = Color.RED;
 		this.optionComparaisonComplete = false;
 		this.modeDeComparaison = CompareMode.TEXT_MODE;
 		logger.setLevel(Level.OFF);
@@ -237,7 +238,17 @@ public class PDFUtil {
 		else
 			return comparePdfByImage(file1, file2, startPage, endPage);
 	}
-		
+	
+	/**
+	 * Effectue une comparaison entre deux fichier en mode "texte" uniquement.
+	 * Attention ce mode de comparaison ne fournit pas le "diff" entre les fichiers, uniquement un résultat "vrai" ou "faux".
+	 * @param file1 le premier fichier PDF
+	 * @param file2 le second fichier PDF
+	 * @param startPage la première page pour la comparaison
+	 * @param endPage la dernière page pour la comparaison
+	 * @return vrai si les deux fichiers sont identiques, faux sinon.
+	 * @throws IOException en cas de problème d'accès ou de lecture des fichiers.
+	 */
 	private boolean comparepdfFilesWithTextMode(String file1, String file2, int startPage, int endPage) throws IOException{
 		
 		String file1Txt = this.getPDFText(file1, startPage, endPage).trim();
@@ -291,14 +302,19 @@ public class PDFUtil {
 		return this.saveAsImage(file, -1, -1);
 	}
 	
-   /**
-   * This method saves the each page of the pdf as image
-   */
+	/**
+	 * Permet de sauvegarder sous forme d'image l'ensemble des pages du document PDF.
+	 * @param file le fichier PDF (chemin absolue)
+	 * @param startPage la première page
+	 * @param endPage la dernière page
+	 * @return une liste de nom de fichier (chemin absolue) représentant les images tirées du PDF
+	 * @throws IOException en cas de problèmes lors de la lecture ou de l'écriture des fichiers.
+	 */
 	private List<String> saveAsImage(String file, int startPage, int endPage) throws IOException{
 		
-		logger.info("file : " + file);
-		logger.info("startPage : " + startPage);
-		logger.info("endPage : " + endPage);
+		logger.info("Fichier : " + file);
+		logger.info("Première page : " + startPage);
+		logger.info("Dernière page : " + endPage);
 		
 		ArrayList<String> imgNames = new ArrayList<String>();
 		
@@ -317,7 +333,7 @@ public class PDFUtil {
 				BufferedImage image = pdfRenderer.renderImageWithDPI(iPage, 300, ImageType.RGB);
 				ImageIOUtil.writeImage(image, fname , 300);
 				imgNames.add(fname);
-				logger.info("PDf Page saved as image : " + fname);
+				logger.info("Page sauvegardée sous forme d'image : " + fname);
 			}
 			document.close();
 		}catch (Exception e) {
@@ -546,8 +562,8 @@ public class PDFUtil {
 	/**
 	 * Permet de mettre à jour les numéros de pages de références pour la comparaison entre les fichiers. 
 	 * @param file le fichier concerné.
-	 * @param start la page de début souhaitées (si mis à 0, la première page est prise)
-	 * @param end la page de fin souhaitées (si msi à 0, la dernière page du document est prise)
+	 * @param start la page de début souhaitées (si mis à 0 ou moins, la première page est prise)
+	 * @param end la page de fin souhaitées (si msi à 0 ou moins, la dernière page du document est prise)
 	 * @throws IOException en cas de problème d'accès au fichier PDF.
 	 */
 	private void mettreAJourPagesDebutEtFin(String file, int start, int end) throws IOException{
