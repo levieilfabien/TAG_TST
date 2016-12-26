@@ -893,7 +893,7 @@ public class SeleniumOutils {
 		driver.close();
 		return changerDeFenetre();
 	}
-	
+
 	/**
 	 * Permet de cliquer sur un element.
 	 * Il n'est pas possible d'interragir avec un élément invisible, aussi on clique toujours sur un élément visible.
