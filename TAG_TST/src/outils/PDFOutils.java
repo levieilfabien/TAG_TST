@@ -32,46 +32,54 @@ public class PDFOutils {
 		listePage.add(6);
 		listePage.add(7);
 
-		List<String> blocsPDF = ReadGeneratedPDF("PDF_PDF.pdf", listePage, false);
+		//List<String> blocsPDF = ReadGeneratedPDF("PDF_PDF.pdf", listePage, false);
 
 		List<Integer> listePage2 = new LinkedList<Integer>();
 		listePage2.add(1);
 		listePage2.add(2);
 
-		List<String> blocsPDF2 = ReadGeneratedPDF("modele_FIP.pdf", listePage2, false);
-		String completPDF2 = ReadPDF("modele_FIP.pdf", listePage2);
+		//List<String> blocsPDF2 = ReadGeneratedPDF("modele_FIP.pdf", listePage2, false);
+		
+		//String completPDF2 = ReadPDF("modele_FIP.pdf", listePage2);
+		
+		List<Integer> listePage3 = new LinkedList<Integer>();
+		listePage3.add(1);
+		
+		String completCRYPTED = ReadPDF("CRYPTED.pdf", listePage3);
+		
+		System.out.println(completCRYPTED);
 
 		LinkedList<Diff> diffList = new LinkedList<Diff>();
 		
 		String best_match =  "";
 		
-		for (String bloc : blocsPDF) {
-			
-			//System.out.println("On cherche :" + bloc);
-			
-			// On compare le contenu du bloc avec les différents blocs disponible dans le modèle d'origine
-			for (String bloc_origine : blocsPDF2) {
-				// On compare bloc à bloc
-				LinkedList<Diff> temp = dmp.diff_main(bloc_origine, bloc, false);
-				dmp.diff_cleanupEfficiency(temp);
-				// On calcule la distance entre l'ancien enregistrement et le nouveau.
-				int distance_new = dmp.diff_levenshtein(temp);
-				int distance_old = dmp.diff_levenshtein(diffList);
-				
-				// On conserve le "meilleur" diff entre l'ancien et le nouveau
-				if (diffList.size() == 0 || distance_new < distance_old) {
-					diffList.clear();
-					diffList.addAll(temp);
-					best_match = bloc_origine;
-				}
-			}
-			//System.out.println("On trouve : " + best_match);
-			// On montre le meilleur diff.
-			String retour = dmp.diff_prettyHtml(diffList);
-			System.out.println(retour);
-			diffList.clear();
-		}
-//		
+//		for (String bloc : blocsPDF) {
+//			
+//			//System.out.println("On cherche :" + bloc);
+//			
+//			// On compare le contenu du bloc avec les différents blocs disponible dans le modèle d'origine
+//			for (String bloc_origine : blocsPDF2) {
+//				// On compare bloc à bloc
+//				LinkedList<Diff> temp = dmp.diff_main(bloc_origine, bloc, false);
+//				dmp.diff_cleanupEfficiency(temp);
+//				// On calcule la distance entre l'ancien enregistrement et le nouveau.
+//				int distance_new = dmp.diff_levenshtein(temp);
+//				int distance_old = dmp.diff_levenshtein(diffList);
+//				
+//				// On conserve le "meilleur" diff entre l'ancien et le nouveau
+//				if (diffList.size() == 0 || distance_new < distance_old) {
+//					diffList.clear();
+//					diffList.addAll(temp);
+//					best_match = bloc_origine;
+//				}
+//			}
+//			//System.out.println("On trouve : " + best_match);
+//			// On montre le meilleur diff.
+//			String retour = dmp.diff_prettyHtml(diffList);
+//			System.out.println(retour);
+//			diffList.clear();
+//		}
+
 		// dmp.diff_cleanupSemantic(diffList);
 		//dmp.diff_cleanupEfficiency(diffList);
 		// dmp.diff_cleanupMerge(diffList);
