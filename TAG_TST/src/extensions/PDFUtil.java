@@ -170,7 +170,7 @@ public class PDFUtil {
 		PDDocument doc = PDDocument.load(new File(file));
 		PDFTextStripper stripper = new PDFTextStripper();
 		
-		this.updateStartAndEndPages(file, startPage, endPage);
+		this.mettreAJourPagesDebutEtFin(file, startPage, endPage);
 		stripper.setStartPage(this.pageDebut);
 		stripper.setEndPage(this.pageFin);
 		
@@ -304,8 +304,8 @@ public class PDFUtil {
 		
 		try {
 			File sourceFile = new File(file);
-			this.createImageDestinationDirectory(file);			
-			this.updateStartAndEndPages(file, startPage, endPage);
+			this.creerRepertoireDeSauvegarde(file);			
+			this.mettreAJourPagesDebutEtFin(file, startPage, endPage);
 			
 			String fileName = sourceFile.getName().replace(".pdf", "");
 			
@@ -358,18 +358,28 @@ public class PDFUtil {
 		int pgCount2 = this.getPageCount(file2);
 		
 		if(pgCount1!=pgCount2){
-			logger.warning("files page counts do not match - returning false");
+			logger.warning("Les deux fichiers ne comportent pas le même nombre de page à comparer - on renvoie faux");
 			return false;
 		}
 		
 		if(this.optionSurlignerDifferences)
-			this.createImageDestinationDirectory(file2);
+			this.creerRepertoireDeSauvegarde(file2);
 		
-		this.updateStartAndEndPages(file1, startPage, endPage);		
+		this.mettreAJourPagesDebutEtFin(file1, startPage, endPage);		
 		
 		return this.convertToImageAndCompare(file1, file2, this.pageDebut, this.pageFin);
 	}	
 	
+	/**
+	 * Permet la conversion des fichiers PDF en image puis une comparaison pixel à pixel.
+	 * Si l'option à été choisie les différences trouvées seront fournis sous forme de fichier image.
+	 * @param file1 le fichier numéro un
+	 * @param file2 le fichier numéro deux
+	 * @param startPage la page de départ de la comparaison
+	 * @param endPage la page de fin de comparaison
+	 * @return vrai si les deux fichiers sont identique, faux sinon.
+	 * @throws IOException en cas de problème d'accès aux fichiers.
+	 */
 	private boolean convertToImageAndCompare(String file1, String file2, int startPage, int endPage) throws IOException{
 		
 		boolean result = true;
@@ -409,48 +419,51 @@ public class PDFUtil {
 		}
 		return result;  	
 	}
-	
 
-
-   /**
-   * Extract all the embedded images from the pdf document
-   * 
-   * @param file Absolute file path of the file
-   * @param startPage Starting page number of the document
-   * @return List list of image file names with absolute path
-   * @throws java.io.IOException when file is not found.
-   */	
-	public List<String> extractImages(String file, int startPage) throws IOException{
+	/**
+	 * Cette méthode à pour objectif l'extraction des images présentes dans un fichier PDF.
+	 * Les images sont ensuite sauvegarder sur le disque dans le répertoire spécifié dans "cheminSauvegarde".
+	 * @param file le fichier PDF duquel on cherche à extraire les images.
+	 * @param startPage la première page de l'analyse.
+	 * @return une liste regroupant les noms (chemin absolue) des images extraites.
+	 * @throws java.io.IOException si le fichier est introuvable
+	 */		
+	public List<String> extraireImages(String file, int startPage) throws IOException{
 		return this.extractimages(file, startPage, -1);	
 	}
 	
-   /**
-   * Extract all the embedded images from the pdf document
-   * 
-   * @param file Absolute file path of the file
-   * @param startPage Starting page number of the document
-   * @param endPage Ending page number of the document
-   * @return List list of image file names with absolute path
-   * @throws java.io.IOException when file is not found.
-   */	
-	public List<String> extractImages(String file, int startPage, int endPage) throws IOException{
+	/**
+	 * Cette méthode à pour objectif l'extraction des images présentes dans un fichier PDF.
+	 * Les images sont ensuite sauvegarder sur le disque dans le répertoire spécifié dans "cheminSauvegarde".
+	 * @param file le fichier PDF duquel on cherche à extraire les images.
+	 * @param startPage la première page de l'analyse.
+	 * @param endPage la dernière page de l'analyse.
+	 * @return une liste regroupant les noms (chemin absolue) des images extraites.
+	 * @throws java.io.IOException si le fichier est introuvable
+	 */		
+	public List<String> extraireImages(String file, int startPage, int endPage) throws IOException{
 		return this.extractimages(file, startPage, endPage);	
 	}
 	
-   /**
-   * Extract all the embedded images from the pdf document
-   * 
-   * @param file Absolute file path of the file
-   * @return List list of image file names with absolute path
-   * @throws java.io.IOException when file is not found.
-   */		
-	public List<String> extractImages(String file) throws IOException{
+	/**
+	 * Cette méthode à pour objectif l'extraction des images présentes dans un fichier PDF.
+	 * Les images sont ensuite sauvegarder sur le disque dans le répertoire spécifié dans "cheminSauvegarde".
+	 * @param file le fichier PDF duquel on cherche à extraire les images.
+	 * @return une liste regroupant les noms (chemin absolue) des images extraites.
+	 * @throws java.io.IOException si le fichier est introuvable
+	 */		
+	public List<String> extraireImages(String file) throws IOException{
 		return this.extractimages(file, -1, -1);
 	}
 	
-   /**
-   * This method extracts all the embedded images of the pdf document
-   */	
+	/**
+	 * Cette méthode à pour objectif l'extraction des images présentes dans un fichier PDF.
+	 * Les images sont ensuite sauvegarder sur le disque dans le répertoire spécifié dans "cheminSauvegarde".
+	 * @param file le fichier PDF duquel on cherche à extraire les images.
+	 * @param startPage la première page de l'analyse.
+	 * @param endPage la dernière page de l'analyse.
+	 * @return une liste regroupant les noms (chemin absolue) des images extraites.
+	 */ 
 	private List<String> extractimages(String file, int startPage, int endPage){
 		
 		logger.info("file : " + file);
@@ -461,13 +474,13 @@ public class PDFUtil {
 		boolean bImageFound = false;
 		try {
 
-			this.createImageDestinationDirectory(file);
-			String fileName = this.getFileName(file).replace(".pdf", "_resource");
+			this.creerRepertoireDeSauvegarde(file);
+			String fileName = this.obtenirNomFichier(file).replace(".pdf", "_resource");
 			
 			PDDocument document = PDDocument.load(new File(file));
 			PDPageTree list = document.getPages();
 			
-			this.updateStartAndEndPages(file, startPage, endPage);
+			this.mettreAJourPagesDebutEtFin(file, startPage, endPage);
 			
 			int totalImages = 1;
 			for(int iPage=this.pageDebut-1;iPage<this.pageFin;iPage++){	
@@ -495,25 +508,49 @@ public class PDFUtil {
 		return imgNames;  	
 	}
 
-	private void createImageDestinationDirectory(String file) throws IOException{
-		if(null==this.cheminSauvegarde){
+	/**
+	 * Permet la création du répertoire destiné à accueillir les images extraires.
+	 * Attention : Si le répertoire existe déjà il est supprimer avant de créer le nouveau.
+	 * @param file le repertoire destination.
+	 * @throws IOException en cas d'erreur.
+	 */
+	private void creerRepertoireDeSauvegarde(String file) throws IOException{
+		if(null == this.cheminSauvegarde){
 			File sourceFile = new File(file);
 			String destinationDir = sourceFile.getParent() + "/temp/";
 			this.cheminSauvegarde=destinationDir;
-			this.createFolder(destinationDir);
+			this.creerRepertoire(destinationDir);
 		}
 	}
 	
-	private boolean createFolder(String file) throws IOException{
+	/**
+	 * Permet la création d'un répertoire. Si le répertoire existe déjà il est supprimer avant de créer le nouveau.
+	 * @param file répertoire à créer.
+	 * @return vrai si la création est fait, faux sinon.
+	 * @throws IOException si il est impossible de supprimer l'ancien répertoire ou de créer le nouveau.
+	 */
+	private boolean creerRepertoire(String file) throws IOException{
 		FileUtils.deleteDirectory(new File(file));
 		return new File(file).mkdir();
 	}
 	
-	private String getFileName(String file){
+	/**
+	 * Permet d'obtenir le nom du fichier ou du répertoire passé en paramètre.
+	 * @param file le fichier ou le répertoire dont on souhaites le nom.
+	 * @return le nom du fichier ou du répertoire paramètre.
+	 */
+	private String obtenirNomFichier(String file){
 		return new File(file).getName();
 	}
 	
-	private void updateStartAndEndPages(String file, int start, int end) throws IOException{
+	/**
+	 * Permet de mettre à jour les numéros de pages de références pour la comparaison entre les fichiers. 
+	 * @param file le fichier concerné.
+	 * @param start la page de début souhaitées (si mis à 0, la première page est prise)
+	 * @param end la page de fin souhaitées (si msi à 0, la dernière page du document est prise)
+	 * @throws IOException en cas de problème d'accès au fichier PDF.
+	 */
+	private void mettreAJourPagesDebutEtFin(String file, int start, int end) throws IOException{
 		
 		PDDocument document = PDDocument.load(new File(file));
 		int pagecount = document.getNumberOfPages();
