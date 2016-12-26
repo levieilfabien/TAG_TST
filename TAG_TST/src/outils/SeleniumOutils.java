@@ -857,7 +857,7 @@ public class SeleniumOutils {
 				return driver;
 			}
     	}
-    	
+
 		Iterator<String> i = driver.getWindowHandles().iterator();
 		GenericDriver retour = driver;
 		Integer compteur = 0;
