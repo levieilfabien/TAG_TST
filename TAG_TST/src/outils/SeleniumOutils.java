@@ -893,7 +893,19 @@ public class SeleniumOutils {
 		driver.close();
 		return changerDeFenetre();
 	}
-	
+	/**
+	 * Permet de récupérer les n derniers caractères d'une chaîne
+	 * @param chaine
+	 * @param nombre
+	 * @return
+	 */
+	public String derniersCaractères(String chaine, int nombre)
+	{
+	    if (chaine.length() <= nombre)
+	       return(chaine);
+	    else
+	        return(chaine.substring(chaine.length() - nombre));
+	}
 	/**
 	 * Permet de cliquer sur un element.
 	 * Il n'est pas possible d'interragir avec un élément invisible, aussi on clique toujours sur un élément visible.
