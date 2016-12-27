@@ -232,6 +232,15 @@ public class PDFUtil {
 		return this.comparePdfFiles(file1, file2, startPage, -1);
 	}
 	
+	/**
+	 * Effectue la comparaison entre deux fichiers PDF suivant le mode choisie.
+	 * @param file1 le fichier de référence.
+	 * @param file2 le fichier "révisé".
+	 * @param startPage la page de début de comparaison.
+	 * @param endPage la page de fin de comparaison.
+	 * @return true si les fichiers osnt identiques, false sinon.
+	 * @throws IOException en cas de problèmes d'accès aux fichiers.
+	 */
 	private boolean comparePdfFiles(String file1, String file2, int startPage, int endPage)throws IOException{
 		if(CompareMode.TEXT_MODE==this.modeDeComparaison)
 			return comparepdfFilesWithTextMode(file1, file2, startPage, endPage);
