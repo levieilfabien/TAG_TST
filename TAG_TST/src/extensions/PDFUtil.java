@@ -416,26 +416,24 @@ public class PDFUtil {
 		PDFRenderer pdfRenderer2 = null;
 		
 		try {
-			
-				doc1 = PDDocument.load(new File(file1));
-				doc2 = PDDocument.load(new File(file2));
-			 
-				pdfRenderer1 = new PDFRenderer(doc1);
-				pdfRenderer2 = new PDFRenderer(doc2);
+			doc1 = PDDocument.load(new File(file1));
+			doc2 = PDDocument.load(new File(file2));
+		 
+			pdfRenderer1 = new PDFRenderer(doc1);
+			pdfRenderer2 = new PDFRenderer(doc2);
 
+			for(int iPage=startPage-1;iPage<endPage;iPage++){
+				String fileName = new File(file1).getName().replace(".pdf", "_") + (iPage + 1);
+				fileName = this.getCheminSauvegarde() + "/" + fileName + "_diff.png";
 				
-				for(int iPage=startPage-1;iPage<endPage;iPage++){
-					String fileName = new File(file1).getName().replace(".pdf", "_") + (iPage + 1);
-					fileName = this.getCheminSauvegarde() + "/" + fileName + "_diff.png";
-					
-					logger.info("Comparing Page No : " + (iPage+1));
-					BufferedImage image1 = pdfRenderer1.renderImageWithDPI(iPage, 300, ImageType.RGB);
-					BufferedImage image2 = pdfRenderer2.renderImageWithDPI(iPage, 300, ImageType.RGB);
-					result = ImageUtil.compareAndHighlight(image1, image2, fileName, this.optionSurlignerDifferences, this.couleurDiff.getRGB()) && result;
-					if(!this.optionComparaisonComplete && !result){
-						break;
-					}
+				logger.info("Comparing Page No : " + (iPage+1));
+				BufferedImage image1 = pdfRenderer1.renderImageWithDPI(iPage, 300, ImageType.RGB);
+				BufferedImage image2 = pdfRenderer2.renderImageWithDPI(iPage, 300, ImageType.RGB);
+				result = ImageUtil.compareAndHighlight(image1, image2, fileName, this.optionSurlignerDifferences, this.couleurDiff.getRGB()) && result;
+				if(!this.optionComparaisonComplete && !result){
+					break;
 				}
+			}
 		}catch (Exception e) {
 			e.printStackTrace();
 		}finally{

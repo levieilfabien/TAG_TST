@@ -134,14 +134,22 @@ public class ALMOutils {
 
 	/**
 	 * Permet d'obtenir le chemin vers le fichier de dll de Jacob.
+	 * @param bit32 à vrai si on souhaites la version 32bit, à false pour la version 64bit. Si null, la fonction cherche elle même l'architecture de la JVM.
 	 * @return le chemin vers le fichier de properties.
 	 */
 	@SuppressWarnings("deprecation")
 	public static String getJacobDll(Boolean bit32) {
+		// Si on ne précise pas, on détermine sur quelle architecture se trouve la JVM.
+		if (bit32 == null) {
+			bit32 = "32".equals(System.getProperty("sun.arch.data.model"));
+		}
 		// On souhaites utiliser l'implémentation 32bit ou 64bit ?
-		String cheminDll = bit32?RESOURCES + JACOB_X86:RESOURCES + JACOB_X64;
+		String cheminDll = bit32?/*RESOURCES + */JACOB_X86:/*RESOURCES + */JACOB_X64;
 		// On récupère le dll correspondant dans le répertoire "resources".
-		String retour = PropertiesOutil.class.getClassLoader().getResource(cheminDll).getFile().substring(1);
+		//String retour = PropertiesOutil.class.getClassLoader().getResource(cheminDll).getFile().substring(1);
+		// Les resources ne devrais pas être stockées dans le repertoire du projet utilisateur mais dans le framework on récupère donc dans le code de TAG_TST
+		String retour = PropertiesOutil.class.getProtectionDomain().getCodeSource().getLocation().getPath().substring(1) + cheminDll;
+		
 		try {
 			retour = URLDecoder.decode(retour, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
@@ -152,10 +160,18 @@ public class ALMOutils {
 		}
 		retour = retour.replaceAll("\\\\", Matcher.quoteReplacement(File.separator));
 		retour = retour.replaceAll(Matcher.quoteReplacement("/"), Matcher.quoteReplacement(File.separator));
+		System.out.println(retour);
 		return retour;
 	}
 	
+	/**
+	 * Fonction dédiée à l'obtention du répertoire contenant les fichiers DLL.
+	 * @param bit32 à vrai si on souhaites la version 32bit, à false pour la version 64bit. 
+	 * @return le chemin vers le repertoire contenant les DLL
+	 * @deprecated ne renvoie pas le bon chemin, utilisez la fonction dédiée à chaque DLL plutôt que cette fonction.
+	 */
 	@SuppressWarnings("deprecation")
+	@Deprecated
 	private static String getDllDir(Boolean bit32) {
 		// On souhaites utiliser l'implémentation 32bit ou 64bit ?
 		String cheminDll = bit32?RESOURCES + JACOB_X86:RESOURCES + JACOB_X64;
@@ -300,7 +316,7 @@ public class ALMOutils {
 					wrapper.close();
 				} catch (ALMServiceException e) {
 					e.printStackTrace();
-					throw new SeleniumException(Erreurs.E032, "Impossible de mettre à jour l'état du cas de test dans ALM.");
+					throw new SeleniumException(Erreurs.E032, "Impossible de mettre à jour l'état du cas de test dans ALM : " + e.getMessage());
 				}
 			} else {
 				// Si le cas d'essai en contient d'autres, on boucle sur chaucun d'entre eux.
