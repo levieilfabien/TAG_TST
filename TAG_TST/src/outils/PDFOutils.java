@@ -420,7 +420,8 @@ public class PDFOutils extends PDFUtil {
 	 */
 	public static void main(String[] args) {
 			try {
-				PDFOutils.comparerListePDF(new File("C:\\work\\TEST1"), new File("C:\\work\\TEST2"));
+				//PDFOutils.comparerListePDF(new File("C:\\work\\TEST1"), new File("C:\\work\\TEST2"));
+				PDFOutils.comparerListePDF(new File("C:\\work\\PDF V16.03"), new File("C:\\work\\PDF V15.11"));
 			} catch (SeleniumException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

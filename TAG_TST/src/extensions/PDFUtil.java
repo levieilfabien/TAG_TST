@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
+
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPageTree;
@@ -20,6 +21,8 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.tools.imageio.ImageIOUtil;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.commons.io.FileUtils;
+
+import outils.IMGOutils;
 
 /**
 * Outil de manipulation de PDFpermettant notament d'obtenir les différences entre deux pdf sous forme d'image.
@@ -429,7 +432,7 @@ public class PDFUtil {
 				logger.info("Comparing Page No : " + (iPage+1));
 				BufferedImage image1 = pdfRenderer1.renderImageWithDPI(iPage, 300, ImageType.RGB);
 				BufferedImage image2 = pdfRenderer2.renderImageWithDPI(iPage, 300, ImageType.RGB);
-				result = ImageUtil.compareAndHighlight(image1, image2, fileName, this.optionSurlignerDifferences, this.couleurDiff.getRGB()) && result;
+				result = IMGOutils.compareAndHighlight(image1, image2, fileName, this.optionSurlignerDifferences) && result;
 				if(!this.optionComparaisonComplete && !result){
 					break;
 				}

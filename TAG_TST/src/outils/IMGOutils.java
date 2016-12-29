@@ -2,6 +2,7 @@ package outils;
 
 import java.awt.BorderLayout;
 import java.awt.Canvas;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -9,6 +10,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
@@ -20,14 +22,18 @@ import org.apache.batik.swing.svg.GVTTreeBuilderEvent;
 
 import constantes.Erreurs;
 import exceptions.SeleniumException;
+import extensions.CIELab;
 
 
 /**
- * Classe pour la manipulation des fichiers SVG.
+ * Classe pour la manipulation des fichiers images comme le SVG.
+ * Regroupe aussi les fonctions de manipulation de données visuelles comme les couleurs.
  * @author levieil_f
  *
  */
 public class IMGOutils {
+	
+	static Logger logger = Logger.getLogger(IMGOutils.class.getName());
 
 	/**
 	 * Affiche une fenetre contenant l'image SVG à afficher.
@@ -35,7 +41,7 @@ public class IMGOutils {
 	 * @return la fenêtre obtenue.
 	 * @throws SeleniumException en cas d'erreur.
 	 */
-	public static JFrame affichierFichierSVG(String nomFichier) throws SeleniumException {
+	public static JFrame afficherFichierSVG(String nomFichier) throws SeleniumException {
         // Creation de la fenetre et de son contenu.
         final JFrame frame = new JFrame("Affichage SVG : " + nomFichier);
         final JPanel panel = new JPanel(new BorderLayout());
@@ -75,7 +81,7 @@ public class IMGOutils {
 	 * @return la fenêtre obtenue.
 	 * @throws SeleniumException en cas d'erreur.
 	 */
-	public static JFrame affichierFichierPNG(String nomFichier) throws SeleniumException {
+	public static JFrame afficherFichierPNG(String nomFichier) throws SeleniumException {
         // Creation de la fenetre et de son contenu.
         final JFrame frame = new JFrame("Affichage PNG : " + nomFichier);
         final JPanel panel = new JPanel(new BorderLayout());
@@ -112,8 +118,144 @@ public class IMGOutils {
         return frame;
 	}
 	
+	/**
+	 * Effectue une comparaison entre deux images et effectue une surbrillance sur les différences. Les ajout apparaissent en vert, les suppression en rouge et les autres différences apparaissent en Magenta.
+	 * @param img1 la première image (base de comparaison)
+	 * @param img2 la seconde image
+	 * @param fileName le chemin vers le fichier de sauvegarde des différences (au format PNG)
+	 * @param highlight à vrai si on souhaites une surbrillance (et la production du diff), à faux sinon.
+	 * @return true si les documents sont identiques, false sinon.
+	 * @throws IOException en cas d'erreur de manipulation des fichiers.
+	 */
+	public static boolean compareAndHighlight(final BufferedImage img1, final BufferedImage img2, String fileName, boolean highlight) throws IOException {
+		return compareAndHighlight(img1, img2, fileName, highlight, true, true, 50);
+	}
+	
+	/**
+	 * Effectue une comparaison entre deux images et effectue une surbrillance sur les différences. Les ajout apparaissent en vert, les suppression en rouge et les autres différences apparaissent en Magenta.
+	 * @param img1 la première image (base de comparaison)
+	 * @param img2 la seconde image
+	 * @param fileName le chemin vers le fichier de sauvegarde des différences (au format PNG)
+	 * @param highlight à vrai si on souhaites une surbrillance (et la production du diff), à faux sinon.
+	 * @param transparence à vrai si on souhaites que les pixels identiques soit légèrement transparent.
+	 * @param tolerance à vrai si on souhaites que si un certain seuil n'est pas dépassé dans les distance, alors on ne colorise pas.
+	 * @param seuilTolerance le seuil de distance de tolérane à respecter si tolerance est à vrai.
+	 * @return true si les documents sont identiques, false sinon.
+	 * @throws IOException en cas d'erreur de manipulation des fichiers.
+	 */
+	public static boolean compareAndHighlight(final BufferedImage img1, final BufferedImage img2, String fileName, boolean highlight, boolean transparence, boolean tolerance, int seuilTolerance) throws IOException {
+
+		// On récupère les informations de tailles pour les images.
+	    final int w = img1.getWidth();
+	    final int h = img1.getHeight();
+	    // On récupère l'ensemble des pixels composant chacune des images
+	    final int[] p1 = img1.getRGB(0, 0, w, h, null, 0, w);
+	    final int[] p2 = img2.getRGB(0, 0, w, h, null, 0, w);
+
+	    // Si les deux tableaux sont différents c'est qu'il existe au moins un pixel qui n'est pas identique.
+	    if(!(java.util.Arrays.equals(p1, p2))){
+	    	logger.warning("Image comparée - Les images ne sont pas identiques");
+	    	// On ne parcours tous les pixels que si on cherche à produire un diff
+	    	if(highlight){
+	    	    for (int i = 0; i < p1.length; i++) {
+	    	        if (p1[i] != p2[i]){
+	    	        	if (p2[i] == Color.WHITE.getRGB()) {
+	    	        		////// AJOUT //////
+	    	        		// Si P2 est blanc c'est que P1 est "en plus" par rapport à P2
+	    	        		p1[i] = Color.GREEN.getRGB();
+	    	        	} else if (p1[i] == Color.WHITE.getRGB()) {
+	    	        		////// SUPPRESSION //////
+	    	        		// Si P1 est blanc c'est que P1 est "en moins" par rapport à P2
+	    	        		p1[i] = Color.RED.getRGB();
+	    	        	} else {
+	    	        		////// REMPLACEMENT /////
+	    	        		// Si P1 & P2 ne sont pas blanc alors P1 est remplacé par P2 (on supperpose les deux)
+	    	        		// On tolère une proximité des pixels de manière à éviter les faux positifs (décalages d'un pixel par exemple)
+		    	        		if (tolerance) {
+		    	        			if(getDistance(p1[i], p2[i]) > seuilTolerance) {
+		    	        				p1[i] = Color.MAGENTA.getRGB();
+		    	        		} else {
+		    	        			p1[i] = Color.MAGENTA.getRGB();
+		    	        		}		
+	    	        		}
+	    	        	}
+	    	        } 
+	    	        // Rendre transparent les zones communes entre les deux fichiers ?
+	    	        else if (p1[i] != Color.WHITE.getRGB() && transparence) {
+	    	        	p1[i] = rendreTransparent(p1[i], 0.75f);
+	    	        	//p1[i] |= (0.1 & 0xff);
+	    	        }
+	    	    }
+	    	    // Création de l'image à partir des nouvelles colorisations de P1.
+	    	    final BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+	    	    out.setRGB(0, 0, w, h, p1, 0, w);
+	    	    saveImage(out, fileName);
+	    	}
+	    	return false;
+	    }
+	    return true;
+	}
+	
+	/**
+	 * Premet de rendre transparente suivant un facteur spécifié la couleur.
+	 * @param color la couleur paramètre au format RGB.
+	 * @param factor le facteur de transparence (ex : 0.5f pour semi transparence).
+	 * @return la nouvelle valeur RGB de la couleur en tenant compte de la transparence.
+	 */
+	public static int rendreTransparent(int color, float factor) {
+		Color temp = new Color(color);
+	    int alpha = Math.round(temp.getAlpha() * factor);
+	    int red = temp.getRed();
+	    int green = temp.getGreen();
+	    int blue = temp.getBlue();
+	    return new Color(red, green, blue, alpha).getRGB();
+	}
+	
+	/**
+	 * Permet de calculer la distance entre deux couleurs au format RGB.
+	 * Cette distance ne tiens pas compte de la transparence et s'effectue via une conversion au format CIE (norme).
+	 * @param colorA la première couleur.
+	 * @param colorB la seconde couleur.
+	 * @return la différence entre les deux couleurs exprimée sous forme de double (ex : différence entre rouge et bleu = 175)
+	 */
+	public static double getDistance(int colorA, int colorB) {
+		//Conversion en couleur RGB
+		Color couleur1 = new Color(colorA);
+		Color couleur2 = new Color(colorB);
+		
+		//Conversion en couleur CIE - Le calcul de la distance entre deux couleurs ce fait dans cet espace (convention)
+		CIELab lab = CIELab.getInstance();
+		float[] couleur3 = lab.fromRGB(new float[] {couleur1.getRed(), couleur1.getGreen(), couleur1.getBlue()});
+		float[] couleur4 = lab.fromRGB(new float[] {couleur2.getRed(), couleur2.getGreen(), couleur2.getBlue()});
+		
+		// Calcul des distances entre les couleurs (L, a et b)
+		double l = couleur3[0] - couleur4[0];
+		double a = couleur3[1] - couleur4[1];
+		double b = couleur3[2] - couleur4[2];
+		
+		// On calcule le deltaE, la distance entre deux couleurs
+		double deltaE = Math.sqrt(Math.pow(l, 2) + Math.pow(a, 2) + Math.pow(b, 2));
+		
+		return deltaE;
+	}
+
+
+	/**
+	 * Sauvegarde de l'image sur le disque.
+	 * @param image l'image.
+	 * @param file le fichier de destination.
+	 */
+	public static void saveImage(BufferedImage image, String file){
+		try{
+			File outputfile = new File(file);
+			ImageIO.write(image, "png", outputfile);	
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}	
+	
 	
 	public static void main(String args[]) throws SeleniumException {
-		IMGOutils.affichierFichierPNG("captures/TRACEO-Selectiondusite1362567866707.png");
+		IMGOutils.afficherFichierPNG("captures/TRACEO-Selectiondusite1362567866707.png");
 	}
 }
