@@ -360,17 +360,76 @@ public class PDFOutils extends PDFUtil {
 		return patch.getDeltas();
 	}
 	
+	/**
+	 * Effectue une comparaison entre deux fichier.
+	 * La comparaison produit un fichier de diff visuel sous forme d'image PNG pour les pages où des différences sont trouvées.
+	 * @param repertoire1 le répertoire de révision (la "nouvelle version")
+	 * @param repertoire2 le répertoire de référence (l'"ancienne version")
+	 * @return la racine commune à tous les fichiers de diff produit.
+	 * @throws SeleniumException en cas d'impossibilité d'accès ou de lecture d'un fichier ou d'un répertoire.
+	 */
+	public static String comparerPDF(File fichier1, File fichier2) throws SeleniumException {
+		return comparerPDF(fichier1, fichier2, -1, -1, true, true, true, 50);
+	}
+	
+	/**
+	 * Effectue une comparaison entre deux fichier.
+	 * La comparaison produit un fichier de diff visuel sous forme d'image PNG pour les pages où des différences sont trouvées.
+	 * @param repertoire1 le répertoire de révision (la "nouvelle version")
+	 * @param repertoire2 le répertoire de référence (l'"ancienne version")
+	 * @param startPage la page de départ de la comparaison
+	 * @param endPage la page de fin de comparaison
+	 * @param surligner indique si on surligne les différence (et on produit une image)
+	 * @param transparence indique si on met en transparence les objets communs aux deux fichiers
+	 * @param tolerance indique si on tolère une différence de couleur entre deux pixels (evite les faux positif)
+	 * @param seuilTolerance le seuil de tolérance de différence entreles pixels (50 pour un seuil logique).
+	 * @return la racine commune à tous les fichiers de diff produit.
+	 * @throws SeleniumException en cas d'impossibilité d'accès ou de lecture d'un fichier ou d'un répertoire.
+	 */
+	public static String comparerPDF(File fichier1, File fichier2, int startPage, int endPage, boolean surligner, boolean transparence, boolean tolerance, int seuilTolerance) throws SeleniumException {
+		String retour = new String();
+		PDFUtil pdfutil = new PDFUtil();
+		pdfutil.setCheminSauvegarde(".");
+		pdfutil.setOptionComparaisonComplete(true);
+		pdfutil.setOptionSurlignerDifferences(true);
+		pdfutil.setModeDeComparaison(CompareMode.VISUAL_MODE);
+		String cheminProduction = ".";
+		boolean temp = false;
+		
+		// Si les repertoires existe on prépare le répertoire de sauvegarde
+		cheminProduction = fichier1.getParent();
+		if (cheminProduction != null) {
+			//cheminProduction = cheminProduction.concat(File.separator + "diff");
+			pdfutil.setCheminSauvegarde(cheminProduction);
+		} else {
+			throw new SeleniumException(Erreurs.E021, "Impossible de créer le répertoire de sortie.");
+		}
+
+		try {
+			temp = pdfutil.convertirEnImageEtComparer(fichier1.getAbsolutePath(), fichier2.getAbsolutePath(), startPage, endPage, surligner, transparence, tolerance, seuilTolerance);
+			
+		} catch (/*IO*/Exception e) {
+			throw new SeleniumException(Erreurs.E021, "Les fichiers PDF ne sont pas lisibles où le repertoire de sauvegarde n'est pas accessible.");
+		}
+		
+		if (temp) {
+			retour =  cheminProduction;
+		}
+		
+		return retour;
+	}
 	
 	/**
 	 * Effectue une comparaison de masse entre deux répertoires contenant des PDF portant les mêmes noms.
 	 * La comparaison à lieue par paire et produit un fichier de diff visuel sous forme d'image PNG pour les pages où des différences sont trouvées.
 	 * @param repertoire1 le répertoire de révision (la "nouvelle version")
 	 * @param repertoire2 le répertoire de référence (l'"ancienne version")
-	 * @return une liste de noms de fichier correspondants aux diffs.
+	 * @return une liste de boolean indiquant les différences des paires.
 	 * @throws SeleniumException en cas d'impossibilité d'accès ou de lecture d'un fichier ou d'un répertoire.
 	 */
-	public static List<String> comparerListePDF(File repertoire1, File repertoire2) throws SeleniumException {
-		List<String> retour = new LinkedList<String>();
+	public static List<Boolean> comparerListePDF(File repertoire1, File repertoire2) throws SeleniumException {
+		List<Boolean> retour = new LinkedList<Boolean>();
+		boolean temp = false;
 		PDFUtil pdfutil = new PDFUtil();
 		pdfutil.setCheminSauvegarde(".");
 		pdfutil.setOptionComparaisonComplete(true);
@@ -396,9 +455,13 @@ public class PDFOutils extends PDFUtil {
 						// On choisit le fichier dont le nom est le même
 						if (fichierPDF.getName().toUpperCase().equals(fichierPDFCible.getName().toUpperCase())) {
 							try {
-								pdfutil.compare(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath());
+								temp = pdfutil.compare(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath());
 								//comparaisonTextuelleParBloc(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath());
 								publierDiff(fichierPDF, fichierPDFCible, cheminProduction);
+								retour.add(temp);
+//								if (temp) {
+//									retour.add(cheminProduction + File.separator + fichierPDF.getName() + "_diff.png");
+//								}
 								break;
 							} catch (/*IO*/Exception e) {
 								throw new SeleniumException(Erreurs.E021, "Les fichiers PDF ne sont pas lisibles où le repertoire de sauvegarde n'est pas accessible.");

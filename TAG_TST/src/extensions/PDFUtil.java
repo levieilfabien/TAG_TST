@@ -445,6 +445,68 @@ public class PDFUtil {
 		}
 		return result;  	
 	}
+	
+	/**
+	 * Permet la conversion des fichiers PDF en image puis une comparaison pixel à pixel.
+	 * Si l'option à été choisie les différences trouvées seront fournis sous forme de fichier image.
+	 * @param file1 le fichier numéro un
+	 * @param file2 le fichier numéro deux
+	 * @param startPage la page de départ de la comparaison
+	 * @param endPage la page de fin de comparaison
+	 * @param surligner indique si on surligne les différence (et on produit une image)
+	 * @param transparence indique si on met en transparence les objets communs aux deux fichiers
+	 * @param tolerance indique si on tolère une différence de couleur entre deux pixels (evite les faux positif)
+	 * @param seuilTolerance le seuil de tolérance de différence entreles pixels (50 pour un seuil logique).
+	 * @return vrai si les deux fichiers sont identique, faux sinon.
+	 * @throws IOException en cas de problème d'accès aux fichiers.
+	 */
+	public boolean convertirEnImageEtComparer(String file1, String file2, int startPage, int endPage, boolean surligner, boolean transparence, boolean tolerance, int seuilTolerance) throws IOException{
+		
+		boolean result = true;
+		
+		PDDocument doc1=null;
+		PDDocument doc2=null;
+		
+		PDFRenderer pdfRenderer1 = null;
+		PDFRenderer pdfRenderer2 = null;
+		
+		try {
+			// On lit les 2 fichiers PDF
+			doc1 = PDDocument.load(new File(file1));
+			doc2 = PDDocument.load(new File(file2));
+		 
+			pdfRenderer1 = new PDFRenderer(doc1);
+			pdfRenderer2 = new PDFRenderer(doc2);
+			
+			// Si les pages ne sont pas précisée on les mets à jour.
+			if (startPage == -1 || endPage == -1) {
+				this.mettreAJourPagesDebutEtFin(file1, startPage, endPage);
+				//this.mettreAJourPagesDebutEtFin(file2, startPage, endPage);
+			}
+			
+
+			// Pour chaque "paire" de page on effectue la comparaison
+			for(int iPage=this.pageDebut-1;iPage<this.pageFin;iPage++){
+				String fileName = new File(file1).getName().replace(".pdf", "_") + (iPage + 1);
+				fileName = this.getCheminSauvegarde() + "/" + fileName + "_diff.png";
+				
+				// Conversion en image puis comparaison
+				logger.info("Comparing Page No : " + (iPage+1));
+				BufferedImage image1 = pdfRenderer1.renderImageWithDPI(iPage, 300, ImageType.RGB);
+				BufferedImage image2 = pdfRenderer2.renderImageWithDPI(iPage, 300, ImageType.RGB);
+				result = IMGOutils.compareAndHighlight(image1, image2, fileName, surligner, transparence, tolerance, seuilTolerance) && result;
+				if(!this.optionComparaisonComplete && !result){
+					break;
+				}
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+		}finally{
+			doc1.close();
+			doc2.close();
+		}
+		return result;  	
+	}
 
 	/**
 	 * Cette méthode à pour objectif l'extraction des images présentes dans un fichier PDF.

@@ -1,14 +1,32 @@
 package extensions;
 import java.awt.color.ColorSpace;
 
+/**
+ * Extension de l'espace de couleur CIE standard de Java pour permettre la transposition de couleur RGC et CIEXYZ en couleur CIELab.
+ * CIELab est l'espace de couleur exprimé sur les composante L a et b faisant entrer en compte la notion de luminance plutôt qu'uniquement une répartition spaciale.
+ * Il s'agit d'un espace de couleur adapté pour des couleurs de surface elle tient compte de l'écart de couleurs perçu par la vision humaine.
+ * Cette conversion permet notament d'effectuer des calculs de distances entre les couleurs.
+ * @author levieilfa
+ *
+ */
 public class CIELab extends ColorSpace {
 
     private static final long serialVersionUID = 5027741380892134289L;
 
+    /**
+     * L'espace de couleur de référence.
+     */
     private static final ColorSpace CIEXYZ = ColorSpace.getInstance(ColorSpace.CS_CIEXYZ);
 
+    /**
+     * Constante de référence pour les fonction f et finv.
+     */
     private static final double N = 4.0 / 29.0;
 	
+    /**
+     * Renvoie l'instance.
+     * @return l'instance de l'espace de couleur.
+     */
     public static CIELab getInstance() {
         return Holder.INSTANCE;
     }
@@ -58,10 +76,18 @@ public class CIELab extends ColorSpace {
         return CIEXYZ.toRGB(xyz);
     }
 
+    /**
+     * Constructeur par défaut du CIELab à partir du l'espace de couleur de référence.
+     */
     CIELab() {
         super(ColorSpace.TYPE_Lab, 3);
     }
 
+    /**
+     * Fonction permettant la conversion des composantes depuis un espace CIEXYZ vers un espace CIELab.
+     * @param x la composante à convertir
+     * @return la composante convertie
+     */
     private static double f(double x) {
         if (x > 216.0 / 24389.0) {
             return Math.cbrt(x);
@@ -70,6 +96,11 @@ public class CIELab extends ColorSpace {
         }
     }
 
+    /**
+     * Fonction inverse de la fonction f permettant la conversion des composantes depuis un espace CIELab vers un espace CIEXYZ.
+     * @param x la composante à convertir
+     * @return la composante convertie
+     */
     private static double fInv(double x) {
         if (x > 6.0 / 29.0) {
             return x*x*x;
@@ -82,6 +113,11 @@ public class CIELab extends ColorSpace {
         return getInstance();
     }
 
+    /**
+     * Classe valorisant l'instance à partir du constructeur par défaut.
+     * @author levieilfa
+     *
+     */
     private static class Holder {
         static final CIELab INSTANCE = new CIELab();
     }

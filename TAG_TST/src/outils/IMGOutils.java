@@ -6,6 +6,9 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -90,11 +93,31 @@ public class IMGOutils {
 			image = ImageIO.read(new File(nomFichier));
 	        
 	        final Canvas canvas = new Canvas() {
+	        	// Cette fonction sera appellée à chaque redimensionnement du canvas.
 	        	public void paint(Graphics g)  
 	            {  
+	        		Dimension dim = super.getSize();
+	        		int hauteur = dim.height;
+	        		int largeur = dim.width;
+	        		
+	        		// On récupère la taille de l'écran
+	        		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+	        		int largeurEcran = gd.getDisplayMode().getWidth();
+	        		int hauteurEcran = gd.getDisplayMode().getHeight();
+	        		
+	        		// On calcule le rapport entre la hauteur et la largeur de l'image afin de respecter les proportions.
+	        		int rapport = hauteur/largeur;
+	        		if (hauteur > hauteurEcran) {
+	        			hauteur = hauteurEcran - 50;
+	        			largeur = hauteur * rapport;
+	        		} else if (largeur > largeurEcran) {
+	        			largeur = largeurEcran - 50;
+	        			hauteur = largeur * rapport;
+	        		}
+	        		
 	                super.paint(g);  
 	                Graphics2D g2 = (Graphics2D) g;  
-	                g2.drawImage(image, 0, 0, null);  
+	                g2.drawImage(image, 0, 0, largeur, hauteur, null);  
 	            }  
 	        	
 			};       
@@ -106,7 +129,26 @@ public class IMGOutils {
 	        
 	        // Affichage de la fenetre et de son contenu.
 	        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-	        frame.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
+    		int hauteur = image.getHeight();
+    		int largeur = image.getWidth();
+    		
+    		// On récupère les dimension des l'écran
+    		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+    		int largeurEcran = gd.getDisplayMode().getWidth();
+    		int hauteurEcran = gd.getDisplayMode().getHeight();
+    		
+    		// On calcule le rapport entre la hauteur et la largeur de l'image afin de respecter les proportions.
+    		int rapport = hauteur/largeur;
+    		// Quoi qu'il arrive on s'assure que l'image ne dépasse pas la taille de l'écran.
+    		if (hauteur > hauteurEcran) {
+    			hauteur = hauteurEcran - 50;
+    			largeur = hauteur * rapport;
+    		} else if (largeur > largeurEcran) {
+    			largeur = largeurEcran - 50;
+    			hauteur = largeur * rapport;
+    		}
+    		
+	        frame.setPreferredSize(new Dimension(largeur, hauteur));
 	        frame.setVisible(true);
 	        
 	        frame.pack();
@@ -256,6 +298,6 @@ public class IMGOutils {
 	
 	
 	public static void main(String args[]) throws SeleniumException {
-		IMGOutils.afficherFichierPNG("captures/TRACEO-Selectiondusite1362567866707.png");
+		IMGOutils.afficherFichierPNG("C:\\work\\PDF V15.11\\BAD_1_diff.png");
 	}
 }
