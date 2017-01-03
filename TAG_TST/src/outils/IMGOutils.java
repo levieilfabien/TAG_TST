@@ -193,6 +193,9 @@ public class IMGOutils {
 	    // On récupère l'ensemble des pixels composant chacune des images
 	    final int[] p1 = img1.getRGB(0, 0, w, h, null, 0, w);
 	    final int[] p2 = img2.getRGB(0, 0, w, h, null, 0, w);
+	    // P1 Va servir à stocker le merge des fichiers, ajout stockera uniquement les ajouts, suppression stockera uniquement les suppressions
+	    final int[] ajout = img1.getRGB(0, 0, w, h, null, 0, w);
+	    final int[] suppression = img2.getRGB(0, 0, w, h, null, 0, w);
 
 	    // Si les deux tableaux sont différents c'est qu'il existe au moins un pixel qui n'est pas identique.
 	    if(!(java.util.Arrays.equals(p1, p2))){
@@ -205,10 +208,12 @@ public class IMGOutils {
 	    	        		////// AJOUT //////
 	    	        		// Si P2 est blanc c'est que P1 est "en plus" par rapport à P2
 	    	        		p1[i] = Color.GREEN.getRGB();
+	    	        		ajout[i] = Color.GREEN.getRGB();
 	    	        	} else if (p1[i] == Color.WHITE.getRGB()) {
 	    	        		////// SUPPRESSION //////
 	    	        		// Si P1 est blanc c'est que P1 est "en moins" par rapport à P2
 	    	        		p1[i] = Color.RED.getRGB();
+	    	        		suppression[i] = Color.RED.getRGB();
 	    	        	} else {
 	    	        		////// REMPLACEMENT /////
 	    	        		// Si P1 & P2 ne sont pas blanc alors P1 est remplacé par P2 (on supperpose les deux)
@@ -216,8 +221,12 @@ public class IMGOutils {
 		    	        		if (tolerance) {
 		    	        			if(getDistance(p1[i], p2[i]) > seuilTolerance) {
 		    	        				p1[i] = Color.MAGENTA.getRGB();
+		    	        				ajout[i] = Color.GREEN.getRGB();
+		    	        				suppression[i] = Color.MAGENTA.getRGB();
 		    	        		} else {
 		    	        			p1[i] = Color.MAGENTA.getRGB();
+		    	        			ajout[i] = Color.GREEN.getRGB();
+		    	        			suppression[i] = Color.MAGENTA.getRGB();
 		    	        		}		
 	    	        		}
 	    	        	}
@@ -232,6 +241,16 @@ public class IMGOutils {
 	    	    final BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
 	    	    out.setRGB(0, 0, w, h, p1, 0, w);
 	    	    saveImage(out, fileName);
+	    	    // Création de l'image d'ajout des nouvelles colorisations de ajout.
+	    	    final BufferedImage imgAjout = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+	    	    imgAjout.setRGB(0, 0, w, h, ajout, 0, w);
+	    	    saveImage(out, fileName);
+	    	    // Création de l'image de suppression des nouvelles colorisations de suppression.
+	    	    final BufferedImage imgSupp = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+	    	    imgSupp.setRGB(0, 0, w, h, suppression, 0, w);
+	    	    saveImage(out, fileName);
+	    	    saveImage(imgAjout, fileName.replace(".png", "ajout.png"));
+	    	    saveImage(imgSupp, fileName.replace(".png", "supp.png"));
 	    	}
 	    	return false;
 	    }
