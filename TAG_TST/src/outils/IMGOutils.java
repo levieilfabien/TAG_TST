@@ -218,17 +218,11 @@ public class IMGOutils {
 	    	        		////// REMPLACEMENT /////
 	    	        		// Si P1 & P2 ne sont pas blanc alors P1 est remplacé par P2 (on supperpose les deux)
 	    	        		// On tolère une proximité des pixels de manière à éviter les faux positifs (décalages d'un pixel par exemple)
-		    	        		if (tolerance) {
-		    	        			if(getDistance(p1[i], p2[i]) > seuilTolerance) {
-		    	        				p1[i] = Color.MAGENTA.getRGB();
-		    	        				ajout[i] = Color.GREEN.getRGB();
-		    	        				suppression[i] = Color.MAGENTA.getRGB();
-		    	        		} else {
-		    	        			p1[i] = Color.MAGENTA.getRGB();
-		    	        			ajout[i] = Color.GREEN.getRGB();
-		    	        			suppression[i] = Color.MAGENTA.getRGB();
-		    	        		}		
-	    	        		}
+	    	        		if(!tolerance || (getDistance(p1[i], p2[i]) > seuilTolerance)) {
+    	        				p1[i] = Color.MAGENTA.getRGB();
+    	        				ajout[i] = Color.MAGENTA.getRGB();
+    	        				suppression[i] = Color.MAGENTA.getRGB();
+	    	        		}	
 	    	        	}
 	    	        } 
 	    	        // Rendre transparent les zones communes entre les deux fichiers ?
@@ -241,16 +235,23 @@ public class IMGOutils {
 	    	    final BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
 	    	    out.setRGB(0, 0, w, h, p1, 0, w);
 	    	    saveImage(out, fileName);
-	    	    // Création de l'image d'ajout des nouvelles colorisations de ajout.
-	    	    final BufferedImage imgAjout = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-	    	    imgAjout.setRGB(0, 0, w, h, ajout, 0, w);
-	    	    saveImage(out, fileName);
-	    	    // Création de l'image de suppression des nouvelles colorisations de suppression.
-	    	    final BufferedImage imgSupp = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-	    	    imgSupp.setRGB(0, 0, w, h, suppression, 0, w);
-	    	    saveImage(out, fileName);
-	    	    saveImage(imgAjout, fileName.replace(".png", "ajout.png"));
-	    	    saveImage(imgSupp, fileName.replace(".png", "supp.png"));
+//	    	    // Création de l'image d'ajout des nouvelles colorisations de ajout.
+//	    	    final BufferedImage imgAjout = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+//	    	    imgAjout.setRGB(0, 0, w, h, ajout, 0, w);
+//	    	    saveImage(out, fileName);
+//	    	    // Création de l'image de suppression des nouvelles colorisations de suppression.
+//	    	    final BufferedImage imgSupp = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+//	    	    imgSupp.setRGB(0, 0, w, h, suppression, 0, w);
+//	    	    saveImage(out, fileName);
+	    	    
+	    	    // On produit une image contenant deux sous images, les ajouts et les suppressions.
+	    	    final BufferedImage multi = new BufferedImage(w*2, h, BufferedImage.TYPE_INT_ARGB);
+	    	    multi.setRGB(0, 0, w, h, ajout, 0, w);
+	    	    multi.setRGB(w, 0, w, h, suppression, 0, w);
+	    	    
+//	    	    saveImage(imgAjout, fileName.replace(".png", "ajout.png"));
+//	    	    saveImage(imgSupp, fileName.replace(".png", "supp.png"));
+	    	    saveImage(multi, fileName.replace(".png", "multi.png"));
 	    	}
 	    	return false;
 	    }
@@ -316,7 +317,7 @@ public class IMGOutils {
 	}	
 	
 	
-	public static void main(String args[]) throws SeleniumException {
-		IMGOutils.afficherFichierPNG("C:\\work\\PDF V15.11\\BAD_1_diff.png");
-	}
+//	public static void main(String args[]) throws SeleniumException {
+//		IMGOutils.afficherFichierPNG("C:\\work\\PDF V15.11\\BAD_1_diff.png");
+//	}
 }

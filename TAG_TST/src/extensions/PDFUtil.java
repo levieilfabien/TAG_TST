@@ -373,29 +373,38 @@ public class PDFUtil {
 		return this.comparePdfByImage(file1, file2, startPage, endPage);
 	}		
 	
-   /**
-   * This method reads each page of a given doc, converts to image 
-   * compare. If it fails, exits immediately.
-   */
+
+	/**
+	 * Compare deux fichiers PDF sous forme d'image.
+	 * @param file1 le fichier nouveau
+	 * @param file2 le fichier référence
+	 * @param startPage la page de début, -1 si non connu.
+	 * @param endPage la page de fin, -1 si non connu
+	 * @return true si les documents sont identiques, false sinon.
+	 * @throws IOException en cas d'erreur lors de l'accès aux fichiers ou de la conversion en image.
+	 */
 	private boolean comparePdfByImage(String file1, String file2, int startPage, int endPage) throws IOException{
 		
 		logger.info("file1 : " + file1);
 		logger.info("file2 : " + file2);
 		
+		// Permet d'obtenir le nombre de page des deux documents.
 		int pgCount1 = this.getPageCount(file1);
 		int pgCount2 = this.getPageCount(file2);
 		
-		if(pgCount1!=pgCount2){
+		// Si le nombre de page n'est pas le même entre les deux documents, c'est impossible que la comparaison donne un résultat positif.
+		if (pgCount1 != pgCount2) {
 			logger.warning("Les deux fichiers ne comportent pas le même nombre de page à comparer - on renvoie faux");
 			return false;
 		}
 		
-		if(this.optionSurlignerDifferences)
-			this.creerRepertoireDeSauvegarde(file2);
+		if(this.optionSurlignerDifferences) {
+			creerRepertoireDeSauvegarde(file2);
+		}
 		
-		this.mettreAJourPagesDebutEtFin(file1, startPage, endPage);		
+		mettreAJourPagesDebutEtFin(file1, startPage, endPage);		
 		
-		return this.convertToImageAndCompare(file1, file2, this.pageDebut, this.pageFin);
+		return convertToImageAndCompare(file1, file2, this.pageDebut, this.pageFin);
 	}	
 	
 	/**

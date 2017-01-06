@@ -1,24 +1,37 @@
 package outils;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.codehaus.plexus.util.StringOutputStream;
+
 import outils.DiffOutils.Diff;
 
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.exceptions.UnsupportedPdfException;
 import com.itextpdf.text.io.RandomAccessSourceFactory;
+import com.itextpdf.text.pdf.PRStream;
 import com.itextpdf.text.pdf.PRTokeniser;
+import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfContentParser;
+import com.itextpdf.text.pdf.PdfObject;
 import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.PdfStamper;
 import com.itextpdf.text.pdf.RandomAccessFileOrArray;
 import com.itextpdf.text.pdf.parser.LocationTextExtractionStrategy;
 import com.itextpdf.text.pdf.parser.PdfReaderContentParser;
 import com.itextpdf.text.pdf.parser.PdfTextExtractor;
+import com.itextpdf.text.pdf.parser.SimpleTextExtractionStrategy;
 //import com.itextpdf.text.pdf.parser.PdfTextExtractor;
 import com.itextpdf.text.pdf.parser.TextExtractionStrategy;
+import com.itextpdf.text.pdf.parser.TextMarginFinder;
 
 import constantes.Erreurs;
 import difflib.Delta;
@@ -57,7 +70,18 @@ public class PDFOutils extends PDFUtil {
 	private static List<String> lirePDFBalise(String fichier, List<Integer> listePage, boolean parLigne) {
 		StringBuilder str = new StringBuilder();
 		List<String> retour = new LinkedList<String>();
+		List<String> tempListe = new LinkedList<String>();
 		String temp = new String();
+		
+		// Stocker le précédent bloc
+		float tempX = -1;
+		float tempY = -1;
+		float tempL = -1;
+		float tempH = -1;
+		
+		// Stocker les retangles
+		List<Float[]> rectangles = new LinkedList<Float[]>(); 
+		
 		byte[] tempBrut;
 		TextExtractionStrategy strategy = new LocationTextExtractionStrategy();
 		try {
@@ -77,6 +101,44 @@ public class PDFOutils extends PDFUtil {
 			// Pour chaque page demandées on effectue une analyse séparée
 			for (Integer page : listePage) {
 				strategy = parser.processContent(page, strategy);
+				
+				//Media Box: The 'page size'. The size of the media this PDF page should be printed on.
+				//Crop Box: The size of the finished page. Any difference between media and crop will be cut off in a post processing step. Defaults to the media box.
+				
+				TextMarginFinder finder = parser.processContent(page, new TextMarginFinder());
+				Rectangle mediaBox = reader.getPageSize(page);
+
+				System.out.println("MARGINLeft  : " + finder.getLlx());
+				System.out.println("MARGINBottom: " + finder.getLly());
+				System.out.println("MARGINHeight: " + finder.getHeight());
+				System.out.println("MARGINWidth : " + finder.getWidth());
+				System.out.println("MARGINRight : " + finder.getUrx());
+				System.out.println("MARGINTop   : " + finder.getUry());
+				
+				System.out.println("MEDIALEFT   = " + mediaBox.getLeft());
+				System.out.println("MEDIATOP    = " + mediaBox.getTop());
+				System.out.println("MEDIARIGHT  = " + mediaBox.getRight());
+				System.out.println("MEDIAWIDTH  = " + mediaBox.getWidth());
+
+				
+//		        PdfObject obj;
+//                StringWriter sos = new  StringWriter();
+//		        for (int i = 1; i <= reader.getXrefSize(); i++) {
+//		            obj = reader.getPdfObject(i);
+//		            if (obj != null && obj.isStream()) {
+//		                PRStream stream = (PRStream)obj;
+//		                byte[] b;
+//		                try {
+//		                    b = PdfReader.getStreamBytes(stream);
+//		                } catch(UnsupportedPdfException e) {
+//		                    b = PdfReader.getStreamBytesRaw(stream);
+//		                }
+//		                String s = new String(b, "UTF-8");
+//		                sos.append(s);
+//		            }
+//		        }
+//		        System.out.println(sos);
+				
 				// Obtenir le texte "brut" avec balises
 				tempBrut = reader.getPageContent(page);
 				//System.out.println(new String(tempBrut));	
@@ -87,27 +149,67 @@ public class PDFOutils extends PDFUtil {
 					// String indique une chaine de caractère du document,
 					// number une position et other une balise
 					
-					// Fin de balise = stockage des chaines obtenues, la balise ET est "endtoken".
+					// Detection de fin de balise = stockage des chaines obtenues, la balise ET est "endtoken".
 					if (!parLigne) {
 						if (tokenizer.getTokenType() == PRTokeniser.TokenType.OTHER && tokenizer.getStringValue().toUpperCase().equals("ET")) {
-							retour.add(temp);
+							retour.add(temp + "\t");
 							temp = new String();
 						}
 					} 
-					// Detection de fin de ligne (TJ? TD?)
+					// Detection de fin de ligne (TJ TD sont des fin de lignes)
 					if (tokenizer.getTokenType() == PRTokeniser.TokenType.OTHER && (tokenizer.getStringValue().toUpperCase().equals("TJ") || tokenizer.getStringValue().toUpperCase().equals("TD"))) {
 						if (parLigne) {
-							retour.add(temp);
+							retour.add(temp + "\t");
 							temp = new String();
 						} else {
 							temp = temp.concat("\n");
 						}
 					}
-					// Si le token indique une chaine de carctère (ou une valeur numérique) ou ajoute de la chaine courante au bloc courant
-					if (tokenizer.getTokenType() == PRTokeniser.TokenType.STRING || tokenizer.getTokenType() == PRTokeniser.TokenType.NUMBER) {
-						temp = temp.concat(tokenizer.getStringValue());
+					
+					if (tokenizer.getTokenType() == PRTokeniser.TokenType.NUMBER) {
+						// Les numbers sont en fait des informations numériques sur le bloc
+						int compteur = 0;
+						// On stock les informations
+						while (tokenizer.getTokenType() == PRTokeniser.TokenType.NUMBER) {
+							tempListe.add(tokenizer.getStringValue());
+							tokenizer.nextToken();	
+						}
+						// On regarde si la serie contient les informations de coordonnées
+						if (tempListe.size() > 4) {
+							temp = temp.concat("[" + tempListe.get(tempListe.size() - 2) + "," +  tempListe.get(tempListe.size() - 1) + "]\t");
+							
+//							if (tempX != -1) {
+//								Float[] rectangle = new Float[4];
+//								rectangle[0] = tempListe.get(tempListe.size() - 2)
+//							}
+							
+							// On stocke les informations 
+							tempX = Float.parseFloat(tempListe.get(tempListe.size() - 2)) + finder.getLlx();
+							tempY = Math.abs(finder.getLly() - finder.getUry()) + Float.parseFloat(tempListe.get(tempListe.size() - 1)) ;
+							tempL = 5;
+							tempH = 15;
+							
+							// 7888
+							// 180 pdf = 113 pixel => rapport de 1.6 ?
+							
+							System.out.println("Avant : " + tempListe.get(tempListe.size() - 1) + ", après : " + tempY);
+							
+							Float[] rectangle = new Float[4];
+							rectangle[0] = tempX;
+							rectangle[1] = tempY;
+							rectangle[2] = tempL;
+							rectangle[3] = tempH;
+							rectangles.add(rectangle);
+						}
+						tempListe = new LinkedList<String>();
+						
 					}
 
+					
+					// Si le token indique une chaine de carctère (ou une valeur numérique) ou ajoute de la chaine courante au bloc courant
+					if (tokenizer.getTokenType() == PRTokeniser.TokenType.STRING) {
+						temp = temp.concat(tokenizer.getStringValue()  + "\t");
+					}  
 				}
 
 				// Obtenir le texte sans balises
@@ -116,6 +218,9 @@ public class PDFOutils extends PDFUtil {
 				// Ajouter dans le retour la chaine travaillée
 				// str.append(temp);
 			}
+			
+			surligner(fichier, fichier.replace(".pdf", "_RECT.pdf"), rectangles);
+			
 		} catch (Exception err) {
 			err.printStackTrace();
 		}
@@ -131,6 +236,43 @@ public class PDFOutils extends PDFUtil {
 		return getTextePDF(fichier, null);
 	}
 
+    /**
+     * Parses a PDF and ads a rectangle showing the text margin.
+     * @param src the source PDF
+     * @param dest the resulting PDF
+     */
+    public static void ajouterMarges(String src, String dest)
+        throws IOException, DocumentException {
+        PdfReader reader = new PdfReader(src);
+        PdfReaderContentParser parser = new PdfReaderContentParser(reader);
+        PdfStamper stamper = new PdfStamper(reader, new FileOutputStream(dest));
+        TextMarginFinder finder;
+        for (int i = 1; i <= reader.getNumberOfPages(); i++) {
+            finder = parser.processContent(i, new TextMarginFinder());
+            PdfContentByte cb = stamper.getOverContent(i);
+            cb.rectangle(finder.getLlx(), finder.getLly(),
+                finder.getWidth(), finder.getHeight());
+            cb.stroke();
+        }
+        stamper.close();
+        reader.close();
+    }
+	
+    public static void surligner(String src, String dest, List<Float[]> rectangles) throws IOException, DocumentException {
+        PdfReader reader = new PdfReader(src);
+        PdfStamper stamper = new PdfStamper(reader, new FileOutputStream(dest));
+        PdfContentByte canvas = stamper.getUnderContent(1);
+        canvas.saveState();
+        canvas.setColorFill(BaseColor.YELLOW);
+        for (Float[] rectangle : rectangles) {
+	        canvas.rectangle(rectangle[0], rectangle[1], rectangle[2], rectangle[3]);
+	        canvas.fill();
+        }
+        canvas.restoreState();
+        stamper.close();
+        reader.close();
+    }
+    
 	/**
 	 * Permet de lire le contenu sous forme de chaine de caractère du texte d'un PDF sans tenir compte des balises.
 	 * Les pages spécifiées seront les seules extraites.
@@ -166,43 +308,43 @@ public class PDFOutils extends PDFUtil {
 		return str.toString(); // String.format("%s", str);
 	}
 
-	// /**
-	// * Obtenir le PDF et en lire le contenu
-	// *
-	// * @param pdf_url
-	// * le chemin vers le PDF
-	// * @param listePage
-	// * liste des pages à extraire
-	// * @return le contenu du pdf
-	// */
-	// private static String ReadPDF(String pdf_url, List<Integer> listePage) {
-	// StringBuilder str = new StringBuilder();
-	//
-	// TextExtractionStrategy strategy = new SimpleTextExtractionStrategy();
-	// try {
-	//
-	// PdfReader reader = new PdfReader(pdf_url);
-	// PdfReaderContentParser parser = new PdfReaderContentParser(reader);
-	// int n = reader.getNumberOfPages();
-	// if (listePage == null) {
-	// for (int i = 1; i <= n; i++) {
-	// // str.append(PdfTextExtractor.getTextFromPage(reader, i));
-	// parser.processContent(i, strategy);
-	// str.append(strategy.getResultantText());
-	// }
-	// } else {
-	// for (Integer page : listePage) {
-	// // str.append(PdfTextExtractor.getTextFromPage(reader,
-	// // page));
-	// parser.processContent(page, strategy);
-	// str.append(strategy.getResultantText());
-	// }
-	// }
-	// } catch (Exception err) {
-	// err.printStackTrace();
-	// }
-	// return str.toString(); // String.format("%s", str);
-	// }
+	 /**
+	 * Obtenir le PDF et en lire le contenu
+	 *
+	 * @param pdf_url
+	 * le chemin vers le PDF
+	 * @param listePage
+	 * liste des pages à extraire
+	 * @return le contenu du pdf
+	 */
+	 private static String ReadPDF(String pdf_url, List<Integer> listePage) {
+	 StringBuilder str = new StringBuilder();
+	
+	 TextExtractionStrategy strategy = new SimpleTextExtractionStrategy();
+	 try {
+	
+	 PdfReader reader = new PdfReader(pdf_url);
+	 PdfReaderContentParser parser = new PdfReaderContentParser(reader);
+	 int n = reader.getNumberOfPages();
+	 if (listePage == null) {
+	 for (int i = 1; i <= n; i++) {
+	 // str.append(PdfTextExtractor.getTextFromPage(reader, i));
+	 parser.processContent(i, strategy);
+	 str.append(strategy.getResultantText());
+	 }
+	 } else {
+	 for (Integer page : listePage) {
+	 // str.append(PdfTextExtractor.getTextFromPage(reader,
+	 // page));
+	 parser.processContent(page, strategy);
+	 str.append(strategy.getResultantText());
+	 }
+	 }
+	 } catch (Exception err) {
+	 err.printStackTrace();
+	 }
+	 return str.toString(); // String.format("%s", str);
+	 }
 	
 	/**
 	 * Effectue une comparaison entre deux fichier PDF pour produire une liste de delta à analyser ultérieurement.
@@ -485,6 +627,23 @@ public class PDFOutils extends PDFUtil {
 			try {
 				//PDFOutils.comparerListePDF(new File("C:\\work\\TEST1"), new File("C:\\work\\TEST2"));
 				PDFOutils.comparerListePDF(new File("C:\\work\\PDF V16.03"), new File("C:\\work\\PDF V15.11"));
+//				List<String> retour = PDFOutils.lirePDFBalise("C:\\work\\PDF V16.03\\DEX.pdf", false);
+				
+//				try {
+//					PDFOutils.ajouterMarges("C:\\work\\PDF V16.03\\DEX.pdf", "C:\\work\\PDF V16.03\\DEX2.pdf");
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				} catch (DocumentException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+				
+				//List<String> retour = PDFOutils.lirePDFBalise("C:\\work\\PDF V16.03\\DEX.pdf", false);
+				
+//				for (String balise : retour) {
+//					System.out.println(balise);
+//				}
 			} catch (SeleniumException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
