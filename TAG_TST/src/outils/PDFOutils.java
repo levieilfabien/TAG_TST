@@ -455,6 +455,7 @@ public class PDFOutils extends PDFUtil {
 		try {
 			String diff = produireDiff(getTextePDF(revision.getAbsolutePath()), getTextePDF(reference.getAbsolutePath()));
 			PrintWriter sw = new PrintWriter(fichier + File.separator + "diff" + revision.getName() + ".html", "UTF-8");
+			sw.append("<meta charset=\"UTF-8\">");
 			sw.append("REVISED : " + revision.getAbsolutePath() + " , REFERENCE : " + reference.getAbsolutePath() + " <br>");
 			sw.append(diff);
 			sw.close();
@@ -480,7 +481,8 @@ public class PDFOutils extends PDFUtil {
 		dmp.diff_cleanupEfficiency(diffList);
 
 		// Mise ne forme du diff pour être exploitable.
-		String retour = dmp.diff_prettyHtml(diffList);
+		//String retour = dmp.diff_prettyHtml(diffList);
+		String retour = dmp.diff_UniquementLigneDiff(diffList);
 		diffList.clear();
 		
 		return retour;
@@ -597,7 +599,7 @@ public class PDFOutils extends PDFUtil {
 						// On choisit le fichier dont le nom est le même
 						if (fichierPDF.getName().toUpperCase().equals(fichierPDFCible.getName().toUpperCase())) {
 							try {
-								temp = pdfutil.compare(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath());
+								//temp = pdfutil.compare(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath());
 								//comparaisonTextuelleParBloc(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath());
 								publierDiff(fichierPDF, fichierPDFCible, cheminProduction);
 								retour.add(temp);
@@ -625,8 +627,8 @@ public class PDFOutils extends PDFUtil {
 	 */
 	public static void main(String[] args) {
 			try {
-				//PDFOutils.comparerListePDF(new File("C:\\work\\TEST1"), new File("C:\\work\\TEST2"));
-				PDFOutils.comparerListePDF(new File("C:\\work\\PDF V16.03"), new File("C:\\work\\PDF V15.11"));
+				PDFOutils.comparerListePDF(new File("C:\\work\\TEST1"), new File("C:\\work\\TEST2"));
+				//PDFOutils.comparerListePDF(new File("C:\\work\\PDF V16.03"), new File("C:\\work\\PDF V15.11"));
 //				List<String> retour = PDFOutils.lirePDFBalise("C:\\work\\PDF V16.03\\DEX.pdf", false);
 				
 //				try {

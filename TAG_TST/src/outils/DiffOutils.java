@@ -1421,6 +1421,67 @@ public class DiffOutils {
 	    }
 	    return html.toString();
 	  }
+	  
+	  /**
+	   * Convert a Diff list into a pretty HTML report.
+	   * @param diffs LinkedList of Diff objects.
+	   * @return HTML representation.
+	   */
+	  public String diff_UniquementLigneDiff(LinkedList<Diff> diffs) {
+		  StringBuilder html = new StringBuilder();
+    	// On stocke temporairement les différentes occurences de diff. On doit repéré les fin de ligne
+	     StringBuilder tmpHtml = new StringBuilder();
+    	boolean modif = false;
+    	boolean retourLigne = false;
+    	
+	    for (Diff aDiff : diffs) {
+	  
+	    	String text = aDiff.text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "&para;<br>");
+	    	
+	    	String[] decoupe = text.split("<br>");
+	    	
+	    	for(String ssText : text.split("<br>")) {
+		    	
+		    	// Si on atteint un retour à la ligne alors on considère le fait d'être en fin de ligne et qu'il faut évaluer les modifs à la prochaine itération.
+	    		if (ssText != null && decoupe.length > 1 && !ssText.equals(decoupe[decoupe.length - 1])) {
+	    			ssText = ssText.concat("<br>");
+	    		}
+	    		retourLigne = ssText.contains("&para;") || ssText.contains("<br>");
+		    	
+		    	// On poursuis le traitement du diff suivant
+		    	switch (aDiff.operation) {
+			    	case INSERT:
+			    		tmpHtml.append("<ins style=\"background:#e6ffe6;\">").append(ssText).append("</ins>");
+			    		modif = true;
+			    		break;
+			    	case DELETE:
+			    		tmpHtml.append("<del style=\"background:#ffe6e6;\">").append(ssText).append("</del>");
+			    		modif = true;
+			    	  	break;
+			      	case EQUAL:
+			      		tmpHtml.append("<span>").append(ssText).append("</span>");
+			    	  	break;
+		    	}
+		    	
+		    	// Si on est en fin de ligne, alors on append sinon, non.
+		    	if (retourLigne) {
+			    	if (modif) {
+		    			html.append(tmpHtml.toString());
+		    			//System.out.println("BLOC : " + tmpHtml);
+			    	}  
+//			    	else {
+//		    			System.out.println("Ce bloc ne comporte pas de modifications");
+//		    		}
+		    		tmpHtml = new StringBuilder();
+		    		modif = false;
+		    	}
+		    	
+		    }
+	    }
+	    
+	    
+	    return XMLOutils.entityToHtml(html.toString());
+	  }
 
 	  /**
 	   * Compute and return the source text (all equalities and deletions).
