@@ -2,16 +2,8 @@ package outils;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -69,7 +61,7 @@ public class FichierOutils {
 	 * @return true si un remplacement à eue lieu, false sinon.
 	 * @throws SeleniumException en cas d'erreur d'accès au fichier.
 	 */
-	public Boolean remplacementLigneContenant(File fichier, String sousChaine, String nouvelleChaine) throws SeleniumException {
+	public static Boolean remplacementLigneContenant(File fichier, String sousChaine, String nouvelleChaine) throws SeleniumException {
 		Boolean retour = false;
 	    try {
 	        // On lit le fichier
