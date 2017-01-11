@@ -599,7 +599,7 @@ public class PDFOutils extends PDFUtil {
 						// On choisit le fichier dont le nom est le même
 						if (fichierPDF.getName().toUpperCase().equals(fichierPDFCible.getName().toUpperCase())) {
 							try {
-								//temp = pdfutil.compare(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath());
+								temp = pdfutil.compare(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath());
 								//comparaisonTextuelleParBloc(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath());
 								publierDiff(fichierPDF, fichierPDFCible, cheminProduction);
 								retour.add(temp);

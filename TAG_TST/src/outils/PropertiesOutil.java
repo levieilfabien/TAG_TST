@@ -121,7 +121,7 @@ public class PropertiesOutil {
 		    if (fip != null) {
 		    	properties.load(fip);
 		    	retour = properties.getProperty(clef);
-		    	System.out.println(clef + " = " + retour);	
+		    	//System.out.println(clef + " = " + retour);	
 				return properties.getProperty(clef);
 		    } else {
 		    	return null;
