@@ -49,19 +49,22 @@ public class ZIPOutils {
     				File newFile = new File(outputFolder + File.separator + fileName);
 
     				//System.out.println("Extraction du fichier : "+ newFile.getAbsoluteFile());
-
-    				//create all non exists folders
-    				//else you will hit FileNotFoundException for compressed folder
-    				new File(newFile.getParent()).mkdirs();
-
-    				FileOutputStream fos = new FileOutputStream(newFile);
-
-    				int len;
-    				while ((len = zis.read(buffer)) > 0) {
-    					fos.write(buffer, 0, len);
+    				
+    				// si le fichier existe déjà, impossible de l'extraire
+    				if (!newFile.exists()) {
+	    				//create all non exists folders
+	    				//else you will hit FileNotFoundException for compressed folder
+	    				new File(newFile.getParent()).mkdirs();
+	
+	    				FileOutputStream fos = new FileOutputStream(newFile);
+	
+	    				int len;
+	    				while ((len = zis.read(buffer)) > 0) {
+	    					fos.write(buffer, 0, len);
+	    				}
+	
+	    				fos.close();	
     				}
-
-    				fos.close();
     				
     				if (fileName.equals(fichierAExtraire)) {
     					retour = newFile;
