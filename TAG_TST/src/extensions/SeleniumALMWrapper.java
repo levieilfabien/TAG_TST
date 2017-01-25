@@ -207,7 +207,7 @@ public class SeleniumALMWrapper {
 			//System.setProperty("jacob.dll.path", "C:\\Users\\levieilfa\\git\\Selenium\\TAG_TST\\src\\resources\\jacob-1.18-x64.dll");
 			//System.setProperty("jacob.dll.path", "C:\\Users\\levieilfa\\git\\Selenium\\TAG_TST\\target\\classes\\jacob-1.18-x86.dll");
 			System.setProperty("jacob.dll.path", ALMOutils.getJacobDll(true));
-			System.setProperty("jacob.dll.path", "C:\\Users\\levieilfa\\git\\Selenium\\TAG_TST\\target\\classes\\jacob-1.18-x86.dll");
+			//System.setProperty("jacob.dll.path", "C:\\Users\\levieilfa\\git\\Selenium\\TAG_TST\\target\\classes\\jacob-1.18-x86.dll");
 			
 			ActiveXComponent activexObject = new ActiveXComponent("TDApiOle80.TDConnection");
 
