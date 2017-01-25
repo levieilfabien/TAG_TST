@@ -627,8 +627,8 @@ public class PDFOutils extends PDFUtil {
 	 */
 	public static void main(String[] args) {
 			try {
-				PDFOutils.comparerListePDF(new File("C:\\work\\TEST1"), new File("C:\\work\\TEST2"));
-				//PDFOutils.comparerListePDF(new File("C:\\work\\PDF V16.03"), new File("C:\\work\\PDF V15.11"));
+				//PDFOutils.comparerListePDF(new File("C:\\work\\TEST1"), new File("C:\\work\\TEST2"));
+				PDFOutils.comparerListePDF(new File("C:\\work\\PDF V16.03"), new File("C:\\work\\PDF V15.11"));
 //				List<String> retour = PDFOutils.lirePDFBalise("C:\\work\\PDF V16.03\\DEX.pdf", false);
 				
 //				try {

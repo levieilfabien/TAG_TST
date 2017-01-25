@@ -201,11 +201,13 @@ public class SeleniumALMWrapper {
 		try {
 			//Rustine pour forcer la lecture d'une version de Jacob
 			//System.setProperty("jacob.dll.path", "C:\\Windows\\System32\\jacob-1.18-x64.dll");
+			
 			//TODO Mettre en place référence dynamique
 			//System.setProperty("jacob.dll.path", "C:\\Users\\levieilfa\\git\\Selenium\\TAG_TST\\src\\resources\\jacob-1.18-x86.dll");
 			//System.setProperty("jacob.dll.path", "C:\\Users\\levieilfa\\git\\Selenium\\TAG_TST\\src\\resources\\jacob-1.18-x64.dll");
 			//System.setProperty("jacob.dll.path", "C:\\Users\\levieilfa\\git\\Selenium\\TAG_TST\\target\\classes\\jacob-1.18-x86.dll");
 			System.setProperty("jacob.dll.path", ALMOutils.getJacobDll(true));
+			System.setProperty("jacob.dll.path", "C:\\Users\\levieilfa\\git\\Selenium\\TAG_TST\\target\\classes\\jacob-1.18-x86.dll");
 			
 			ActiveXComponent activexObject = new ActiveXComponent("TDApiOle80.TDConnection");
 

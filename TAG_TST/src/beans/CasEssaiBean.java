@@ -83,7 +83,7 @@ public class CasEssaiBean implements Serializable {
 	/**
 	 * Nom exact du cas de test dans test plan (onglet execution_grid du testLab)
 	 */
-	private String nomTestPlan;
+	private String nomTestPlan = null;
 	
 	/**
 	 * Sous cas d'essai ayant leurs propres objectifs.

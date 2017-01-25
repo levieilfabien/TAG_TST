@@ -3,7 +3,6 @@ package outils;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.List;
 import java.util.regex.Matcher;
 
 import org.apache.log4j.Logger;
@@ -20,7 +19,6 @@ import com.jacob.com.LibraryLoader;
 
 import constantes.Erreurs;
 import exceptions.SeleniumException;
-import extensions.NativeLibraries;
 import extensions.SeleniumALMWrapper;
 import extensions.interfaces.IALMRun;
 import extensions.interfaces.IALMTestCase;
@@ -144,22 +142,41 @@ public class ALMOutils {
 			bit32 = "32".equals(System.getProperty("sun.arch.data.model"));
 		}
 		// On souhaites utiliser l'implémentation 32bit ou 64bit ?
-		String cheminDll = bit32?/*RESOURCES + */JACOB_X86:/*RESOURCES + */JACOB_X64;
-		// On récupère le dll correspondant dans le répertoire "resources".
+		String cheminDll = bit32?JACOB_X86:JACOB_X64;
+		
+		// On récupère le dll correspondant dans le répertoire "resources", n'est pas cohérent, car ce n'est pas le projet qui porte le DLL JACOB
 		//String retour = PropertiesOutil.class.getClassLoader().getResource(cheminDll).getFile().substring(1);
 		// Les resources ne devrais pas être stockées dans le repertoire du projet utilisateur mais dans le framework on récupère donc dans le code de TAG_TST
-		String retour = PropertiesOutil.class.getProtectionDomain().getCodeSource().getLocation().getPath().substring(1) + cheminDll;
+		String retour = PropertiesOutil.class.getProtectionDomain().getCodeSource().getLocation().getPath().substring(1);
 		
+		// Identification de la source
+		if (retour.endsWith("jar")) {
+			System.out.println("Exécution depuis un fichier jar");
+			// On extrait le fichier dll du jar dans le repertoire parent.
+			retour = ZIPOutils.unZip(retour, new File(retour).getParent(), cheminDll).getAbsolutePath();
+		} else {
+			System.out.println("Exécution depuis un workspace");
+			// On ajoute l'information du dll au repertoire de ressource
+			retour = retour + cheminDll;
+		}
+		
+		// Si le chemin contient des caractères interdit en UTF8 on effectue un décodage.
 		try {
 			retour = URLDecoder.decode(retour, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			retour = URLDecoder.decode(retour);
 		}
+		
+		// Si le chemin ne finie pas par l'extension dll, des caractères parasites peuvent être présent, on les supprimes.
 		while (!retour.endsWith("dll")) {
 			retour = retour.substring(0, retour.length() - 2);
 		}
+		
+		// Suppression & Remplacement des séparateur incorrect ou dédoublé dans le chemin
 		retour = retour.replaceAll("\\\\", Matcher.quoteReplacement(File.separator));
 		retour = retour.replaceAll(Matcher.quoteReplacement("/"), Matcher.quoteReplacement(File.separator));
+		
+		// Affichage du chemin pour des besoin de déboggage.
 		System.out.println(retour);
 		return retour;
 	}
@@ -268,10 +285,14 @@ public class ALMOutils {
 		// On vérifie les données pour ALM.
 		if (casEssai.getAlm()) {
 			// Si le test plan n'est pas renseigné c'est qu'on est sur un scénario. Mais les autres informations sont requises
-			System.out.println("Mise à jour dans ALM de " + casEssai.getNomTestLab() + ":" + casEssai.getNomTestPlan() + ":" + casEssai.getIdUniqueTestLab());
-			if (casEssai.getNomTestLab() != null && casEssai.getCheminTestLab() != null && casEssai.getIdUniqueTestLab() != 0) {
+			System.out.println("Mise à jour dans ALM de " + casEssai.getCheminTestLab() + ":" + casEssai.getNomTestLab() + ":" + casEssai.getNomTestPlan() + ":" + casEssai.getIdUniqueTestLab());
+			if (casEssai.getNomTestLab() != null && casEssai.getCheminTestLab() != null && casEssai.getIdUniqueTestLab() > 0) {
 				valide = true;
-				System.out.println("Mise à jour dans ALM de " + casEssai.getNomTestLab() + ":" + casEssai.getNomTestPlan() + ":" + casEssai.getIdUniqueTestLab());
+				System.out.println("Chemin dans le test Lab : " + casEssai.getNomTestLab());
+				System.out.println("Nom dans le test Lab : " + casEssai.getNomTestLab());
+				System.out.println("ID dans le test Lab : " + casEssai.getIdUniqueTestLab());
+				System.out.println("Nom dans le test plan : " + casEssai.getNomTestPlan());
+				//System.out.println("Mise à jour dans ALM de " + casEssai.getCheminTestLab() + ":" + casEssai.getNomTestLab() + ":" + casEssai.getNomTestPlan() + ":" + casEssai.getIdUniqueTestLab());
 			}
 		}
 		// On vérifie si le cas d'essai est unique ou pas. Le test plan n'est renseigné que pour un "Cas de Test" pas un "Scénario".
@@ -351,6 +372,8 @@ public class ALMOutils {
 		
 		//miseAJourTest(wrapper, "POC Selenium\\IZIVENTE", "SC03 - Souscription distributeur TRAVAUX CE", "SC03 - IZIVENTE_Distributeur_Travaux", 49375, StatusAs.PASSED);
 		//wrapper.close();
+		
+		getJacobDll(true);
 		
 	}
 }
