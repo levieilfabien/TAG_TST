@@ -48,6 +48,7 @@ public class ALMOutils {
 	 * @param project le projet de test.
 	 * @return le dispatch vers ALM.
 	 */
+	@Deprecated
 	public static Dispatch connectionALMJacob(String login, String password, String domain, String project) {
 		try{
 			System.setProperty("jacob.dll.path", getJacobDll(true));
@@ -288,11 +289,10 @@ public class ALMOutils {
 			System.out.println("Mise à jour dans ALM de " + casEssai.getCheminTestLab() + ":" + casEssai.getNomTestLab() + ":" + casEssai.getNomTestPlan() + ":" + casEssai.getIdUniqueTestLab());
 			if (casEssai.getNomTestLab() != null && casEssai.getCheminTestLab() != null && casEssai.getIdUniqueTestLab() > 0) {
 				valide = true;
-				System.out.println("Chemin dans le test Lab : " + casEssai.getNomTestLab());
-				System.out.println("Nom dans le test Lab : " + casEssai.getNomTestLab());
-				System.out.println("ID dans le test Lab : " + casEssai.getIdUniqueTestLab());
-				System.out.println("Nom dans le test plan : " + casEssai.getNomTestPlan());
-				//System.out.println("Mise à jour dans ALM de " + casEssai.getCheminTestLab() + ":" + casEssai.getNomTestLab() + ":" + casEssai.getNomTestPlan() + ":" + casEssai.getIdUniqueTestLab());
+//				System.out.println("Chemin dans le test Lab : " + casEssai.getNomTestLab());
+//				System.out.println("Nom dans le test Lab : " + casEssai.getNomTestLab());
+//				System.out.println("ID dans le test Lab : " + casEssai.getIdUniqueTestLab());
+//				System.out.println("Nom dans le test plan : " + casEssai.getNomTestPlan());
 			}
 		}
 		// On vérifie si le cas d'essai est unique ou pas. Le test plan n'est renseigné que pour un "Cas de Test" pas un "Scénario".
@@ -304,6 +304,7 @@ public class ALMOutils {
 			//System.out.println("Mise à jour dans ALM de " + casEssai.getNomTestLab() + ":" + casEssai.getNomTestPlan());
 			// Si le cas est unique on met à jour le "Cas de test" (Test) dans le "scénario" (Test Set) en lui ajoutant un "Run".
 			if (casUnique) {
+				//System.out.println("C'est un cas UNIQUE");
 				try {
 					// TODO Faire une version paramètrable
 					SeleniumALMWrapper wrapper = myConnectionALMWrapper();
@@ -340,6 +341,7 @@ public class ALMOutils {
 					throw new SeleniumException(Erreurs.E032, "Impossible de mettre à jour l'état du cas de test dans ALM : " + e.getMessage());
 				}
 			} else {
+				//System.out.println("C'est un cas MULTIPLE (TestPlan non renseigné)");
 				// Si le cas d'essai en contient d'autres, on boucle sur chaucun d'entre eux.
 				for (CasEssaiBean sousCas : casEssai.getTests()) {
 					System.out.println("=> Mise à jour dans ALM de " + sousCas.getNomTestLab() + ":" + sousCas.getNomTestPlan());

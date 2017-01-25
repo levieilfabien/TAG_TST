@@ -114,8 +114,7 @@ public class SeleniumALMWrapper {
 				tsTest.post();
 				return tsTest;
 			}
-			//TODO A supprimer
-			System.out.println(tsTest.getTestName());
+			//System.out.println(tsTest.getTestName());
 		}
 		throw new ALMServiceException("Impossible de trouver le test portant le nom de \"" + tcName + "\"");
 	}
