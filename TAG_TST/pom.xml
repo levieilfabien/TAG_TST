@@ -17,40 +17,18 @@
 			</testResource>
 		</testResources>
 		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
-				</configuration>
-			</plugin>
-			
-						<!-- Maven Assembly Plugin -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.4.1</version>
-				<configuration>
-					<!-- get all project dependencies -->
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-
-				</configuration>
-				<executions>
-				  <execution>
-					<id>make-assembly</id>
-                                        <!-- bind to the packaging phase -->
-					<phase>package</phase> 
-					<goals>
-						<goal>single</goal>
-					</goals>
-				  </execution>
-				</executions>
-			</plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.6.1</version>
+            <configuration>
+               <source>1.8</source>
+               <target>1.8</target>
+            </configuration>
+         </plugin>
 		</plugins>
 	</build>
+	
 	<dependencies>
 		<dependency>
 			<groupId>jp.skypencil.java-diff-utils</groupId>
@@ -132,16 +110,6 @@
 			<version>1.0.1</version>
 		</dependency>
 		<dependency>
-			<groupId>org.sikuli</groupId>
-			<artifactId>sikuli-api</artifactId>
-			<version>1.0.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.sikuli</groupId>
-			<artifactId>sikuli-core</artifactId>
-			<version>1.1.0</version>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-vfs2</artifactId>
 			<version>2.0</version>
@@ -156,22 +124,15 @@
 			<artifactId>jsch</artifactId>
 			<version>0.1.42</version>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.sikuli</groupId>
 			<artifactId>sikuli-script</artifactId>
 			<version>X-1.0rc3</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
 			<artifactId>selenium-java</artifactId>
-			<version>2.47.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.seleniumhq.selenium</groupId>
-			<artifactId>selenium-parent</artifactId>
-			<version>2.47.1</version>
-			<type>pom</type>
-			<scope>import</scope>
+			<version>3.0.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>

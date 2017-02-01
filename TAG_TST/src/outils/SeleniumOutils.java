@@ -89,7 +89,7 @@ public class SeleniumOutils {
 	
 	public void ajouterListener() {
 		EventFiringWebDriver eventDriver = new EventFiringWebDriver(driver);
-		eventDriver.register(new SeleniumListener());
+		//eventDriver.register(new SeleniumListener());
 		
 		// ((EventFiringWebDriver) driver).register(new SeleniumListener()); 
 	}
@@ -685,6 +685,9 @@ public class SeleniumOutils {
 		        		return retour;
 		        	} catch (SeleniumException e) {
 		        		// L'élément n'est pas encore présent.
+		        		return false;
+		        	} catch (StaleElementReferenceException ex) {
+		        		// L'élément n'est plus présent.
 		        		return false;
 		        	}
 		        }

@@ -86,5 +86,29 @@ public class GenericListener implements WebDriverEventListener {
 		// TODO Auto-generated method stub
 			System.out.println("Un script !!");
 		}
+
+		@Override
+		public void beforeNavigateRefresh(WebDriver driver) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void afterNavigateRefresh(WebDriver driver) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void beforeChangeValueOf(WebElement element, WebDriver driver, CharSequence[] keysToSend) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void afterChangeValueOf(WebElement element, WebDriver driver, CharSequence[] keysToSend) {
+			// TODO Auto-generated method stub
+			
+		}
 		 
 }

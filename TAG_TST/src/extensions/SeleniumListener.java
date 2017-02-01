@@ -5,14 +5,13 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.events.WebDriverEventListener;
 
-public class SeleniumListener implements WebDriverEventListener {
+public abstract class SeleniumListener implements WebDriverEventListener {
 	
 	@Override
 	public void beforeClickOn(WebElement arg0, WebDriver arg1) {
 		System.out.println("On va cliquer sur : " + arg0.getTagName() + " " + arg0.getText());
 	}
 
-	@Override
 	public void afterChangeValueOf(WebElement arg0, WebDriver arg1) {
 		System.out.println("On a cliquer sur : " + arg0.getTagName() + " " + arg0.getText());
 	}
@@ -53,7 +52,6 @@ public class SeleniumListener implements WebDriverEventListener {
 		
 	}
 
-	@Override
 	public void beforeChangeValueOf(WebElement arg0, WebDriver arg1) {
 		// TODO Auto-generated method stub
 		
