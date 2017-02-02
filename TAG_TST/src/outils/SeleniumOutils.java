@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 
@@ -86,6 +87,11 @@ public class SeleniumOutils {
 	 * Le repertoire racine pour l'écriture d'objet.
 	 */
 	private String repertoireRacine = ".";
+	
+	/**
+	 * L'attente maximale autorisée pour les fonctions d'attentes.
+	 */
+	private int attenteMax = 30;
 	
 	public void ajouterListener() {
 		EventFiringWebDriver eventDriver = new EventFiringWebDriver(driver);
@@ -472,7 +478,7 @@ public class SeleniumOutils {
 	    	if (testerPresenceAlerteJavascript()) {
 	    		accepterAlerteJavascript();
 	    	}    	
-			(new WebDriverWait(driver, 7)).until(new ExpectedCondition<Boolean>() {
+			(new WebDriverWait(driver, attenteMax)).until(new ExpectedCondition<Boolean>() {
 		        public Boolean apply(WebDriver d) {
 		            return changerDeFenetre(titre).getTitle().toLowerCase().startsWith(titre.toLowerCase());
 		        }
@@ -508,7 +514,7 @@ public class SeleniumOutils {
 	 * @throws SeleniumException en cas d'erreur.
 	 */
 	public void attendrePresenceTexte(final String frame, final String texte) throws SeleniumException {
-		attendrePresenceTexte(frame, texte, 10);
+		attendrePresenceTexte(frame, texte, attenteMax);
 	}
 	
 	/**
@@ -547,7 +553,7 @@ public class SeleniumOutils {
 	 * @throws SeleniumException en cas d'erreur.
 	 */
 	public void attendreNonPresenceTexte(final String texte) throws SeleniumException {
-		attendreNonPresenceTexte(texte, 30);
+		attendreNonPresenceTexte(texte, attenteMax);
 	}
 	
 	/**
@@ -666,7 +672,7 @@ public class SeleniumOutils {
 	    try {
 	    	logger("On attend le chargement de l'élément " + cible.getClef() + " : " + cible.lister() + " (Frame : " + cible.getFrame() + ")");
 	    	final By critere = cible.creerBy();
-			(new WebDriverWait(driver, 10)).until(new ExpectedCondition<Boolean>() {
+			(new WebDriverWait(driver, attenteMax)).until(new ExpectedCondition<Boolean>() {
 		        public Boolean apply(WebDriver driver) {
 		        	try {
 		        		Boolean retour = false;
@@ -700,7 +706,9 @@ public class SeleniumOutils {
 	/**
 	 * Fonction temporaire pour une attente. Meilleure solution à trouver.
 	 * @param nbSec le nombre de seconde d'attente
+	 * @deprecated cette fonction est à éviter, préférez les fonction d'attente d'éléments.
 	 */
+	@Deprecated
 	public void attendre(long nbSec) {
 	    try {;
 	    	logger("On attend pendant " + nbSec + " secondes.");
@@ -750,7 +758,7 @@ public class SeleniumOutils {
 	 * @throws SeleniumException en cas d'erreur (ou si la cible ne disparais pas).
 	 */
 	public void attendreDisparitionElement(final CibleBean cible) throws SeleniumException {
-		attendreDisparitionElement(cible, 10);
+		attendreDisparitionElement(cible, attenteMax);
 	}
 	
 	/**
@@ -1857,16 +1865,19 @@ public class SeleniumOutils {
 
 	/**
 	 * Constructeur pour la boite à outil.
+	 * Fixe le temps d'attente implicite à 10 secondes.
 	 * @param driver le driver émulant firefox.
 	 */
 	public SeleniumOutils(GenericDriver driver) {
 		super();
 		this.typeImpl = GenericDriver.FIREFOX_IMPL;
 		this.driver = driver;
+		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 	}
 
 	/**
 	 * Constructeur pour la boite à outil.
+	 * Fixe le temps d'attente implicite à 10 secondes.
 	 * @param driver le driver.
 	 * @param typeImpl l'implémentation à utiliser.
 	 */
@@ -1874,6 +1885,7 @@ public class SeleniumOutils {
 		super();
 		this.typeImpl = typeImpl;
 		this.driver = driver;
+		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 	}
 	
 	/**
