@@ -386,10 +386,15 @@ public class CasEssaiBean implements Serializable {
 	}
 
 	public String getRegistreExecutionTail() {
+		//TODO trouver une autre solution.
+		String retour = "";
 		if (registreExecution.length() > 30000) {
-			return registreExecution.substring(30001, registreExecution.length());
+			retour = registreExecution.substring(30001, registreExecution.length());
 		}
-		return "";
+		if (retour.length() > 30000) {
+			retour = "Logs trop importants pour être présentés ici";
+		}
+		return retour;
 	}
 
 	public EnvironementDeTest getEnvironement() {

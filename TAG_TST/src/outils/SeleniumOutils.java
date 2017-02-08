@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.text.Normalizer;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,10 +18,6 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
-
-import moteurs.FirefoxImpl;
-import moteurs.GenericDriver;
-import moteurs.IEImpl;
 
 import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.Alert;
@@ -58,7 +55,9 @@ import beans.RGMBean;
 import constantes.Clefs;
 import constantes.Erreurs;
 import exceptions.SeleniumException;
-import extensions.SeleniumListener;
+import moteurs.FirefoxImpl;
+import moteurs.GenericDriver;
+import moteurs.IEImpl;
 
 /**
  * Boite à outil contenant l'ensemble des fonctionnalités communes aux différentes implémentation du driver.
@@ -91,7 +90,7 @@ public class SeleniumOutils {
 	/**
 	 * L'attente maximale autorisée pour les fonctions d'attentes.
 	 */
-	private int attenteMax = 30;
+	private int attenteMax = 15;
 	
 	public void ajouterListener() {
 		EventFiringWebDriver eventDriver = new EventFiringWebDriver(driver);
@@ -693,7 +692,7 @@ public class SeleniumOutils {
 		        		// L'élément n'est pas encore présent.
 		        		return false;
 		        	} catch (StaleElementReferenceException ex) {
-		        		// L'élément n'est plus présent.
+		        		// L'élément n'est plus présent, la référence est donc obselète.
 		        		return false;
 		        	}
 		        }
@@ -743,6 +742,7 @@ public class SeleniumOutils {
 		        	} catch (SeleniumException e) {
 		        		return true;
 		        	} catch (StaleElementReferenceException ex) {
+		        		// La référence vers l'objet est obselète. L'objet n'est donc normalement plus présent
 		        		return true;
 		    	    }
 		        }
@@ -919,10 +919,19 @@ public class SeleniumOutils {
 			if (temp != null) {
 				temp.click();
 			} else {
+				// L'objet n'est pas trouvé dans la page.
 				throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est pas visible.");
 			}
 		} catch (StaleElementReferenceException ex) {
-			throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est plus disponible (rechargement?).");
+			// L'objet qu'on cherche à cliquer n'est plus présent : la référence est obselète
+			try {
+				// On tente à nouveau le clique avec une référence directe, si c'est à nouveau un échec on conclue sur une impossibilité.
+				obtenirElementVisible(cible).click();
+			} catch (StaleElementReferenceException ex2) {
+				throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est plus disponible (rechargement?).");
+			} catch (NullPointerException ex2) {
+				throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est pas visible.");
+			}
 		}
 	}
 	
@@ -1069,23 +1078,57 @@ public class SeleniumOutils {
 	 * @throws SeleniumException en cas d'erreur.
 	 */
 	public WebElement obtenirElementVisible(CibleBean cible, boolean obligatoire) throws SeleniumException {
+		
+		// On essai d'obtenir la liste des éléments pouvant correspondre à la demande.
+		List<WebElement> liste = new ArrayList<WebElement>();
 		try {
-			for (WebElement element : obtenirElements(cible.getFrame(), cible.creerBy())) {
-				if (element.isDisplayed() && element.isEnabled()) {
-					return element;
-				}
-			}
-		} catch (UnhandledAlertException ex) {
-			throw new SeleniumException(Erreurs.E019, "Popup " + ex.getAlertText() + " lors de la recherche de : " + cible.lister() + "");
-		} catch (StaleElementReferenceException ex) {
-			throw new SeleniumException(Erreurs.E023, "Impossible d'atteindre l'élement lors de la recherche de : " + cible.lister() + "");
+			liste = obtenirElements(cible.getFrame(), cible.creerBy());		
 		} catch (SeleniumException ex) {
+			// Si la liste est vide, on génère une erreur ou un retour à vide.
 			if (ex.getInformations() == Erreurs.E009 && !obligatoire) {
 				logger("Pas d'objet répondants aux critères " + cible.toString());
 				return null;
 			} else {
 				throw ex;
 			}
+		}
+		
+		// On parcours la liste jusqu'à obtenir un élément correspond à la demande.
+		try {		
+			for (WebElement element : liste) {
+				try {
+					if (element.isDisplayed() && element.isEnabled()) {
+						return element;
+					} 
+				} catch (StaleElementReferenceException ex) {
+					// Le fait qu'une référence à un des objets trouvé soit obselète ne signifie pas qu'on ne peux pas intéragir avec.
+					// On rafraichie les référence et on tente à nouveau.
+					liste = obtenirElements(cible.getFrame(), cible.creerBy());	
+					for (WebElement elementBis : liste) {
+						try {
+							if (elementBis.isDisplayed() && elementBis.isEnabled()) {
+								return elementBis;
+							} 
+						} catch (StaleElementReferenceException exBis) {
+							// Si la nouvelle tentative redonne une erreur de référence on la signale.
+							throw new SeleniumException(Erreurs.E023, "Impossible d'atteindre l'élement lors de la recherche de : " + cible.lister() + " la référence vers l'objet est obselète.");
+						}
+					}
+					// Si la nouvelle tentative ne donne rien et ne génère pas d'exception, alors aucun élément ne répond au besoin, on renverra null.
+					break;
+				}
+			}
+		} catch (UnhandledAlertException ex) {
+			// Si on recontre une popup bloquant l'IHM, on renvoie une erreur bloquante.
+			throw new SeleniumException(Erreurs.E019, "Popup " + ex.getAlertText() + " lors de la recherche de : " + cible.lister() + "");
+		} 
+		
+		// Si on est parvenu jusqu'ici, c'est qu'aucun élément trouvé ne correspond à la demande. Si la recherche étais obligatoire on génère une erreur
+		// Sinon on renvoie null.
+		if(!obligatoire) {
+			logger("Pas d'objet répondants aux critères " + cible.toString());
+		} else {
+			throw new SeleniumException(Erreurs.E009, "Pas d'élément répondant aux criètres de recherche de : " + cible.lister());
 		}
  		return null;
 	}
@@ -1285,7 +1328,7 @@ public class SeleniumOutils {
 			ex.printStackTrace();
 			throw new SeleniumException(ex, "(Selecteur : " + cible.lister() + ", Valeur : " + libelle + ")");
 		} catch (StaleElementReferenceException ex) {
-			//ex.printStackTrace();
+			ex.printStackTrace();
 			throw new SeleniumException(Erreurs.E023, "(Selecteur : " + cible.lister() + ", Valeur : " + libelle + ")");
 		}
 		
