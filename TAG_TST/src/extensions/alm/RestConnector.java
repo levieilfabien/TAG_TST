@@ -93,7 +93,6 @@ public class RestConnector {
      * @return l'url complètée avec le paramètre path.
      */
     public String buildUrl(String path) {
-
         return String.format("%1$s/%2$s", serverUrl, path);
     }
 
@@ -111,8 +110,32 @@ public class RestConnector {
     public void setCookies(Map<String, String> cookies) {
         this.cookies = cookies;
     }
+    
+    /**
+     * Renvoie l'url vers le serveur ALM paramètrée dans le connecteur.
+     * @return l'url vers le serveur.
+     */
+    public String getServerUrl() {
+		return serverUrl;
+	}
 
     /**
+     * Renvoie le domaine paramètré lors de l'initialisation.
+     * @return le domaine
+     */
+	public String getDomain() {
+		return domain;
+	}
+
+    /**
+     * Renvoie le projet paramètré lors de l'initialisation.
+     * @return le projet
+     */
+	public String getProject() {
+		return project;
+	}
+
+	/**
      * Effectue une commande HTTP Put.
      * @param url l'url destinatrice du PUT.
      * @param data les données à transmettre dans le PUT.

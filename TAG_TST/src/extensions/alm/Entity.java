@@ -134,6 +134,23 @@ public class Entity {
     	}
         this.getFields().field.add(new Field(name, value));
     }
+    
+    /**
+     * Permet d'obtenir un champ dont le nom est connu appartenant à une entité.
+     * Si il existe plusieurs occurence de ce même champ, seul la première occurence sera renvoyée.
+     * @param name le nom du champ que l'on cherche.
+     * @return le champ demandé, ou null si il n'est pas trouvé.
+     */
+    public Field obtenirChamp(String name) {
+    	if (this.getFields() != null) {
+    		for (Field champ : this.getFields().getField()) {
+    			if (name.equals(champ.getName())) {
+    				return champ;
+    			}
+     		}
+    	}
+        return null;
+    }
 
     /**
      * Gets the value of the type property.
@@ -278,6 +295,8 @@ public class Entity {
             	name = name2;
             	value = Arrays.asList(value2);
 			}
+            
+            public Field() {}
 
 			/**
              * Gets the value of the value property.

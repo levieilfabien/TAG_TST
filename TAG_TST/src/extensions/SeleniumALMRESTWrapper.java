@@ -1,6 +1,7 @@
 package extensions;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Date;
@@ -8,9 +9,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.io.Files;
+
+import beans.CasEssaiBean;
+import beans.ObjectifBean;
+import constantes.Erreurs;
+import exceptions.SeleniumException;
 import extensions.alm.Assert;
 import extensions.alm.Base64Encoder;
 import extensions.alm.Constants;
+import extensions.alm.Entities;
 import extensions.alm.Entity;
 import extensions.alm.Entity.Fields.Field;
 import extensions.alm.EntityDescriptor;
@@ -31,7 +39,7 @@ public class SeleniumALMRESTWrapper {
      * @throws Exception en cas d'erreur.
      */
     public static void main(String[] args) throws Exception {
-    	
+    	// TODO à réaliser en amont de l'initialisation.
     	// On prépare l'URL. Si le port n'est pas précisé c'est qu'on en utilise pas.
     	String url = "https://" + Constants.HOST;
     	if (Constants.PORT != null) {
@@ -55,7 +63,18 @@ public class SeleniumALMRESTWrapper {
 //	        	run.ajouterChamp("owner", "levieilfa");
 //	        	run.ajouterChamp("subtype-id", "hp.qc.run.MANUAL");
 //	        	run.ajouterChamp("status", "Passed");
-	    		String url_run = wrapper.creerRun("Run_TEST", "417693", "76408", "levieilfa", true);
+	    		//String url_run = wrapper.creerRun("Run_TEST", "417693", "49375", "76408", Constants.USERNAME, true);
+	    		
+	    		//https://hpalm.intranatixis.com/qcbin/rest/domains/NATIXIS_FINANCEMENT/projects/CREDIT_CONSOMMATION/test-instances/417693
+	    		// TODO l'idée est de récupérer la test instant à partir de l'id du scenario et de l'id du test (attention, n'autorise pas les doublons !)
+	    		
+	    		String url_run = wrapper.creerRun("Run_TEST", null, "49375", "76408", Constants.USERNAME, true);
+	    		
+	    		// cycle-id = 49375
+	    		// test-id = 76408
+	    		//https://hpalm.intranatixis.com/qcbin/rest/domains/NATIXIS_FINANCEMENT/projects/CREDIT_CONSOMMATION/test-instances?query={cycle-id[49375];test-id[76408];}
+	    		//https://hpalm.intranatixis.com/qcbin/rest/domains/NATIXIS_FINANCEMENT/projects/CREDIT_CONSOMMATION/test-instances?query={cycle-id[49375];test-id[76408];}
+	    		//String url_run = wrapper.creerRun("Run_TEST", "417693", "49375", "76408", Constants.USERNAME, true);
 	    		
 	    		System.out.println(url_run);
 	    		
@@ -68,7 +87,7 @@ public class SeleniumALMRESTWrapper {
 	    		System.out.println("Impossible !");
 	    	}
     	}
-    	wrapper.logout();
+    	wrapper.deconnexion();
     }
 
     
@@ -77,9 +96,8 @@ public class SeleniumALMRESTWrapper {
      * @param serverUrl l'url vers le serveur (finissant par /qcbin)
      * @param domain le domaine concernée
      * @param project le projet concerné
-     * @throws Exception en cas d'erreur.
      */
-    public void initialisation(final String serverUrl, final String domain, final String project) throws Exception {
+    public void initialisation(final String serverUrl, final String domain, final String project) {
     	con = RestConnector.getInstance().init(new HashMap<String, String>(), serverUrl, domain, project);
     }
     
@@ -89,41 +107,6 @@ public class SeleniumALMRESTWrapper {
      */
     public void ouvrirSessionQC() throws Exception {
     	con.getQCSession();
-    }
-    
-    /**
-     * Test une connexion et une déconnexion l'une après l'autre.
-     * @param serverUrl l'url du serveur
-     * @param domain le domaine
-     * @param project le projet
-     * @param username l'utilisateur (le login)
-     * @param password le mot de passe
-     * @throws Exception en cas d'erreur lors de la connexion.
-     */
-    public void testConnexion(final String serverUrl, final String domain, final String project, String username, String password) throws Exception {
-    	
-    	// On configure la connexion REST.
-        RestConnector con = RestConnector.getInstance().init(new HashMap<String, String>(), serverUrl, domain, project);
-        // Initialisation de l'outil
-        SeleniumALMRESTWrapper example = new SeleniumALMRESTWrapper();
-
-        //On utilise une fonction nous indiquant si la connexion est active ou non. Si elle ne l'est pas on obtiens l'url de connexion.
-        String authenticationPoint = example.obtenirURLConnexion();
-        Assert.assertTrue("La connexion est déjà active. Impossible à cette étape.", authenticationPoint != null);
-
-        //Une connexion s'effectue vers l'url renvoyer lors de l'étape précédente.
-        boolean loginResponse = example.login(authenticationPoint, username, password);
-        Assert.assertTrue("La connexion est impossible, mauvais mot de passe?", loginResponse);
-        Assert.assertTrue("La connexion n'as pas creer l'indispensable Light Weight Single Sign On(LWSSO) cookie.", con.getCookieString().contains("LWSSO_COOKIE_KEY"));
-
-        //Vérification de la connexion : la fonction isAuthenticated renvoie null.
-        Assert.assertNull("La connexion à été perdue (où n'as jamais été établie).", example.obtenirURLConnexion());
-
-        //On se déconnecte.
-        example.logout();
-
-        //Vérification de la déconnexion
-        Assert.assertNotNull("La connexion est toujours active malgré la demande de déconnexion.", example.obtenirURLConnexion());
     }
 
 	/**
@@ -181,7 +164,7 @@ public class SeleniumALMRESTWrapper {
      * @return true si la déconnexion à fonctionée, false sinon
      * @throws Exception en cas d'erreur.
      */
-    public boolean logout() throws Exception {
+    public boolean deconnexion() throws Exception {
 
 	    //note the get operation logs us out by setting authentication cookies to:
 	    // LWSSO_COOKIE_KEY="" via server response header Set-Cookie
@@ -198,44 +181,36 @@ public class SeleniumALMRESTWrapper {
      * @throws Exception en cas d'erreur.
      */
     public String obtenirURLConnexion() throws Exception {
-
+    	//https://hpalm.intranatixis.com/qcbin/rest/is-authenticated
         String isAuthenticateUrl = con.buildUrl("rest/is-authenticated");
         String ret;
         
-        //https://hpalm.intranatixis.com/qcbin/rest/is-authenticated
-        
+        // On effectue la requête en "GET" sur l'URL d'authentitication
         Response response = con.httpGet(isAuthenticateUrl, null, null);
         int responseCode = response.getStatusCode();
-
-        //if already authenticated
+        
         if (responseCode == HttpURLConnection.HTTP_OK) {
+        	// Si l'identification est déjà active, alors on ne renvoie pas l'url de connexion.
             ret = null;
-        }
-
-        //if not authenticated - get the address where to authenticate
-        // via WWW-Authenticate
-        else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
-
+        } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+        	 // Si l'identification n'est pas encore effectuée, on récupère des entête l'url d'authentification
             Iterable<String> authenticationHeader = response.getResponseHeaders().get("WWW-Authenticate");
-
             String newUrl = authenticationHeader.iterator().next().split("=")[1];
             newUrl = newUrl.replace("\"", "");
             newUrl += "/authenticate";
             ret = newUrl;
-        	
         } else {
-        	//Not ok, not unauthorized. An error, such as 404, or 500
+        	//En cas d'erreur (ex : Code 404 ou 500) on renvoie une exception
             throw response.getFailure();
         }
         
         //TODO à positioner sous forme d'options de la fonction d'identification.
         
-        // La connexion s'effectue volontier en HTTPS si il y a présence d'un certificats (ex : SSL)
+        // La connexion s'effectue en HTTPS si il y a présence d'un certificats (ex : SSL)
         if (ret != null && !ret.contains("https")) {
         	ret = ret.replace("http", "https");
         }
-        
-        // Si on utilise une connexion https, il ne faut pas spécifier le port
+        // Si on utilise une connexion https, il ne faut pas spécifier le port 80
         if (ret != null  && Constants.PORT == null && ret.contains(":80")) {
         	ret = ret.replace(":80", "");
         }
@@ -243,7 +218,16 @@ public class SeleniumALMRESTWrapper {
         return ret;
     }
     
-    public void obtenirDefect(String id) throws Exception {
+    /**
+     * Renvoie une entité dont on connais l'id ou les critère de recherche sous forme d'Entity.
+     * Les critère d'ID et de QUERY sont mutuellement exclusif.
+     * @param id l'id de l'entite que l'on souhaites trouver 
+     * @param query une requête permettant de trouver l'entité (ex : query={cycle-id[49375];test-id[76408];})
+     * @param typeEntite le type d'entité à récupérer (ex : defect)
+     * @return l'entité représentant le defect
+     * @throws Exception en cas d'erreur.
+     */
+    public Entity obtenirEntite(String id, String query, String typeEntite) throws Exception {
         //String query = "query={project[IZIVENTE];detected-by[doublibounouais OR mongenetla OR lottena];name[V14.03*];user-06[*CE* OR *BP*];id[6511]}";
         //String query = "query={id["+id+"]}";
         
@@ -251,51 +235,81 @@ public class SeleniumALMRESTWrapper {
         Map<String, String> requestHeaders = new HashMap<String, String>();
         requestHeaders.put("Accept", "application/xml");
         // On précise que le type d'entity à manipuler est un defect
-        String resourceWeWantToRead = con.buildEntityCollectionUrl("defect");
-        // On effectue la connexion vers le defect dont à fournit l'id est on récupère la réponse.
-        String responseStr = con.httpGet(resourceWeWantToRead + "/" + id, null, requestHeaders).toString();
-        // On extrait de la réponse l'entity (en l'occurence une QC/defect)
-        Entity entity = EntityMarshallingUtils.marshal(Entity.class, responseStr);
+        String resourceWeWantToRead = con.buildEntityCollectionUrl(typeEntite);
+        // On effectue la connexion vers l'entité dont à fournit l'id est on récupère la réponse.
+        // Si il y a une requête on la prend en compte :
+        String urlComplete = resourceWeWantToRead;
+        if (id != null) {
+        	urlComplete = urlComplete + "/" + id;
+        } else if (query != null) {
+        	urlComplete = urlComplete.concat("?" + query);
+        }
+        
+        System.out.println(urlComplete);
+        
+        String responseStr = con.httpGet(urlComplete, null, requestHeaders).toString();
+        // On extrait l'entity de la réponse 
+        Entity entity = null;
+        if (query != null) {
+        	// On a une réponse à une requête il faut extraire le premier enregistrement
+        	Entities entities = EntityMarshallingUtils.marshal(Entities.class, responseStr);
+        	entity = entities.getEntities().get(0);
+        } else {
+        	// On a un enregistrmement unique qu'on renvoie.
+        	entity = EntityMarshallingUtils.marshal(Entity.class, responseStr);
+        }
         
         // On va parcourir l'ensemble des champs renvoyés
-        List<Field> fields = entity.getFields().getField();
-        System.out.print("listing fields from marshalled object: ");
-        for (Field field : fields) {
-            System.out.print(field.getName() + "=" + field.getValue() + ", ");
-        }
+//        List<Field> fields = entity.getFields().getField();
+//        System.out.print("listing fields from marshalled object: ");
+//        for (Field field : fields) {
+//            System.out.print(field.getName() + "=" + field.getValue() + ", ");
+//        }
+        
+        return entity;
     }
     
     /**
      * Effectue la création d'un RUN en fonction des paramètres demandés.
      * @param nomRun Le nom à appliquer au RUN, sera concaténé à un timestamp
-     * @param idCycle L'id du cycle de rattachement dans le Test Lab (attention non visible dans l'IHM)
+     * @param idCycle L'id de l'instance du test dans le test lab (différent de l'id du test dans Test Plan)
+     * @param idScenario l'id du scénario dans le test lab(à null si inconnu)
      * @param idTest L'id du cas de test dans le Test Plan (Test ID).
      * @param propretaire le propriétaire de l'éxécution.
      * @param etat true si l'éxécution est à Passed, false sinon.
      * @return l'url de consultation du RUN.
+     * @throws SeleniumException en cas d'impossibilité de créer le run.
      */
-    public String creerRun(String nomRun, String idCycle, String idTest, String propretaire, Boolean etat) {
+    public String creerRun(String nomRun, String idCycle, String idScenario, String idTest, String propretaire, Boolean etat) throws SeleniumException {
     	Entity run = new Entity();   	
-    	// On précise le type d'entité
+    	// On précise le type d'entité et on renseigne les champs obligatoire
     	run.setType("run");
-    	// On renseigne les champs obligatoire
     	run.ajouterChamp("name", nomRun + "_" + new Date().getTime());
-    	run.ajouterChamp("testcycl-id", idCycle);
     	run.ajouterChamp("test-id", idTest);
     	run.ajouterChamp("owner", propretaire);
     	run.ajouterChamp("subtype-id", "hp.qc.run.MANUAL");
     	run.ajouterChamp("status", etat?"Passed":"Failed");
-    	// On prépare les paramètres de la création
-    	String chaine = convertirEntiteEnChaine(run);
-    	String resourceWeWantToWrite = con.buildEntityCollectionUrl("run");
-    	//System.out.println(chaine);
+    	//Si l'id du scénario (test set) n'est pas connu, cela entrainera une erreur dans l'affichage du RUN. On evite cela en le rendant obligatoire bien qu'il ne le soit pas.
+    	run.ajouterChamp("cycle-id", idScenario);
+    	if (idCycle != null) {
+    		run.ajouterChamp("testcycl-id", idCycle);
+    	} else {
+    		try {
+    			// L'instance de test n'est pas toujours connue. En effet elle n'est pas visible dans ALM, mais uniquement dans pas copier coller de l'URL.
+	    		// Dans ce cas on récupère l'instance de test afin d'obtenir son id.
+	    		Entity testInstance = obtenirEntite(null, "query={cycle-id[" + idScenario + "];test-id[" + idTest + "];}", "test-instance");
+	    		run.ajouterChamp("testcycl-id", testInstance.obtenirChamp("id").getValue().get(0));
+    		} catch (Exception ex) {
+    			throw new SeleniumException(Erreurs.E032, "Impossible d'extraire l'id de l'instance de test  (" + ex.getMessage() + ")");
+    		}
+    	}
+    	
     	try {
-			return creationEntite(resourceWeWantToWrite, chaine);
+        	// On prépare les paramètres de la création et on l'effectue
+			return creerEntite(con.buildEntityCollectionUrl("run"), convertirEntiteEnChaine(run));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new SeleniumException(Erreurs.E032, "Impossible de creer le run (" + e.getMessage() + ")");
 		}
-    	return null;
     }
     
     /**
@@ -305,33 +319,22 @@ public class SeleniumALMRESTWrapper {
      * @param actual l'attendu lors de l'étape
      * @param expected le constaté lors de l'étape
      * @param idRun l'identifiant du run, ou l'url d'accès au run
-     * @param idTest l'identifiant du test (facultatif, mais nécessaire pour le bon affichage dans ALM)
+     * @param idTest l'identifiant du test
      * @param etat true si Passed, false si Failed.
      * @return l'url vers le step créee.
+     * @throws SeleniumException en cas d'erreur dans le processus de création du step.
      */
-    public String creerStep(String nom, String description, String actual, String expected, String idRun, String idTest, Boolean etat) {
-    	//<Qc URL>/qcbin/rest/domains/<Domain>/projects/<project>/design-steps?query={parent-id[<test_id>]}
-    	//https://hpalm.intranatixis.com/qcbin/rest/domains/NATIXIS_FINANCEMENT/projects/CREDIT_CONSOMMATION/design-steps
-    	//https://hpalm.intranatixis.com/qcbin/rest/domains/NATIXIS_FINANCEMENT/projects/CREDIT_CONSOMMATION/customization/entities/run-step/fields?required=true
-    	//https://hpalm.intranatixis.com/qcbin/rest/domains/NATIXIS_FINANCEMENT/projects/CREDIT_CONSOMMATION/runs/183539/run-steps
-    		
+    public String creerStep(String nom, String description, String actual, String expected, String idRun, String idTest, Boolean etat) throws SeleniumException {    		
     	Entity step = new Entity();   	
-    	// On précise le type d'entité
+    	// On précise le type d'entité et on remplis les champs obligatoires
     	step.setType("run-step");
-    	//ST_STEP_NAME - name
     	step.ajouterChamp("name", nom);
-    	//ST_STATUS - status
     	step.ajouterChamp("status", etat?"Passed":"Failed");
-    	//ST_DESCRIPTION - description
     	step.ajouterChamp("description", description);
-    	//ST_ACTUAL - actual
     	step.ajouterChamp("actual", actual);
-    	//ST_EXPECTED - expected
     	step.ajouterChamp("expected", expected);
-    	// test-id (ex: 18475) --> Le même que celui du RUN, c'est l'id du test parent
-    	if (idTest != null) {
-    		step.ajouterChamp("test-id", idTest);
-    	}
+    	// test-id (ex: 18475) --> Le même que celui du RUN, c'est l'id du test parent. Il est facultatif mais son absence entraine des erreurs.
+    	step.ajouterChamp("test-id", idTest);
     	// parent-id (ex: 23115) --> L'Id du Run, champ obligatoire
     	if (idRun.startsWith("http")) {
     		// Si on à fournit l'url on coupe celle ci pour ne prendre que la dernière valeur.
@@ -340,21 +343,12 @@ public class SeleniumALMRESTWrapper {
     		step.ajouterChamp("parent-id", idRun);
     	}
     	
-    	// On prépare les paramètres de la création
-    	String chaine = convertirEntiteEnChaine(step);
-    	String resourceWeWantToWrite = con.buildEntityCollectionUrl("run-step");
-    	//System.out.println(chaine);
+    	// On prépare les paramètres de la création et on l'effectue
     	try {
-			return creationEntite(resourceWeWantToWrite, chaine);
+			return creerEntite(con.buildEntityCollectionUrl("run-step"), convertirEntiteEnChaine(step));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new SeleniumException(Erreurs.E032, "Impossible de creer le step (" + e.getMessage() + ")");
 		}
-    	return null;
-    	
-    	// step-order
-    	// desstep-id (ex : 35259)
-    	
     }
     
     /**
@@ -364,7 +358,7 @@ public class SeleniumALMRESTWrapper {
      * @return l'url permettant la consultation de la nouvelle entité
      * @exception Exception en cas d'erreur.
      */
-    public String creationEntite(String collectionUrl, String postedEntityXml) throws Exception {
+    public String creerEntite(String collectionUrl, String postedEntityXml) throws Exception {
     	// On initialise les entêtes avec les informations sur le contenu (XML)
         Map<String, String> requestHeaders = new HashMap<String, String>();
         requestHeaders.put("Content-Type", "application/xml");
@@ -388,7 +382,7 @@ public class SeleniumALMRESTWrapper {
      * @param entityUrl l'url vers l'entité à supprimer.
      * @return la représentation XML de l'objet supprimé.
      */
-    public String deleteEntity(String entityUrl) throws Exception {
+    public String supprimerEntite(String entityUrl) throws Exception {
         Map<String, String> requestHeaders = new HashMap<String, String>();
         requestHeaders.put("Accept", "application/xml");
 
@@ -449,18 +443,16 @@ public class SeleniumALMRESTWrapper {
     /**
      * Permet de savoir une entity accepte le versionning où non.
      * @param entityType le type d'entité à vérifier.
-     * @param domain le domaine concerné
-     * @param project le projet concerné
      * @return true si l'entity supporte le versionning, false sinon
      * @throws Exception en cas d'erreur.
      */
-     public static boolean isVersioned(String entityType, final String domain, final String project) throws Exception {
+     public boolean isVersioned(String entityType) throws Exception {
     	 // Initilisation du connecteur pour accèder au éléments de customization.
-         RestConnector con = RestConnector.getInstance();
+         //RestConnector con = RestConnector.getInstance();
          String descriptorUrl = con.buildUrl("rest/domains/"
-                  + domain
+                  + con.getDomain()
                   + "/projects/"
-                  + project
+                  + con.getProject()
                   + "/customization/entities/"
                   + entityType);
          // Récupération du descriptif XML de l'entity demandée.
@@ -479,7 +471,6 @@ public class SeleniumALMRESTWrapper {
       * @throws Exception en cas d'erreur.
       */
      public String checkout(String entityUrl, String comment, int version) throws Exception {
-
     	 // On transforme le commentaire et la version en entrées XML pour les manipuler.
          String commentXmlBit = ((comment != null) && !comment.isEmpty() ? "<Comment>" + comment + "</Comment>" : "");
          String versionXmlBit = (version >= 0 ? "<Version>" + version + "</Version>" : "");
@@ -511,7 +502,6 @@ public class SeleniumALMRESTWrapper {
       * @throws Exception en cas d'erreur.
       */
      public boolean checkin(String entityUrl, String comment, boolean overrideLastVersion) throws Exception {
-
     	// On transforme le commentaire et la version en entrées XML pour les manipuler.
          final String commentXmlBit = ((comment != null) && !comment.isEmpty() ? "<Comment>" + comment + "</Comment>" : "");
          final String overrideLastVersionBit = overrideLastVersion == true ? "<OverrideLastVersion>true</OverrideLastVersion>" : "" ;
@@ -535,7 +525,7 @@ public class SeleniumALMRESTWrapper {
       * @return l'entité vérouillée.
       * @throws Exception en cas d'erreur.
       */
-     public String lock(String entityUrl) throws Exception {
+     public String verouiller(String entityUrl) throws Exception {
     	 // On créer l'entête permettant le transfert de données XML.
          Map<String, String> requestHeaders = new HashMap<String, String>();
          requestHeaders.put("Accept", "application/xml");
@@ -553,7 +543,7 @@ public class SeleniumALMRESTWrapper {
       * @return true si l'entité est dévérouillée suite à l'opération, false sinon.
       * @throws Exception en cas d'erreur.
       */
-     public boolean unlock(String entityUrl) throws Exception {
+     public boolean deverouiller(String entityUrl) throws Exception {
          return con.httpDelete(entityUrl + "/lock", null).getStatusCode() == HttpURLConnection.HTTP_OK;
      }
      
@@ -564,7 +554,7 @@ public class SeleniumALMRESTWrapper {
       * @return la description XML de l'entité après l'étape de mise à jour.
       * @throws Exception en cas d'erreur.
       */
-     private Response update(String entityUrl, String updatedEntityXml) throws Exception {
+     public Response majEntite(String entityUrl, String updatedEntityXml) throws Exception {
     	 // On créer l'entête permettant le transfert de données XML.
          Map<String, String> requestHeaders = new HashMap<String, String>();
          requestHeaders.put("Content-Type", "application/xml");
@@ -587,7 +577,7 @@ public class SeleniumALMRESTWrapper {
       * @param attachmentFileName le nom de fichier à donné dans le serveur.
       * @return la représentation sous forme de chaine de la réponse du serveur.
       */
-     private String updateAttachmentData(String entityUrl, byte[] bytes, String attachmentFileName) throws Exception {
+     public String majPJDonnees(String entityUrl, byte[] bytes, String attachmentFileName) throws Exception {
          // On créer l'entête permettant le transfert de données XML, mais sous forme de données
          Map<String, String> requestHeaders = new HashMap<String, String>();
          requestHeaders.put("Content-Type", "application/octet-stream");
@@ -610,7 +600,7 @@ public class SeleniumALMRESTWrapper {
       * @param attachmentFileName le nom de l'attachement côté serveur dont on souhaites mettre à jour la description.
       * @return la représentation sous forme de chaine de la réponse du serveur.
       */
-     private String updateAttachmentDescription(String entityUrl, String description, String attachmentFileName) throws Exception {
+     public String majPJDescription(String entityUrl, String description, String attachmentFileName) throws Exception {
     	 // On créer l'entête permettant le transfert de données XML, mais sous forme de données
          Map<String, String> requestHeaders = new HashMap<String, String>();
          requestHeaders.put("Content-Type", "application/xml");
@@ -634,7 +624,7 @@ public class SeleniumALMRESTWrapper {
       * @return le XML représentant l'attachement spécifié.
       * @throws Exception en cas d'erreur.
       */
-     private String readAttachmentDetails(String attachmentUrl) throws Exception {
+     public String lirePJDetails(String attachmentUrl) throws Exception {
     	 // Gestion des headers XML
          Map<String, String> requestHeaders = new HashMap<String, String>();
          requestHeaders.put("Accept", "application/xml");
@@ -653,7 +643,7 @@ public class SeleniumALMRESTWrapper {
       * @return le contenu du fichier en PJ.
       * @throws Exception en cas d'erreur.
       */
-     private byte[] readAttachmentData(String attachmentUrl) throws Exception {
+     public byte[] lirePJDonnees(String attachmentUrl) throws Exception {
     	// Gestion des headers XML
          Map<String, String> requestHeaders = new HashMap<String, String>();
          requestHeaders.put("Accept", "application/octet-stream");
@@ -672,7 +662,7 @@ public class SeleniumALMRESTWrapper {
       * @return un XML représentant tous les attachement de l'entité paramètre.
       * @throws Exception en cas d'erreur.
       */
-     private String readAttachments(String entityUrl) throws Exception {
+     public String lirePJs(String entityUrl) throws Exception {
          Map<String, String> requestHeaders = new HashMap<String, String>();
          requestHeaders.put("Accept", "application/xml");
 
@@ -690,12 +680,12 @@ public class SeleniumALMRESTWrapper {
       * @param filename le nom de fichier à utilisé.
       * @return l'url vers l'attachement ainsi créer.
       */
-     private String attachWithOctetStream(String entityUrl, byte[] fileData, String filename) throws Exception {
+     public String joindrePJ(String entityUrl, byte[] fileData, String filename) throws Exception {
 
          Map<String, String> requestHeaders = new HashMap<String, String>();
          requestHeaders.put("Slug", filename);
          requestHeaders.put("Content-Type", "application/octet-stream");
-
+         
          Response response = con.httpPost(entityUrl + "/attachments", fileData, requestHeaders);
 
          if (response.getStatusCode() != HttpURLConnection.HTTP_CREATED) {
@@ -705,14 +695,14 @@ public class SeleniumALMRESTWrapper {
      }
      
      /**
-      * Permet l'ajout de PJ en passant par la description de plusieurs content Type (nomn, description, data) d'une PJ à une entité.
+      * Permet l'ajout de PJ en passant par la description de plusieurs content Type (nom, description, data) d'une PJ à une entité.
       * @param entityUrl l'url vers l'entité à laquelle ajoutée la PJ.
       * @param fileData le contenu du fichier (en byte[])
       * @param contentType le contentType du contenu du fichier (ex : txt/html or xml, or octetstream etc..)
       * @param filename le nom à donné à la PJ.
       * @return l'url vers l'entité d'attachement créer à partir de la PJ.
       */
-     private String attachWithMultipart(String entityUrl, byte[] fileData, String contentType, String filename, String description) throws Exception {
+     public String joindrePJ(String entityUrl, byte[] fileData, String contentType, String filename, String description) throws Exception {
          /*
 			 headers:
 			 Content-Type: multipart/form-data; boundary=<boundary>
@@ -740,23 +730,15 @@ public class SeleniumALMRESTWrapper {
 			 and file data(template for file).
           */
 
-         // This can be pretty much any string.
-         // It's used to mark the different mime parts
-         String boundary = "exampleboundary";
+         // La chaine à utilisée pour démarquer differentes parties mime
+         String boundary = "boundary";
 
-         //template to use when sending field data (assuming none-binary data)
-         String fieldTemplate =
-                 "--%1$s\r\n"
-                         + "Content-Disposition: form-data; name=\"%2$s\" \r\n\r\n"
-                         + "%3$s"
-                         + "\r\n";
+         //Template pour décrire les données (supposée non binaire)
+         String fieldTemplate = "--%1$s\r\n" + "Content-Disposition: form-data; name=\"%2$s\" \r\n\r\n" + "%3$s" + "\r\n";
 
-         // Template to use when sending file data.
-         // Binary data still needs to be suffixed.
-         String fileDataPrefixTemplate =
-                 "--%1$s\r\n"
-                         + "Content-Disposition: form-data; name=\"%2$s\"; filename=\"%3$s\"\r\n"
-                         + "Content-Type: %4$s\r\n\r\n";
+         // Template pour décrire l'envoie des données fichier
+         // Les données binaires ont toujours besoin d'être suffixée.
+         String fileDataPrefixTemplate = "--%1$s\r\n" + "Content-Disposition: form-data; name=\"%2$s\"; filename=\"%3$s\"\r\n" + "Content-Type: %4$s\r\n\r\n";
 
          // On génère les partie de XML décrivant le nom, la description, et le contenu du fichier
          String filenameData = String.format(fieldTemplate, boundary, "filename", filename);
@@ -774,10 +756,10 @@ public class SeleniumALMRESTWrapper {
          bytes.write(fileDataSuffix.getBytes());
          bytes.close();
 
-         // On spécifie les entête en précisant quele contenu est constitué de plusieurs parties.
+         // On spécifie les entête en précisant que le contenu est constitué de plusieurs parties.
          Map<String, String> requestHeaders = new HashMap<String, String>();
          requestHeaders.put("Content-Type", "multipart/form-data; boundary=" + boundary);
-
+         // On effectue la réquête "POST".
          Response response = con.httpPost(entityUrl + "/attachments", bytes.toByteArray(), requestHeaders);
          if (response.getStatusCode() != HttpURLConnection.HTTP_CREATED) {
              throw new Exception(response.toString());
@@ -787,7 +769,89 @@ public class SeleniumALMRESTWrapper {
      }
 
      
-     public void attachmentsExample(final String urlEntite, String domain, String project) throws Exception {
+     
+     
+ 	/**
+ 	 * Fonction permettant la mise à jour dans ALM du cas de test à partir des informations saisies.
+ 	 * Un nouveau RUN vas être créer pour chaque cas de test du scénario, et les steps vont être renseignée dans ce run.
+ 	 * Cette fonction suppose que le scénario dans TESTLAB n'adresse qu'un seul exemplaire de chaque CT dans TESTPLAN
+ 	 * @param wrapper le connecteur à ALM de Type REST
+ 	 * @param casEssai le cas d'essai contenant les informations obligatoire (id du scénario et id des cas de test).
+ 	 * @param etat l'état final du cas de test.
+ 	 * @throws SeleniumException en cas d'erreur.
+ 	 */
+ 	public static void miseAJourTestSet(CasEssaiBean casEssai, boolean etat) throws SeleniumException {
+ 		// On vérifie les données pour ALM.
+ 		if (casEssai.getAlm()) {
+ 			// On vérifie la validité des informations :
+ 			if (casEssai.getIdUniqueTestLab() == -1 || casEssai.getIdUniqueTestPlan() == -1) {
+ 				throw new SeleniumException(Erreurs.E033, "Impossible de mettre à jour l'état du cas de test dans ALM : Les ID doivent être renseignés.");
+ 			}
+ 			// Si le cas est unique on met à jour le "Cas de test" (Test) dans le "scénario" (Test Set) en lui ajoutant un "Run".
+ 			if (casEssai.getTests().isEmpty()) {
+ 	 			// Si les informations sont valides on initialise la connexion.
+ 				SeleniumALMRESTWrapper wrapper = new SeleniumALMRESTWrapper();
+ 				wrapper.initialisation(Constants.HOST, Constants.DOMAIN, Constants.PROJECT);
+ 				try {
+ 					// Mise à jour de l'état général du cas de test via la création d'un nouveau RUN lié.
+ 					String run = wrapper.creerRun("RunAuto", null, casEssai.getIdUniqueTestLab().toString(), casEssai.getIdUniqueTestPlan().toString(), Constants.USERNAME, etat);
+ 					// Si le cas d'essai est associé à un repertoire on cherche à obtenir les pièces jointes.
+ 					if (casEssai.getRepertoireTelechargement() != null) {
+ 						File repertoire = new File(casEssai.getRepertoireTelechargement());
+ 						// On vérifie qu'il s'agit bien d'un repertoire
+ 						if (repertoire.isDirectory()) {
+ 							// Pour chaque fichier non repertoire dans le repertoire, on met en pièce jointe.
+ 							for (File file : repertoire.listFiles()) {
+ 								if (!file.isDirectory()) {
+ 									String chemin = file.getAbsolutePath();
+ 									// On remplace les référence au repertoire local \.\ par un simple \
+ 									chemin = chemin.replaceAll("\\\\.\\\\", "\\\\");
+ 									wrapper.joindrePJ(run, Files.toByteArray(file), file.getName());
+ 								}
+ 							}
+ 						}
+ 					}
+ 					// On met à jour les STEP (sous forme d'ajout)
+ 					for (ObjectifBean step : casEssai.getObjectifs().values()) {
+ 						if (step.isStep()) {
+ 							//wrapper.addStep(execution_run, step.getCode(), step.getEtat()?StatusAs.PASSED:StatusAs.FAILED, step.getDescriptif(), step.getAttendu(), step.getObtenu());
+ 							wrapper.creerStep(step.getCode(), step.getDescriptif(), step.getObtenu(), step.getAttendu(), run, casEssai.getIdUniqueTestPlan().toString(), step.getEtat());
+ 						}
+ 					}
+ 					// On ferme la connexion avec ALM.
+ 					if (!wrapper.deconnexion()) {
+ 						throw new SeleniumException(Erreurs.E032, "Impossible de clôturer la session ALM !");
+ 					}
+ 				} catch (Exception e) {
+ 					e.printStackTrace();
+ 					throw new SeleniumException(Erreurs.E032, "Impossible de mettre à jour l'état du cas de test dans ALM : " + e.getMessage());
+ 				}
+ 			} else {
+ 				//System.out.println("C'est un cas MULTIPLE (TestPlan non renseigné)");
+ 				// Si le cas d'essai en contient d'autres, on boucle sur chaucun d'entre eux.
+ 				for (CasEssaiBean sousCas : casEssai.getTests()) {
+ 					System.out.println("=> Mise à jour dans ALM du cas de test " + sousCas.getIdUniqueTestLab() + ":" + sousCas.getIdUniqueTestPlan());
+ 					miseAJourTestSet(sousCas, sousCas.getEtatFinal());
+ 				}
+ 			}
+ 		} else {
+ 			System.out.println("La mise à jour ALM est désactivée pour le scénario/cas de test " + casEssai.getNomCasEssai());
+ 		}
+ 	}
+     
+     
+     
+     
+     
+     
+     /**
+      * Fonction de test effectuant des manipulation des PJ de type texte sur l'entité donnée.
+      * Il faut déjà avoir initialisé le connecteur REST avant de lancer cette fonction.
+      * @param urlEntite l'url vers l'entité sur laquelle le test est effectué
+      * @param typeEntite le type d'entité (ex : requirement) concernée.
+      * @throws Exception en cas d'erreur.
+      */
+     public void testPJ(final String urlEntite, String typeEntite) throws Exception {
 
     	 //AuthenticateLoginLogoutExample login = new AuthenticateLoginLogoutExample();
     	 //CreateDeleteExample writeExample = new CreateDeleteExample();
@@ -797,7 +861,8 @@ public class SeleniumALMRESTWrapper {
     	 //AttachmentsExample example = new AttachmentsExample();
 
     	 // Avant de modifier une entité on la vérouille si elle est soumise au versioning, sinon on l'extrait (checkout)
-    	 boolean isVersioned = isVersioned("requirement", domain, project);
+    	 //TODO faire en sorte qu'on vérifie le type de l'entité paramètre
+    	 boolean isVersioned = isVersioned(typeEntite);
     	 
     	 String preModificationXml = null;
     	 if (isVersioned) {
@@ -807,7 +872,7 @@ public class SeleniumALMRESTWrapper {
     		 Assert.assertTrue("checkout comment missing", preModificationXml.contains(convertirChampEnChaine("vc-checkout-comments", firstCheckoutComment)));
     	 } else {
     		 // Si l'entité ne supporte pas le versionning on passe par une pose de verrou.
-    		 preModificationXml = lock(urlEntite);
+    		 preModificationXml = verouiller(urlEntite);
     	 }
 
     	 //Assert.assertTrue("posted field value not found", preModificationXml.contains(Constants.entityToPostFieldXml));
@@ -822,14 +887,14 @@ public class SeleniumALMRESTWrapper {
     	 String multipartFileContent = "content of file";
 
     	 String newMultiPartAttachmentUrl =
-    			 attachWithMultipart(
+    			 joindrePJ(
     					 urlEntite,
     					 multipartFileContent.getBytes(),
     					 "text/plain",
     					 multipartFileName,
     					 multipartFileDescription);
 
-    	 String newOctetStreamAttachmentUrl = attachWithOctetStream(urlEntite, octetstreamFileContent.getBytes(), octetStreamFileName);
+    	 String newOctetStreamAttachmentUrl = joindrePJ(urlEntite, octetstreamFileContent.getBytes(), octetStreamFileName);
 
     	 // Changes aren't visible to other users until we check them
     	 //  in if versioned
@@ -838,24 +903,24 @@ public class SeleniumALMRESTWrapper {
     		 boolean checkin = checkin(urlEntite, firstCheckinComment, false);
     		 Assert.assertTrue("checkin failed", checkin);
     	 } else {
-    		 boolean unlock = unlock(urlEntite);
+    		 boolean unlock = deverouiller(urlEntite);
     		 Assert.assertTrue("unlock failed", unlock);
     	 }
 
     	 //read the data and it's metadata back from the server
-    	 String readAttachments = readAttachments(urlEntite);
+    	 String readAttachments = lirePJs(urlEntite);
     	 Assert.assertTrue("multipart attachment description missing", readAttachments.contains(convertirChampEnChaine("description", multipartFileDescription)));
     	 //Assert.assertTrue("attachment count incorrect or missing", readAttachments.contains("<Entities TotalResults=\"2\">"));
 
-    	 byte[] readAttachmentData = readAttachmentData(newOctetStreamAttachmentUrl);
+    	 byte[] readAttachmentData = lirePJDonnees(newOctetStreamAttachmentUrl);
     	 String readAttachmentsString = new String(readAttachmentData);
     	 Assert.assertEquals("uploaded octet stream file content differs from read file content", readAttachmentsString, octetstreamFileContent);
 
-    	 readAttachmentData = readAttachmentData(newMultiPartAttachmentUrl);
+    	 readAttachmentData = lirePJDonnees(newMultiPartAttachmentUrl);
     	 readAttachmentsString = new String(readAttachmentData);
     	 Assert.assertEquals("uploaded multipart stream file content differs from read file content", readAttachmentsString, multipartFileContent);
 
-    	 String readAttachmentDetails = readAttachmentDetails(newMultiPartAttachmentUrl);
+    	 String readAttachmentDetails = lirePJDetails(newMultiPartAttachmentUrl);
     	 Assert.assertTrue("multipart attachment description missing", readAttachmentDetails.contains(convertirChampEnChaine("description", multipartFileDescription)));
 
     	 //again with the checkout checkin procedure
@@ -866,7 +931,7 @@ public class SeleniumALMRESTWrapper {
     		 preModificationXml = checkout(urlEntite, firstCheckoutComment, -1);
     		 Assert.assertTrue("checkout comment missing", preModificationXml.contains(convertirChampEnChaine("vc-checkout-comments", firstCheckoutComment)));
     	 } else {
-    		 preModificationXml = lock(urlEntite);
+    		 preModificationXml = verouiller(urlEntite);
     	 }
 
     	 //Assert.assertTrue("posted field value not found", preModificationXml.contains(Constants.entityToPostFieldXml));
@@ -875,16 +940,16 @@ public class SeleniumALMRESTWrapper {
     	 String updatedOctetStreamFileData = "updated file contents";
     	 String updatedOctetstreamFileDescription = "completely new description";
 
-    	 updateAttachmentData(urlEntite,
+    	 majPJDonnees(urlEntite,
     			 updatedOctetStreamFileData.getBytes(),
     			 octetStreamFileName);
 
-    	 readAttachmentsString = new String(readAttachmentData(newOctetStreamAttachmentUrl));
+    	 readAttachmentsString = new String(lirePJDonnees(newOctetStreamAttachmentUrl));
     	 Assert.assertEquals("updated octet stream data not changed", updatedOctetStreamFileData, readAttachmentsString);
 
     	 //update description of file
     	 String attachmentMetadataUpdateResponseXml =
-    			 updateAttachmentDescription(urlEntite, updatedOctetstreamFileDescription, octetStreamFileName);
+    			 majPJDescription(urlEntite, updatedOctetstreamFileDescription, octetStreamFileName);
 
     	 Assert.assertTrue("updated octet stream description not changed", attachmentMetadataUpdateResponseXml.contains(updatedOctetstreamFileDescription));
 
@@ -894,7 +959,7 @@ public class SeleniumALMRESTWrapper {
     		 boolean checkin = checkin(urlEntite, firstCheckinComment, false);
     		 Assert.assertTrue("checkin failed", checkin);
     	 } else {
-    		 boolean unlock = unlock(urlEntite);
+    		 boolean unlock = deverouiller(urlEntite);
     		 Assert.assertTrue("unlock failed", unlock);
     	 }
 
@@ -904,22 +969,58 @@ public class SeleniumALMRESTWrapper {
     	 if (isVersioned) {
     		 checkout(urlEntite, "", -1);
     	 } else {
-    		 lock(urlEntite);
+    		 verouiller(urlEntite);
     	 }
 
     	 //delete attachments
-    	 deleteEntity(newOctetStreamAttachmentUrl);
-    	 deleteEntity(newMultiPartAttachmentUrl);
+    	 supprimerEntite(newOctetStreamAttachmentUrl);
+    	 supprimerEntite(newMultiPartAttachmentUrl);
 
     	 //checkin attachment owner
     	 if (isVersioned) {
     		 checkin(urlEntite, "", false);
     	 } else {
-    		 unlock(urlEntite);
+    		 deverouiller(urlEntite);
     	 }
 
     	 //delete attachment owner
-    	 deleteEntity(urlEntite);
-    	 logout();
+    	 supprimerEntite(urlEntite);
+    	 deconnexion();
      }
+     
+     /**
+      * Test une connexion et une déconnexion l'une après l'autre.
+      * @param serverUrl l'url du serveur
+      * @param domain le domaine
+      * @param project le projet
+      * @param username l'utilisateur (le login)
+      * @param password le mot de passe
+      * @throws Exception en cas d'erreur lors de la connexion.
+      */
+     public void testConnexion(final String serverUrl, final String domain, final String project, String username, String password) throws Exception {
+     	
+     	// On configure la connexion REST.
+         RestConnector con = RestConnector.getInstance().init(new HashMap<String, String>(), serverUrl, domain, project);
+         // Initialisation de l'outil
+         SeleniumALMRESTWrapper example = new SeleniumALMRESTWrapper();
+
+         //On utilise une fonction nous indiquant si la connexion est active ou non. Si elle ne l'est pas on obtiens l'url de connexion.
+         String authenticationPoint = example.obtenirURLConnexion();
+         Assert.assertTrue("La connexion est déjà active. Impossible à cette étape.", authenticationPoint != null);
+
+         //Une connexion s'effectue vers l'url renvoyer lors de l'étape précédente.
+         boolean loginResponse = example.login(authenticationPoint, username, password);
+         Assert.assertTrue("La connexion est impossible, mauvais mot de passe?", loginResponse);
+         Assert.assertTrue("La connexion n'as pas creer l'indispensable Light Weight Single Sign On(LWSSO) cookie.", con.getCookieString().contains("LWSSO_COOKIE_KEY"));
+
+         //Vérification de la connexion : la fonction isAuthenticated renvoie null.
+         Assert.assertNull("La connexion à été perdue (où n'as jamais été établie).", example.obtenirURLConnexion());
+
+         //On se déconnecte.
+         example.deconnexion();
+
+         //Vérification de la déconnexion
+         Assert.assertNotNull("La connexion est toujours active malgré la demande de déconnexion.", example.obtenirURLConnexion());
+     }
+
 }

@@ -70,6 +70,11 @@ public class CasEssaiBean implements Serializable {
 	private Integer idUniqueTestLab = -1;
 	
 	/**
+	 * Identifiant du cas de test dans TESTPLAN
+	 */
+	private Integer idUniqueTestPlan = -1;
+	
+	/**
 	 * Chemin dans le test LAB vers le cas de test sans inclure le root.
 	 * EX : POC Selenium\\IZIVENTE
 	 */
@@ -485,7 +490,13 @@ public class CasEssaiBean implements Serializable {
 		this.tests = tests;
 	}
 
+	public Integer getIdUniqueTestPlan() {
+		return idUniqueTestPlan;
+	}
 
+	public void setIdUniqueTestPlan(Integer idUniqueTestPlan) {
+		this.idUniqueTestPlan = idUniqueTestPlan;
+	}
 	
 	////////////////////////////////////////////////////////////////
 	
