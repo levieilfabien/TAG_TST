@@ -15,8 +15,8 @@ public class Constants {
    public static final String USERNAME = "levieilfa";
    public static final String PASSWORD = "Sombros100";
 
-   public static final String DOMAIN = "CREDIT_CONSOMMATION";
-   public static final String PROJECT = "NATIXIS_FINANCEMENT";
+   public static final String DOMAIN = "NATIXIS_FINANCEMENT";
+   public static final String PROJECT = "CREDIT_CONSOMMATION";
 
    /**
     * Constructeur par défaut privé.

@@ -354,7 +354,7 @@ public class RestConnector {
     public void getQCSession(){
         String qcsessionurl = this.buildUrl("rest/site-session");
         Map<String, String> requestHeaders = new HashMap<String, String>();
-        requestHeaders.put("Content-Type", "application/xml");
+        requestHeaders.put("Content-Type", "application/xml; charset=UTF-8");
         requestHeaders.put("Accept", "application/xml");
         try {
             Response resp = this.httpPost(qcsessionurl, null, requestHeaders);

@@ -931,5 +931,291 @@ public class XMLOutils {
 			  return string;
 			}
 		
+		
+		/**
+		 * Utilise les code caractères pour remplacer les caractères du paramètre en entité HTML .
+		 * @param string la chaine de caractères contenant les caractères à encoder.
+		 * @return la conversion de la chaine passée en paramètre.
+		 */
+		public static String HtmlToEntity(String string) {
+			
+			HashMap<Integer, String> entityTable = new LinkedHashMap<Integer, String>();
+			
+			entityTable.put(38, "&amp;");     // Quotation mark. Not required     
+			entityTable.put(34, "&quot;");     // Quotation mark. Not required     
+			entityTable.put(60, "&lt;");    // Less-than sign
+			entityTable.put(62, "&gt;");     // Greater-than sign
+//			  // 63, "&#63;");      // Question mark
+//			  // 111, "&#111;");        // Latin small letter o
+			entityTable.put(160, "&nbsp;");      // Non-breaking space
+			entityTable.put(161, "&iexcl;");     // Inverted exclamation mark
+			entityTable.put(162, "&cent;");      // Cent sign
+			entityTable.put(163, "&pound;");     // Pound sign
+			entityTable.put(164, "&curren;");    // Currency sign
+			entityTable.put(165, "&yen;");       // Yen sign
+			entityTable.put(166, "&brvbar;");    // Broken vertical bar
+			entityTable.put(167, "&sect;");      // Section sign
+			entityTable.put(168, "&uml;");       // Diaeresis
+			entityTable.put(169, "&copy;");      // Copyright sign
+			entityTable.put(170, "&ordf;");      // Feminine ordinal indicator
+			entityTable.put(171, "&laquo;");     // Left-pointing double angle quotation mark
+			entityTable.put(172, "&not;");       // Not sign
+			entityTable.put(173, "&shy;");       // Soft hyphen
+//			  174, "&reg;");       // Registered sign
+			entityTable.put(175, "&macr;");      // Macron
+			entityTable.put(176, "&deg;");       // Degree sign
+			entityTable.put(177, "&plusmn;");    // Plus-minus sign
+			entityTable.put(178, "&sup2;");      // Superscript two
+			entityTable.put(179, "&sup3;");      // Superscript three
+			entityTable.put(180, "&acute;");     // Acute accent
+			entityTable.put(181, "&micro;");     // Micro sign
+			entityTable.put(182, "&para;");      // Pilcrow sign
+			entityTable.put(183, "&middot;");    // Middle dot
+			entityTable.put(184, "&cedil;");     // Cedilla
+			entityTable.put(185, "&sup1;");      // Superscript one
+			entityTable.put(186, "&ordm;");      // Masculine ordinal indicator
+			entityTable.put(187, "&raquo;");     // Right-pointing double angle quotation mark
+			entityTable.put(188, "&frac14;");    // Vulgar fraction one-quarter
+			entityTable.put(189, "&frac12;");    // Vulgar fraction one-half
+			entityTable.put(190, "&frac34;");    // Vulgar fraction three-quarters
+			entityTable.put(191, "&iquest;");    // Inverted question mark
+			entityTable.put(192, "&Agrave;");    // A with grave
+			entityTable.put(193, "&Aacute;");    // A with acute
+			entityTable.put(194, "&Acirc;");     // A with circumflex
+			entityTable.put(195, "&Atilde;");    // A with tilde
+			entityTable.put(196, "&Auml;");      // A with diaeresis
+			entityTable.put(197, "&Aring;");     // A with ring above
+			entityTable.put(198, "&AElig;");     // AE
+			entityTable.put(199, "&Ccedil;");    // C with cedilla
+			entityTable.put(200, "&Egrave;");    // E with grave
+			entityTable.put(201, "&Eacute;");    // E with acute
+			entityTable.put(202, "&Ecirc;");     // E with circumflex
+			entityTable.put(203, "&Euml;");      // E with diaeresis
+			entityTable.put(204, "&Igrave;");    // I with grave
+			entityTable.put(205, "&Iacute;");    // I with acute
+			entityTable.put(206, "&Icirc;");     // I with circumflex
+			entityTable.put(207, "&Iuml;");      // I with diaeresis
+			entityTable.put(208, "&ETH;");       // Eth
+			entityTable.put(209, "&Ntilde;");    // N with tilde
+			entityTable.put(210, "&Ograve;");    // O with grave
+			entityTable.put(211, "&Oacute;");    // O with acute
+			entityTable.put(212, "&Ocirc;");     // O with circumflex
+			entityTable.put(213, "&Otilde;");    // O with tilde
+			entityTable.put(214, "&Ouml;");      // O with diaeresis
+			entityTable.put(215, "&times;");     // Multiplication sign
+			entityTable.put(216, "&Oslash;");    // O with stroke
+			entityTable.put(217, "&Ugrave;");    // U with grave
+			entityTable.put(218, "&Uacute;");    // U with acute
+			entityTable.put(219, "&Ucirc;");     // U with circumflex
+			entityTable.put(220, "&Uuml;");      // U with diaeresis
+			entityTable.put(221, "&Yacute;");    // Y with acute
+			entityTable.put(222, "&THORN;");     // Thorn
+			entityTable.put(223, "&szlig;");     // Sharp s. Also known as ess-zed
+			entityTable.put(224, "&agrave;");    // a with grave
+			entityTable.put(225, "&aacute;");    // a with acute
+			entityTable.put(226, "&acirc;");     // a with circumflex
+			entityTable.put(227, "&atilde;");    // a with tilde
+			entityTable.put(228, "&auml;");      // a with diaeresis
+			entityTable.put(229, "&aring;");     // a with ring above
+			entityTable.put(230, "&aelig;");     // ae. Also known as ligature ae
+			entityTable.put(231, "&ccedil;");    // c with cedilla
+			entityTable.put(232, "&egrave;");    // e with grave
+			entityTable.put(233, "&eacute;");    // e with acute
+			entityTable.put(234, "&ecirc;");     // e with circumflex
+			entityTable.put(235, "&euml;");      // e with diaeresis
+			entityTable.put(236, "&igrave;");    // i with grave
+			entityTable.put(237, "&iacute;");    // i with acute
+			entityTable.put(238, "&icirc;");     // i with circumflex
+			entityTable.put(239, "&iuml;");      // i with diaeresis
+			entityTable.put(240, "&eth;");       // eth
+			entityTable.put(241, "&ntilde;");    // n with tilde
+			entityTable.put(242, "&ograve;");    // o with grave
+			entityTable.put(243, "&oacute;");    // o with acute
+			entityTable.put(244, "&ocirc;");     // o with circumflex
+			entityTable.put(245, "&otilde;");    // o with tilde
+			entityTable.put(246, "&ouml;");      // o with diaeresis
+			entityTable.put(247, "&divide;");    // Division sign
+			entityTable.put(248, "&oslash;");    // o with stroke. Also known as o with slash
+			entityTable.put(249, "&ugrave;");    // u with grave
+			entityTable.put(250, "&uacute;");    // u with acute
+			entityTable.put(251, "&ucirc;");     // u with circumflex
+			entityTable.put(252, "&uuml;");      // u with diaeresis
+			entityTable.put(253, "&yacute;");    // y with acute
+			entityTable.put(254, "&thorn;");     // thorn
+			entityTable.put(255, "&yuml;");      // y with diaeresis
+			entityTable.put(264, "&#264;");      // Latin capital letter C with circumflex
+			entityTable.put(265, "&#265;");      // Latin small letter c with circumflex
+			entityTable.put(338, "&OElig;");     // Latin capital ligature OE
+			entityTable.put(339, "&oelig;");     // Latin small ligature oe
+			entityTable.put(352, "&Scaron;");    // Latin capital letter S with caron
+			entityTable.put(353, "&scaron;");    // Latin small letter s with caron
+			entityTable.put(372, "&#372;");      // Latin capital letter W with circumflex
+			entityTable.put(373, "&#373;");      // Latin small letter w with circumflex
+			entityTable.put(374, "&#374;");      // Latin capital letter Y with circumflex
+			entityTable.put(375, "&#375;");      // Latin small letter y with circumflex
+			entityTable.put(376, "&Yuml;");      // Latin capital letter Y with diaeresis
+			entityTable.put(402, "&fnof;");      // Latin small f with hook, function, florin
+			entityTable.put(710, "&circ;");      // Modifier letter circumflex accent
+			entityTable.put(732, "&tilde;");     // Small tilde
+			entityTable.put(913, "&Alpha;");     // Alpha
+			entityTable.put(914, "&Beta;");      // Beta
+			entityTable.put(915, "&Gamma;");     // Gamma
+			entityTable.put(916, "&Delta;");     // Delta
+			entityTable.put(917, "&Epsilon;");   // Epsilon
+			entityTable.put(918, "&Zeta;");      // Zeta
+			entityTable.put(919, "&Eta;");       // Eta
+			entityTable.put(920, "&Theta;");     // Theta
+			entityTable.put(921, "&Iota;");      // Iota
+			entityTable.put(922, "&Kappa;");     // Kappa
+			entityTable.put(923, "&Lambda;");    // Lambda
+			entityTable.put(924, "&Mu;");        // Mu
+			entityTable.put(925, "&Nu;");        // Nu
+			entityTable.put(926, "&Xi;");        // Xi
+			entityTable.put(927, "&Omicron;");   // Omicron
+			entityTable.put(928, "&Pi;");        // Pi
+			entityTable.put(929, "&Rho;");       // Rho
+			entityTable.put(931, "&Sigma;");     // Sigma
+			entityTable.put(932, "&Tau;");       // Tau
+			entityTable.put(933, "&Upsilon;");   // Upsilon
+			entityTable.put(934, "&Phi;");       // Phi
+			entityTable.put(935, "&Chi;");       // Chi
+			entityTable.put(936, "&Psi;");       // Psi
+			entityTable.put(937, "&Omega;");     // Omega
+			entityTable.put(945, "&alpha;");     // alpha
+			entityTable.put(946, "&beta;");      // beta
+			entityTable.put(947, "&gamma;");     // gamma
+			entityTable.put(948, "&delta;");     // delta
+			entityTable.put(949, "&epsilon;");   // epsilon
+			entityTable.put(950, "&zeta;");      // zeta
+			entityTable.put(951, "&eta;");       // eta
+			entityTable.put(952, "&theta;");     // theta
+			entityTable.put(953, "&iota;");      // iota
+			entityTable.put(954, "&kappa;");     // kappa
+			entityTable.put(955, "&lambda;");    // lambda
+			entityTable.put(956, "&mu;");        // mu
+			entityTable.put(957, "&nu;");        // nu
+			entityTable.put(958, "&xi;");        // xi
+			entityTable.put(959, "&omicron;");   // omicron
+			entityTable.put(960, "&pi;");        // pi
+			entityTable.put(961, "&rho;");       // rho
+			entityTable.put(962, "&sigmaf;");    // sigmaf
+			entityTable.put(963, "&sigma;");     // sigma
+			entityTable.put(964, "&tau;");       // tau
+			entityTable.put(965, "&upsilon;");   // upsilon
+			entityTable.put(966, "&phi;");       // phi
+			entityTable.put(967, "&chi;");       // chi
+			entityTable.put(968, "&psi;");       // psi
+			entityTable.put(969, "&omega;");     // omega
+			entityTable.put(977, "&thetasym;");  // Theta symbol
+			entityTable.put(978, "&upsih;");     // Greek upsilon with hook symbol
+			entityTable.put(982, "&piv;");       // Pi symbol
+			entityTable.put(8194, "&ensp;");     // En space
+			entityTable.put(8195, "&emsp;");     // Em space
+			entityTable.put(8201, "&thinsp;");   // Thin space
+			entityTable.put(8204, "&zwnj;");     // Zero width non-joiner
+			entityTable.put(8205, "&zwj;");      // Zero width joiner
+			entityTable.put(8206, "&lrm;");      // Left-to-right mark
+			entityTable.put(8207, "&rlm;");      // Right-to-left mark
+			entityTable.put(8211, "&ndash;");    // En dash
+			entityTable.put(8212, "&mdash;");    // Em dash
+			entityTable.put(8216, "&lsquo;");    // Left single quotation mark
+			entityTable.put(8217, "&rsquo;");    // Right single quotation mark
+			entityTable.put(8218, "&sbquo;");    // Single low-9 quotation mark
+			entityTable.put(8220, "&ldquo;");    // Left double quotation mark
+			entityTable.put(8221, "&rdquo;");    // Right double quotation mark
+			entityTable.put(8222, "&bdquo;");    // Double low-9 quotation mark
+			entityTable.put(8224, "&dagger;");   // Dagger
+			entityTable.put(8225, "&Dagger;");   // Double dagger
+			entityTable.put(8226, "&bull;");     // Bullet
+			entityTable.put(8230, "&hellip;");   // Horizontal ellipsis
+			entityTable.put(8240, "&permil;");   // Per mille sign
+			entityTable.put(8242, "&prime;");    // Prime
+			entityTable.put(8243, "&Prime;");    // Double Prime
+			entityTable.put(8249, "&lsaquo;");   // Single left-pointing angle quotation
+			entityTable.put(8250, "&rsaquo;");   // Single right-pointing angle quotation
+			entityTable.put(8254, "&oline;");    // Overline
+			entityTable.put(8260, "&frasl;");    // Fraction Slash
+			entityTable.put(8364, "&euro;");     // Euro sign
+			entityTable.put(8472, "&weierp;");   // Script capital
+			entityTable.put(8465, "&image;");    // Blackletter capital I
+			entityTable.put(8476, "&real;");     // Blackletter capital R
+			entityTable.put(8482, "&trade;");    // Trade mark sign
+			entityTable.put(8501, "&alefsym;");  // Alef symbol
+			entityTable.put(8592, "&larr;");     // Leftward arrow
+			entityTable.put(8593, "&uarr;");     // Upward arrow
+			entityTable.put(8594, "&rarr;");     // Rightward arrow
+			entityTable.put(8595, "&darr;");     // Downward arrow
+			entityTable.put(8596, "&harr;");     // Left right arrow
+			entityTable.put(8629, "&crarr;");    // Downward arrow with corner leftward. Also known as carriage return
+			entityTable.put(8656, "&lArr;");     // Leftward double arrow. ISO 10646 does not say that lArr is the same as the 'is implied by' arrow but also does not have any other character for that function. So ? lArr can be used for 'is implied by' as ISOtech suggests
+			entityTable.put(8657, "&uArr;");     // Upward double arrow
+			entityTable.put(8658, "&rArr;");     // Rightward double arrow. ISO 10646 does not say this is the 'implies' character but does not have another character with this function so ? rArr can be used for 'implies' as ISOtech suggests
+			entityTable.put(8659, "&dArr;");     // Downward double arrow
+			entityTable.put(8660, "&hArr;");     // Left-right double arrow
+			// Mathematical Operators
+			entityTable.put(8704, "&forall;");   // For all
+			entityTable.put(8706, "&part;");     // Partial differential
+			entityTable.put(8707, "&exist;");    // There exists
+			entityTable.put(8709, "&empty;");    // Empty set. Also known as null set and diameter
+			entityTable.put(8711, "&nabla;");    // Nabla. Also known as backward difference
+			entityTable.put(8712, "&isin;");     // Element of
+			entityTable.put(8713, "&notin;");    // Not an element of
+			entityTable.put(8715, "&ni;");       // Contains as member
+			entityTable.put(8719, "&prod;");     // N-ary product. Also known as product sign. Prod is not the same character as U+03A0 'greek capital letter pi' though the same glyph might be used for both
+			entityTable.put(8721, "&sum;");      // N-ary summation. Sum is not the same character as U+03A3 'greek capital letter sigma' though the same glyph might be used for both
+			entityTable.put(8722, "&minus;");    // Minus sign
+			entityTable.put(8727, "&lowast;");   // Asterisk operator
+			entityTable.put(8729, "&#8729;");    // Bullet operator
+			entityTable.put(8730, "&radic;");    // Square root. Also known as radical sign
+			entityTable.put(8733, "&prop;");     // Proportional to
+			entityTable.put(8734, "&infin;");    // Infinity
+			entityTable.put(8736, "&ang;");      // Angle
+			entityTable.put(8743, "&and;");      // Logical and. Also known as wedge
+			entityTable.put(8744, "&or;");       // Logical or. Also known as vee
+			entityTable.put(8745, "&cap;");      // Intersection. Also known as cap
+			entityTable.put(8746, "&cup;");      // Union. Also known as cup
+			entityTable.put(8747, "&int;");      // Integral
+			entityTable.put(8756, "&there4;");   // Therefore
+			entityTable.put(8764, "&sim;");      // tilde operator. Also known as varies with and similar to. The tilde operator is not the same character as the tilde, U+007E, although the same glyph might be used to represent both
+			entityTable.put(8773, "&cong;");     // Approximately equal to
+			entityTable.put(8776, "&asymp;");    // Almost equal to. Also known as asymptotic to
+			entityTable.put(8800, "&ne;");       // Not equal to
+			entityTable.put(8801, "&equiv;");    // Identical to
+			entityTable.put(8804, "&le;");       // Less-than or equal to
+			entityTable.put(8805, "&ge;");       // Greater-than or equal to
+			entityTable.put(8834, "&sub;");      // Subset of
+			entityTable.put(8835, "&sup;");      // Superset of. Note that nsup, 'not a superset of, U+2283' is not covered by the Symbol font encoding and is not included.
+			entityTable.put(8836, "&nsub;");     // Not a subset of
+			entityTable.put(8838, "&sube;");     // Subset of or equal to
+			entityTable.put(8839, "&supe;");     // Superset of or equal to
+			entityTable.put(8853, "&oplus;");    // Circled plus. Also known as direct sum
+			entityTable.put(8855, "&otimes;");   // Circled times. Also known as vector product
+			entityTable.put(8869, "&perp;");     // Up tack. Also known as orthogonal to and perpendicular
+			entityTable.put(8901, "&sdot;");     // Dot operator. The dot operator is not the same character as U+00B7 middle dot
+			// Miscellaneous Technical
+			entityTable.put(8968, "&lceil;");    // Left ceiling. Also known as an APL upstile
+			entityTable.put(8969, "&rceil;");    // Right ceiling
+			entityTable.put(8970, "&lfloor;");   // left floor. Also known as APL downstile
+			entityTable.put(8971, "&rfloor;");   // Right floor
+			entityTable.put(9001, "&lang;");     // Left-pointing angle bracket. Also known as bra. Lang is not the same character as U+003C 'less than'or U+2039 'single left-pointing angle quotation mark'
+			entityTable.put(9002, "&rang;");     // Right-pointing angle bracket. Also known as ket. Rang is not the same character as U+003E 'greater than' or U+203A 'single right-pointing angle quotation mark'
+			// Geometric Shapes
+			entityTable.put(9642, "&#9642;");    // Black small square
+			entityTable.put(9643, "&#9643;");    // White small square
+			entityTable.put(9674, "&loz;");      // Lozenge
+			// Miscellaneous Symbols
+			entityTable.put(9702, "&#9702;");    // White bullet
+			entityTable.put(9824, "&spades;");   // Black (filled) spade suit
+			entityTable.put(9827, "&clubs;");    // Black (filled) club suit. Also known as shamrock
+			entityTable.put(9829, "&hearts;");   // Black (filled) heart suit. Also known as shamrock
+			entityTable.put(9830, "&diams;");   // Black (filled) diamond suit
+
+			
+			  for (Integer i : entityTable.keySet()) {
+			     string = string.replaceAll("" + new Character((char) i.intValue()), entityTable.get(i));
+			  }
+
+			  return string;
+			}
 
 }
