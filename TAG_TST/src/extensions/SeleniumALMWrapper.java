@@ -4,7 +4,12 @@ import java.io.File;
 
 import org.apache.log4j.Logger;
 
-import outils.ALMOutils;
+import com.jacob.activeX.ActiveXComponent;
+import com.jacob.com.ComException;
+import com.jacob.com.ComFailException;
+import com.jacob.com.ComThread;
+import com.jacob.com.Dispatch;
+
 import atu.alm.wrapper.bean.ServerDetails;
 import atu.alm.wrapper.collection.ListWrapper;
 import atu.alm.wrapper.enums.DefectPriority;
@@ -12,13 +17,6 @@ import atu.alm.wrapper.enums.DefectSeverity;
 import atu.alm.wrapper.enums.DefectStatus;
 import atu.alm.wrapper.enums.StatusAs;
 import atu.alm.wrapper.exceptions.ALMServiceException;
-
-import com.jacob.activeX.ActiveXComponent;
-import com.jacob.com.ComException;
-import com.jacob.com.ComFailException;
-import com.jacob.com.ComThread;
-import com.jacob.com.Dispatch;
-
 import extensions.impl.ALMAttachement;
 import extensions.impl.ALMAttachementStorage;
 import extensions.impl.ALMRun;
@@ -35,14 +33,16 @@ import extensions.interfaces.ALMHasAttachement;
 import extensions.interfaces.IALMDefect;
 import extensions.interfaces.IALMRun;
 import extensions.interfaces.IALMTestCase;
-import extensions.interfaces.IALMTestCaseRun;
 import extensions.interfaces.IALMTestSet;
+import outils.ALMOutils;
 
 /**
  * Classe permettant la manipulation du contexte ALM en ouvrant une communication de type "COM" avec le OTAClient.dll.
+ * Cette méthode implique de disposer des éléments de configuration et d'un environement d'éxécution 32bit.
  * @author levieilfa
- *
+ * @deprecated Il est préférable de passer par l'interface REST.
  */
+@Deprecated
 public class SeleniumALMWrapper {
 
 	/**

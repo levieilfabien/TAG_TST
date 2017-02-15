@@ -90,7 +90,7 @@ public class SeleniumOutils {
 	/**
 	 * L'attente maximale autorisée pour les fonctions d'attentes.
 	 */
-	private int attenteMax = 15;
+	private int attenteMax = 10;
 	
 	public void ajouterListener() {
 		EventFiringWebDriver eventDriver = new EventFiringWebDriver(driver);
@@ -1161,6 +1161,19 @@ public class SeleniumOutils {
 	public void attendreEtCliquer(CibleBean cible) throws SeleniumException {
 		attendreChargementElement(cible, true, true);
 		cliquer(cible);
+	}
+	
+	/**
+	 * Cette fonction attend l'affichage de la cible puis clique dessus.
+	 * Ensuite elle ne "rend la main" qu'une fois que la cible de l'attente est présente à l'écran.
+	 * @param cible la cible du clic.
+	 * @param cibleAttente la cible de l'attente.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public void cliquerEtAttendre(CibleBean cible, CibleBean cibleAttente) throws SeleniumException {
+		attendreChargementElement(cible, true, true);
+		cliquer(cible);
+		attendreChargementElement(cibleAttente, true, true);
 	}
 	
 	/**
