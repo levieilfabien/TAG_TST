@@ -164,7 +164,35 @@ public class CasEssaiBean implements Serializable {
 	 * @param objectif object à ajouter.
 	 */
 	public void ajouterStep(String descriptif, String code, String attendu) {
-		this.objectifs.put(code, new ObjectifBean(descriptif, code, code + getTime(), attendu, ""));
+		ObjectifBean step = new ObjectifBean(descriptif, code, code + getTime(), attendu, "");
+		// Par défaut un step est "not run", il est donc avec une valorisation de son état à "Null".
+		step.setEtat(null);
+		this.objectifs.put(code, step);
+	}
+	
+	/**
+	 * Constructeur par défaut.
+	 */
+	public CasEssaiBean() {
+		super();
+	}
+	
+	/**
+	 * Construit un sous cas d'essai (donc un cas de test au niveau scénario) pour le cas d'essai passé en paramètre.
+	 * @param reference le scénario ou cas d'essai de référence qui fournis les informations d'initialisation.
+	 * @param prefixe le préfixe associé au nouveau cas d'essai (ou cas de test)
+	 * @param idTestPlan l'identifiant associé au nouveau cas d'essai (l'id dans le test plan associé au cas de test)
+	 */
+	public CasEssaiBean(CasEssaiBean reference, String prefixe, Integer idTestPlan) {
+		super();
+		setAlm(reference.getAlm());
+		setNomCasEssai(prefixe + reference.getTime());
+		setIdUniqueTestLab(reference.getIdUniqueTestLab());
+		setIdUniqueTestPlan(idTestPlan);
+		setRepertoireTelechargement(reference.getRepertoireTelechargement());
+		// Par défaut on ne connais pas l'état final de cette étape, elle sera déduite de la sommes de ses steps.
+		setEtatFinal(null);
+		reference.getTests().add(this);
 	}
 	
 	/**
@@ -206,7 +234,7 @@ public class CasEssaiBean implements Serializable {
 		// Si toutes les sous étapes du cas de test sont valides (typiquement les steps) alors le cas de test est lui même valide.
 		boolean tousValide = true;
 		for (ObjectifBean objectif : getObjectifs().values()) {
-			tousValide = tousValide && objectif.getEtat();
+			tousValide = tousValide && (objectif.isEtat() == true);
 		}
 		setEtatFinal(tousValide);
 	}
@@ -228,6 +256,24 @@ public class CasEssaiBean implements Serializable {
 			}
 			
 		}
+	}
+	
+	/**
+	 * Valide un objectif dont la clef est connue.
+	 * @param outil l'outil selenium.
+	 * @param clef la clef concernée.
+	 */
+	public void valider(SeleniumOutils outil, String clef) {
+		validerObjectif(outil.getDriver(), clef, true);
+	}
+	
+	/**
+	 * Invalide un objectif dont la clef est connue.
+	 * @param outil l'outil selenium.
+	 * @param clef la clef concernée.
+	 */
+	public void invalider(SeleniumOutils outil, String clef) {
+		validerObjectif(outil.getDriver(), clef, false);
 	}
 	
 	/**
@@ -310,13 +356,13 @@ public class CasEssaiBean implements Serializable {
 		StringBuffer retour = new StringBuffer("\nTest " + getNomCasEssai() + ", objectifs à atteindre : \n");
 		for (String clef : getObjectifs().keySet()) {
 			ObjectifBean objectif = getObjectifs().get(clef);
-			retour.append(objectif.getDescriptif() + ", Etat : [" + (objectif.getEtat() ? "OK" : "NOK") +"]\n");
+			retour.append(objectif.getDescriptif() + ", Etat : [" + (objectif.isEtat() == true ? "OK" : "NOK") +"]\n");
 		}
 		if (getReglesDeGestions().size() > 0) {
 			retour.append("Règles de gestion à valider : \n");
 			for (String clef : getReglesDeGestions().keySet()) {
 				RGMBean objectif = getReglesDeGestions().get(clef);
-				retour.append(objectif.getDescriptif() + ", Etat : [" + (objectif.getEtat() ? "OK" : "NOK") +"]\n");
+				retour.append(objectif.getDescriptif() + ", Etat : [" + (objectif.isEtat() == true ? "OK" : "NOK") +"]\n");
 			}
 		}
 		retour.append("Etat final attendu : " + (getFinalise() ? "Finalisé\n" : "Non Finalisé\n"));

@@ -66,7 +66,7 @@ public class XLSOutils {
 			transformer.transformXLS(template, beans, nom);
 			System.out.println("Fin de renseignement excel.");
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			throw new SeleniumException(Erreurs.E011);
 		}
 	}

@@ -279,7 +279,9 @@ public class ALMOutils {
 	 * @param casEssai le cas d'essai contenant les informations obligatoire.
 	 * @param etat l'état final du cas de test.
 	 * @throws SeleniumException en cas d'erreur.
+	 * @deprecated Il faut désormais utiliser la mise à jour ALM via les services REST, elle est beaucoup plus fiable et rapide.
 	 */
+	@Deprecated
 	public static void miseAJourTestSet(CasEssaiBean casEssai, boolean etat) throws SeleniumException {
 		boolean valide = false;
 		boolean casUnique = false;
@@ -331,7 +333,7 @@ public class ALMOutils {
 					// On met à jour les STEP (sous forme d'ajout)
 					for (ObjectifBean step : casEssai.getObjectifs().values()) {
 						if (step.isStep()) {
-							wrapper.addStep(execution_run, step.getCode(), step.getEtat()?StatusAs.PASSED:StatusAs.FAILED, step.getDescriptif(), step.getAttendu(), step.getObtenu());
+							wrapper.addStep(execution_run, step.getCode(), step.isEtat() == true?StatusAs.PASSED:StatusAs.FAILED, step.getDescriptif(), step.getAttendu(), step.getObtenu());
 						}
 					}
 					// On ferme la connexion avec ALM.

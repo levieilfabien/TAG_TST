@@ -42,10 +42,12 @@ import org.openqa.selenium.interactions.Action;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.UnexpectedTagNameException;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import annotations.Step;
 import beans.CasEssaiBean;
 import beans.CibleBean;
 import beans.CookieBean;
@@ -101,47 +103,38 @@ public class SeleniumOutils {
 	
 	/**
 	 * Fonction qui injecte un code dans la page pour retenir tout clic sur la page.
-	 * @throws SeleniumException 
+	 * Cette fonction n'est à utiliser qu'avec un navigateur le permettant.
+	 * @throws SeleniumException en cas d'erreur lors du parcours des frames.
 	 */
 	public void detecterClicParJavascript() throws SeleniumException {
-		
 		List<String> listeFrame = extraireFrames();
-		
 		if (listeFrame != null && !listeFrame.isEmpty()) {
-		
-			for (String idFrame : listeFrame) {
-				driver = changerDeFrame(idFrame);
-				
-				JavascriptExecutor js = (JavascriptExecutor) driver;
-				js.executeScript("last_clic = 'test';"
-						+ " function getClic() {return last_clic;}"
-						+ " function setClic(toSet) {last_clic = toSet;}"
-						+ " document.onclick= function(event) { if (event===undefined) event= window.event; var target= 'target' in event? event.target : event.srcElement;last_clic=target; alert('un clic a recuperer')};");
-				}
+		for (String idFrame : listeFrame) {
+			driver = changerDeFrame(idFrame);
+			JavascriptExecutor js = (JavascriptExecutor) driver;
+			js.executeScript("last_clic = 'test';"
+					+ " function getClic() {return last_clic;}"
+					+ " function setClic(toSet) {last_clic = toSet;}"
+					+ " document.onclick= function(event) { if (event===undefined) event= window.event; var target= 'target' in event? event.target : event.srcElement;last_clic=target; alert('un clic a recuperer')};");
+			}
 		}
 	}
 	
 	/**
-	 * Renvoie le dernier WebElement qui ai subit un clic.
+	 * Renvoie le dernier WebElement qui ai subit un clic. Cette fonction dépend de la mise en place de la détection par javascript.
 	 * @return le WebElement ayant subit le dernier clic ou null si aucun objet.
 	 */
 	public Object dernierClicParJavascript() {
-		
 		//org.openqa.selenium.remote.ErrorHandler$UnknownServerException
-		
 		JavascriptExecutor js = (JavascriptExecutor) driver;
 		accepterAlerteJavascript();
-		
 		Object objet = js.executeScript("return last_clic;");
-		
 		System.out.println(objet);
-		
 		if (objet != null && objet.getClass() == WebElement.class) {
 			return (WebElement) objet;
 		} else {
 			return objet;
 		}
-		
 	}
 	
 	/**
@@ -176,7 +169,21 @@ public class SeleniumOutils {
 		if (element.isDisplayed()) {
 			Actions builder = new Actions(driver);
 			Action moveTo = builder.moveToElement(element).build();
-			
+			moveTo.perform();
+		}
+	}
+	
+	/**
+	 * Permet de diriger la souris vers l'élément paramète.
+	 * @param element l'élément paramètre vers lequel la souris doit se diriger.
+	 * @throws SeleniumException en cas d'erreur lors de la récupération de la cible.
+	 */
+	@Step(nom="focus")
+	public void focusElement(CibleBean cible) throws SeleniumException {
+		WebElement element = obtenirElement(cible);
+		if (element.isDisplayed()) {
+			Actions builder = new Actions(driver);
+			Action moveTo = builder.moveToElement(element).build();
 			moveTo.perform();
 		}
 	}
@@ -195,6 +202,7 @@ public class SeleniumOutils {
 	 * Effectue une capture d'écran ayant pour nom le paramètre.
 	 * @param nomCapture le nom de la capture d'écran (sans l'extension).
 	 */
+	@Step(nom="capture")
 	public void captureEcran(String nomCapture) {
 		//logger("Capture d'écran : " + nomCapture);
 		if (repertoireRacine != null) {
@@ -265,6 +273,7 @@ public class SeleniumOutils {
 	/**
 	 * Permet de sauvegarder les cookies dans un fichier cookie.ser.
 	 */
+	@Step(nom="sauverCookies")
 	public void sauvegarderCookies() {
 		sauvegarderCookies("cookie");
 	}
@@ -281,6 +290,7 @@ public class SeleniumOutils {
 	 * Charge le cookie dont le nom est cookie.ser dans le driver.
 	 * @throws SeleniumException en cas d'erreur.
 	 */
+	@Step(nom="chargerCookies")
 	public void chargerCookie() throws SeleniumException {
 		chargerCookie("cookie");
 	}
@@ -328,6 +338,7 @@ public class SeleniumOutils {
 	 * @param titre le titre de la page dont on attend le chargement.
 	 * @throws SeleniumException en cas d'erreur.
 	 */
+	@Step(nom="attendrePage")
 	public void attendreChargementPage(final String titre) throws SeleniumException {
 		attendreChargementPage(titre, null);
 	}
@@ -492,6 +503,7 @@ public class SeleniumOutils {
 	 * @param texte le texte.
 	 * @throws SeleniumException en cas d'erreur.
 	 */
+	@Step(nom="attendreTexte")
 	public void attendrePresenceTexte(final String texte) throws SeleniumException {
 		attendrePresenceTexte(null, texte);
 	}
@@ -647,8 +659,7 @@ public class SeleniumOutils {
 	 * @return true si le texte est trouvé, false sinon.
 	 */
 	public boolean testerPresenceTexte(String text, boolean visible){
-		Long timestamp = new Date().getTime();
-		return testerPresenceTexte(null, text, visible, timestamp);
+		return testerPresenceTexte(null, text, visible, new Date().getTime());
 	}
 	
 	/**
@@ -670,7 +681,7 @@ public class SeleniumOutils {
 	public void attendreChargementElement(final CibleBean cible, final boolean visible, final boolean actif) throws SeleniumException {
 	    try {
 	    	logger("On attend le chargement de l'élément " + cible.getClef() + " : " + cible.lister() + " (Frame : " + cible.getFrame() + ")");
-	    	final By critere = cible.creerBy();
+	    	//final By critere = cible.creerBy();
 			(new WebDriverWait(driver, attenteMax)).until(new ExpectedCondition<Boolean>() {
 		        public Boolean apply(WebDriver driver) {
 		        	try {
@@ -680,7 +691,7 @@ public class SeleniumOutils {
 		        		if (visible) {
 		        			temp = obtenirElementVisible(cible);
 		        		} else {
-		        			temp = obtenirElement(cible.getFrame(), critere);
+		        			temp = obtenirElement(cible.getFrame(), cible.creerBy());
 		        		}
 		        		retour = (temp != null);
 		        		// Si on à un critère d'activité et que l'élément existe on vérifie.
@@ -694,12 +705,32 @@ public class SeleniumOutils {
 		        	} catch (StaleElementReferenceException ex) {
 		        		// L'élément n'est plus présent, la référence est donc obselète.
 		        		return false;
+		        	} catch (Exception ex2) {
+		        		// Une erreur non prévue s'est déroulée. On ne fait que relancer jusqu'au timer.
+		        		return false;
 		        	}
 		        }
 		    });
 	    } catch (TimeoutException e) {
 	    	throw new SeleniumException(Erreurs.E009, "Element introuvable (ou désactivé) : " + cible.lister());
 	    }
+	}
+	
+	/**
+	 * Attend le chargement d'un élément visible dans la page avant de poursuivre le test.
+	 * La recherche s'effectue dans la Frame active.
+	 * @param cible la cible désignant l'élement à attendre.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public WebElement attendreVisibiliteElement(CibleBean cible) throws SeleniumException {
+	    WebDriverWait wait = new WebDriverWait(driver, attenteMax);
+	    WebElement element;
+	    try {
+	    	element = wait.until(ExpectedConditions.visibilityOfElementLocated(cible.creerBy()));
+	    } catch (TimeoutException e) {
+	    	throw new SeleniumException(Erreurs.E009, "Element introuvable (ou désactivé) : " + cible.lister());
+	    }
+	    return element;
 	}
 	
 	/**
@@ -920,7 +951,7 @@ public class SeleniumOutils {
 				temp.click();
 			} else {
 				// L'objet n'est pas trouvé dans la page.
-				throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est pas visible.");
+				throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est pas visible (ou absente).");
 			}
 		} catch (StaleElementReferenceException ex) {
 			// L'objet qu'on cherche à cliquer n'est plus présent : la référence est obselète
@@ -930,7 +961,7 @@ public class SeleniumOutils {
 			} catch (StaleElementReferenceException ex2) {
 				throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est plus disponible (rechargement?).");
 			} catch (NullPointerException ex2) {
-				throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est pas visible.");
+				throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est pas visible (ou absente).");
 			}
 		}
 	}
@@ -1061,6 +1092,39 @@ public class SeleniumOutils {
 	}
 	
 	/**
+	 * Permet d'obtenir un élément à partir d'un autre élément et d'un chemin xpath.
+	 * @param base l'élément de départ.
+	 * @param xpath le chemin à appliquer depuis l'élément de départ pour obtenir la cible.
+	 * @return l'élément demandé.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public WebElement obtenirElement(CibleBean cible, String xpath) throws SeleniumException {
+		return obtenirElement(obtenirElement(cible), xpath);
+	}
+	
+	/**
+	 * Permet d'obtenir un élément à partir d'un autre élément et d'un chemin xpath.
+	 * @param base l'élément de départ.
+	 * @param xpath le chemin à appliquer depuis l'élément de départ pour obtenir la cible.
+	 * @return l'élément demandé.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public WebElement obtenirElement(WebElement base, String xpath) throws SeleniumException {
+		By by = By.xpath(xpath);
+		try {
+			return base.findElement(by);
+		} catch (NoSuchElementException ex) {
+			throw new SeleniumException(Erreurs.E009, "L'element " + by.toString() + " n'existe pas");
+		} catch (ElementNotVisibleException ex) {
+			throw new SeleniumException(Erreurs.E016, "L'element " + by.toString() + " n'est pas visible");
+		} catch (UnhandledAlertException ex) {
+			throw new SeleniumException(Erreurs.E019, "Popup " + ex.getAlertText() + " Lors de la recherche de l'élément : " + by.toString() );
+		} catch (StaleElementReferenceException ex) {
+			throw new SeleniumException(Erreurs.E023, "L'element " + by.toString() + " n'est plus sur la page");
+		}
+	}
+	
+	/**
 	 * Permet d'obtenir un élément visible à partir d'une cible.
 	 * @param cible la cible désignant l'objet visible recherché.
 	 * @return l'élément demandé (si il est visible).
@@ -1149,7 +1213,6 @@ public class SeleniumOutils {
 	 * @throws SeleniumException en cas d'erreur.
 	 */
 	public void cliquer(String valeur) throws SeleniumException {
-		//cliquer(null, creerBy(Clefs.ID, valeur));	
 		cliquer(new CibleBean(null, Clefs.ID, new String[] {valeur}));
 	}
 	
@@ -1171,8 +1234,7 @@ public class SeleniumOutils {
 	 * @throws SeleniumException en cas d'erreur.
 	 */
 	public void cliquerEtAttendre(CibleBean cible, CibleBean cibleAttente) throws SeleniumException {
-		attendreChargementElement(cible, true, true);
-		cliquer(cible);
+		attendreEtCliquer(cible);
 		attendreChargementElement(cibleAttente, true, true);
 	}
 	
@@ -1226,20 +1288,6 @@ public class SeleniumOutils {
 	public void saisir(String valeur, String texte) throws SeleniumException {
 		saisir(texte, new CibleBean(null, Clefs.ID, valeur), false);
 	}
-
-//	public void selectionner(String libelle, CibleBean cible) throws SeleniumException {
-//		try {
-//			Select temp = new Select(obtenirElementVisible(cible));
-//			try {
-//				temp.selectByVisibleText(libelle);
-//			}	catch (Exception ex) {
-//				temp.selectByValue(libelle);
-//			}
-//			logger("Selection de la valeur " +  libelle + " pour le select : " +  cible.lister());
-//		}  catch (Exception ex) {
-//			throw new SeleniumException(Erreurs.E009, "(Selecteur : " + cible.lister() + ", Valeur : " + libelle + ")");
-//		}
-//	}
 	
 	/**
 	 * Selectionne dans la cible désignée le texte choisie.
@@ -1253,7 +1301,7 @@ public class SeleniumOutils {
 	
 	/**
 	 * Permet la selection d'une valeur dans une balise "select". On tente une selection directe vis à vis de la valeur ou du texte.
-	 * Si cela ne fonctionne pas, une selection via le "innerhtml" aura lieu si le top vérificaiton est à true.
+	 * Si cela ne fonctionne pas, une selection via le "innerhtml" aura lieu si le top vérification est à true.
 	 * @param libelle le libelle ou la valeur à selectionner.
 	 * @param cible la cible désignant le selecteur
 	 * @param verification true si on souhaites vérifier que la selection est effective, false sinon.
@@ -1615,6 +1663,7 @@ public class SeleniumOutils {
 	
 	/**
 	 * Permet de tester la présence d'une cible dans la page courante.
+	 * Cette vérification se fait immédiatement, on n'attend pas d'éventuelles fins de chargement.
 	 * @param cible la cible dont on teste la présence.
 	 * @return true si l'élément est présent et visible, false sinon (ou en cas d'erreur).
 	 */
@@ -1622,6 +1671,43 @@ public class SeleniumOutils {
 		try {
 			return obtenirElementVisible(cible) != null;
 		} catch (Exception ex) {
+			return false;
+		}
+	}
+	
+	/**
+	 * Permet de tester la présence d'une cible dans la page courante.
+	 * Si l'élément n'est pas présent immédiatement, on attend un éventuel chargement.
+	 * @param cible la cible dont on teste la présence.
+	 * @return true si l'élément exite (visible ou non), false sinon (ou en cas d'erreur).
+	 */
+	public boolean testerPresenceElementDiffere(CibleBean cible) {
+		return testerElementDiffere(cible, false);
+	}
+	
+	/**
+	 * Permet de tester la présence et la visibilité d'une cible dans la page courante.
+	 * Si l'élément n'est pas présent (ou invisible) immédiatement, on attend un éventuel chargement.
+	 * @param cible la cible dont on teste la présence.
+	 * @return true si l'élément est présent et visible, false sinon (ou en cas d'erreur).
+	 */
+	public boolean testerVisibiliteElementDiffere(CibleBean cible) {
+		return testerElementDiffere(cible, true);
+	}
+	
+	/**
+	 * Permet de tester la présence et/ou la visibilité d'une cible dans la page courante.
+	 * Si l'élément n'est pas présent ou ne répond pas aux critères immédiatement, on attend un éventuel chargement.
+	 * @param cible la cible dont on teste la présence.
+	 * @param visiblite la cible doit elle être visible?
+	 * @return true si l'élément est détecter selon les critères, false sinon (ou en cas d'erreur).
+	 */
+	private boolean testerElementDiffere(CibleBean cible, boolean visibilite) {
+		try {
+			attendreChargementElement(cible, visibilite, visibilite);
+			return true;
+		} catch (Exception ex) {
+			System.out.println(ex.getMessage());
 			return false;
 		}
 	}
@@ -1677,6 +1763,12 @@ public class SeleniumOutils {
 	
 	//TODO Remplacer dans le code source la partie FRAME par son contenu.
 	
+	/**
+	 * Tente une saisie de texte intuitive à partir de l'indication passée en paramètre.
+	 * @param indication l'indication permettant de trouver l'input qui doit accueuillir la saisie.
+	 * @param texte le texte concerné par la saisie.
+	 * @throws SeleniumException en cas d'erreur où d'impossibilité de saisie.
+	 */
 	public void saisirIntuitif(String indication, String texte) throws SeleniumException {
 		// POUR CHAQUE TYPE DE CRITERE DE RECHERCHE
 		CibleBean temp = null;
@@ -1702,7 +1794,7 @@ public class SeleniumOutils {
 				}
 			} catch (Exception ex) {
 				// ON A PROBABLEMENT PARCOURUE UNE FRAME N'EXISTANT PAS
-				temp.toString();
+				//temp.toString();
 				break;
 			}
 		} 
@@ -1740,7 +1832,7 @@ public class SeleniumOutils {
 						}
 					} catch (Exception ex) {
 						// SI ON A DEPASER LE NOMBRE DE FRAME CONNU ON STOPPE POUR CETTE CLEF
-						temp.toString();
+						//temp.toString();
 						break;
 					}
 				}

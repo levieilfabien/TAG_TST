@@ -38,7 +38,8 @@ public enum Erreurs {
 	E031("E031", "Un élément sur la page ne devrait pas s'afficher", "Elément inattendu", true),
 	E032("E032", "Impossible de communiquer correctement avec ALM", "Erreur ALM", true),
 	E033("E033", "Element mal configuré pour une communication avec ALM", "Erreur ALM", true),
-	E034("E034", "L'élément n'as jamais pris la valeur attendue dans le délai apparti.", "Erreur lors d'une l'attente", true),;
+	E034("E034", "L'élément n'as jamais pris la valeur attendue dans le délai apparti.", "Erreur lors d'une l'attente", true),
+	E035("E035", "L'élément n'as jamais disparu comme prévu.", "Erreur lors d'une l'attente", true);
 	
 	/**
 	 * Le code associé a l'erreur.

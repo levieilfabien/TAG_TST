@@ -232,27 +232,29 @@ public class IMGOutils {
 	    	        }
 	    	    }
 	    	    // Création de l'image à partir des nouvelles colorisations de P1.
-//	    	    final BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-//	    	    out.setRGB(0, 0, w, h, p1, 0, w);
+	    	    final BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+	    	    out.setRGB(0, 0, w, h, p1, 0, w);
 //	    	    saveImage(out, fileName);
-//	    	    // Création de l'image d'ajout des nouvelles colorisations de ajout.
-//	    	    final BufferedImage imgAjout = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-//	    	    imgAjout.setRGB(0, 0, w, h, ajout, 0, w);
-//	    	    saveImage(out, fileName);
-//	    	    // Création de l'image de suppression des nouvelles colorisations de suppression.
-//	    	    final BufferedImage imgSupp = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-//	    	    imgSupp.setRGB(0, 0, w, h, suppression, 0, w);
-//	    	    saveImage(out, fileName);
+	    	    // Création de l'image d'ajout des nouvelles colorisations de ajout.
+	    	    final BufferedImage imgAjout = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+	    	    imgAjout.setRGB(0, 0, w, h, ajout, 0, w);
+	    	    //saveImage(out, fileName);
+	    	    // Création de l'image de suppression des nouvelles colorisations de suppression.
+	    	    final BufferedImage imgSupp = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+	    	    imgSupp.setRGB(0, 0, w, h, suppression, 0, w);
+	    	    //saveImage(out, fileName);
+	    	    
+	    	    
+	    	    saveImage(imgAjout, fileName.replace(".png", "ajout.png"));
+	    	    saveImage(imgSupp, fileName.replace(".png", "supp.png"));
+	    	    saveImage(out, fileName);
 	    	    
 	    	    // On produit une image contenant deux sous images, les ajouts et les suppressions.
-	    	    final BufferedImage multi = new BufferedImage(w*3, h, BufferedImage.TYPE_INT_ARGB);
-	    	    multi.setRGB(0, 0, w, h, p1, 0, w);
-	    	    multi.setRGB(w, 0, w, h, ajout, 0, w);
-	    	    multi.setRGB(2*w, 0, w, h, suppression, 0, w);
-	    	    
-//	    	    saveImage(imgAjout, fileName.replace(".png", "ajout.png"));
-//	    	    saveImage(imgSupp, fileName.replace(".png", "supp.png"));
-	    	    saveImage(multi, fileName.replace(".png", "multi.png"));
+	    	    //final BufferedImage multi = new BufferedImage(w*3, h, BufferedImage.TYPE_INT_ARGB);
+	    	    //multi.setRGB(0, 0, w, h, p1, 0, w);
+	    	    //multi.setRGB(w, 0, w, h, ajout, 0, w);
+	    	    //multi.setRGB(2*w, 0, w, h, suppression, 0, w);
+	    	    //saveImage(multi, fileName.replace(".png", "multi.png"));
 	    	}
 	    	return false;
 	    }

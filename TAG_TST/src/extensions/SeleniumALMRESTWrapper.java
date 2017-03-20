@@ -35,7 +35,22 @@ public class SeleniumALMRESTWrapper {
 	 * Connecteur REST.
 	 */
     private RestConnector con;
-	
+    
+    /**
+     * Encodeur HEXA pour les contenu HTML.
+     */
+    static final CharEncoder hexHtmlEncoder = new CharEncoder("&#x",";",16);
+    
+    /**
+     * Encodeur HEXA pour les URL.
+     */
+    static final CharEncoder hexUrlEncoder = new CharEncoder("%","",16);
+    
+    /**
+     * Encodeur DECIMAL pour les contenu HTML.
+     */
+    static final CharEncoder decimalHtmlEncoder = new CharEncoder("&#",";",10);
+    
     /**
      * Fonction de test pour tenter une connexion ALM.
      * @param args les arguments, non exploiter ici.
@@ -50,7 +65,6 @@ public class SeleniumALMRESTWrapper {
     	}
     	url = url.concat("/qcbin");
     	
-    	
     	CasEssaiBean casEssai = new CasEssaiBean();
     	casEssai.setAlm(true);
     	casEssai.setEtatFinal(false);
@@ -63,79 +77,36 @@ public class SeleniumALMRESTWrapper {
     	
     	SeleniumALMRESTWrapper wrapper = new SeleniumALMRESTWrapper();
     	wrapper.preparerWrapper(url, Constants.DOMAIN, Constants.PROJECT, Constants.USERNAME, Constants.PASSWORD);
-    	String run = wrapper.creerRun("RunAuto", null, "49375", "76408", Constants.USERNAME, true);
-		
-    	run = run.replaceAll("http:", "https:");
-    	run = run.replaceAll(":80", "");
     	
-    	// Si le cas d'essai est associé à un repertoire on cherche à obtenir les pièces jointes.
-    	String step = wrapper.creerStep("StepAuto", "TEST", "école", "lécole", run, "76408", true, false);
-    	
-    	
-		File repertoire = new File(casEssai.getRepertoireTelechargement());
+    	//String urlTestLab = wrapper.synchroScenarioDeTest("CAS_TEST_AUTO5", "10954", "Ceci est un cas de test créer automatiquement.", "Une description par défaut.");
 
-		// Pour chaque fichier non repertoire dans le repertoire, on met en pièce jointe.
-		for (File file : repertoire.listFiles()) {
-			if (!file.isDirectory()) {
-				String chemin = file.getAbsolutePath();
-				// On remplace les référence au repertoire local \.\ par un simple \
-				chemin = chemin.replaceAll("\\\\.\\\\", "\\\\");
-				wrapper.ajoutPJ(run, "run", Files.toByteArray(file), file.getName());
-			}
-		}
-
+    	String urlDesignStep = wrapper.synchroDesignStep("STEP1", "Description", "Excepted", "78961");
     	
+    	System.out.println(urlDesignStep);
+    	
+    	wrapper.deconnexion();
+    	
+//    	System.exit(0);
 //    	
 //    	
-//    	// TODO à réaliser en amont de l'initialisation.
-//    	// On prépare l'URL. Si le port n'est pas précisé c'est qu'on en utilise pas.
-//    	String url = "https://" + Constants.HOST;
-//    	if (Constants.PORT != null) {
-//    		url = url.concat(":" + Constants.PORT);
-//    	}
-//    	url = url.concat("/qcbin");
+//    	String run = wrapper.creerRun("RunAuto", null, "49375", "76408", Constants.USERNAME, true);
+//		
+//    	run = run.replaceAll("http:", "https:");
+//    	run = run.replaceAll(":80", "");
 //    	
-//        //new SeleniumALMRESTWrapper().testConnexion(url, Constants.DOMAIN, Constants.PROJECT, Constants.USERNAME, Constants.PASSWORD);
-//    	
-//    	SeleniumALMRESTWrapper wrapper = new SeleniumALMRESTWrapper();
-//    	wrapper.initialisation(url, "NATIXIS_FINANCEMENT", "CREDIT_CONSOMMATION");
+//    	// Si le cas d'essai est associé à un repertoire on cherche à obtenir les pièces jointes.
+//    	String step = wrapper.creerStep("StepAuto", "TEST", "école", "lécole", run, "76408", true, false);    	
+//		File repertoire = new File(casEssai.getRepertoireTelechargement());
 //
-//    	// Si une connexion est établie (où déjà présente)
-//    	if (wrapper.login(Constants.USERNAME, Constants.PASSWORD)) {
-//	    	try {
-//	    		wrapper.ouvrirSessionQC();
-//	    		//wrapper.obtenirDefect("15110");
-////	        	run.ajouterChamp("name", "Run_TEST" + new Date().getTime());
-////	        	run.ajouterChamp("testcycl-id", "417693");
-////	        	run.ajouterChamp("test-id", "76408");
-////	        	run.ajouterChamp("owner", "levieilfa");
-////	        	run.ajouterChamp("subtype-id", "hp.qc.run.MANUAL");
-////	        	run.ajouterChamp("status", "Passed");
-//	    		//String url_run = wrapper.creerRun("Run_TEST", "417693", "49375", "76408", Constants.USERNAME, true);
-//	    		
-//	    		//https://hpalm.intranatixis.com/qcbin/rest/domains/NATIXIS_FINANCEMENT/projects/CREDIT_CONSOMMATION/test-instances/417693
-//	    		// TODO l'idée est de récupérer la test instant à partir de l'id du scenario et de l'id du test (attention, n'autorise pas les doublons !)
-//	    		
-//	    		String url_run = wrapper.creerRun("Run_TEST", null, "49375", "76408", Constants.USERNAME, true);
-//	    		
-//	    		// cycle-id = 49375
-//	    		// test-id = 76408
-//	    		//https://hpalm.intranatixis.com/qcbin/rest/domains/NATIXIS_FINANCEMENT/projects/CREDIT_CONSOMMATION/test-instances?query={cycle-id[49375];test-id[76408];}
-//	    		//https://hpalm.intranatixis.com/qcbin/rest/domains/NATIXIS_FINANCEMENT/projects/CREDIT_CONSOMMATION/test-instances?query={cycle-id[49375];test-id[76408];}
-//	    		//String url_run = wrapper.creerRun("Run_TEST", "417693", "49375", "76408", Constants.USERNAME, true);
-//	    		
-//	    		System.out.println(url_run);
-//	    		
-//	    		String url_step = wrapper.creerStep("TESTSTEP", "TEST_DESC", "ACTUAL", "EXCEPTED", url_run, null, true);
-//	    		
-//	    		System.out.println(url_step);
-//	    		
-//	    	} catch (Exception ex) {
-//	    		ex.printStackTrace();
-//	    		System.out.println("Impossible !");
-//	    	}
-//    	}
-//    	wrapper.deconnexion();
+//		// Pour chaque fichier non repertoire dans le repertoire, on met en pièce jointe.
+//		for (File file : repertoire.listFiles()) {
+//			if (!file.isDirectory()) {
+//				String chemin = file.getAbsolutePath();
+//				// On remplace les référence au repertoire local \.\ par un simple \
+//				chemin = chemin.replaceAll("\\\\.\\\\", "\\\\");
+//				wrapper.ajoutPJ(run, "run", Files.toByteArray(file), file.getName());
+//			}
+//		}
     }
     
     /**
@@ -220,7 +191,7 @@ public class SeleniumALMRESTWrapper {
         byte[] credBytes = (username + ":" + password).getBytes();
         String credEncodedString = "Basic " + Base64Encoder.encode(credBytes);
 
-        System.out.println("LoginURL : " + loginUrl);
+        //System.out.println("LoginURL : " + loginUrl);
         
         Map<String, String> map = new HashMap<String, String>();
         map.put("Authorization", credEncodedString);
@@ -297,7 +268,7 @@ public class SeleniumALMRESTWrapper {
      * @param id l'id de l'entite que l'on souhaites trouver 
      * @param query une requête permettant de trouver l'entité (ex : query={cycle-id[49375];test-id[76408];})
      * @param typeEntite le type d'entité à récupérer (ex : defect)
-     * @return l'entité représentant le defect
+     * @return l'entité représentant le defect ou null si aucune entité n'as été trouvée.
      * @throws Exception en cas d'erreur.
      */
     public Entity obtenirEntite(String id, String query, String typeEntite) throws Exception {
@@ -317,16 +288,18 @@ public class SeleniumALMRESTWrapper {
         } else if (query != null) {
         	urlComplete = urlComplete.concat("?" + query);
         }
-        
-        System.out.println(urlComplete);
-        
+        //System.out.println(urlComplete);
         String responseStr = con.httpGet(urlComplete, null, requestHeaders).toString();
         // On extrait l'entity de la réponse 
         Entity entity = null;
         if (query != null) {
         	// On a une réponse à une requête il faut extraire le premier enregistrement
         	Entities entities = EntityMarshallingUtils.marshal(Entities.class, responseStr);
-        	entity = entities.getEntities().get(0);
+        	if (entities.getEntities() != null && entities.getEntities().size() > 0) {
+        		entity = entities.getEntities().get(0);
+        	} else {
+        		entity = null;
+        	}
         } else {
         	// On a un enregistrmement unique qu'on renvoie.
         	entity = EntityMarshallingUtils.marshal(Entity.class, responseStr);
@@ -357,11 +330,14 @@ public class SeleniumALMRESTWrapper {
     	Entity run = new Entity();   	
     	// On précise le type d'entité et on renseigne les champs obligatoire
     	run.setType("run");
-    	run.ajouterChamp("name", nomRun + "_" + new Date().getTime());
+    	String nomRunComplet = nomRun + "_" + new Date().getTime();
+    	run.ajouterChamp("name", nomRunComplet);
     	run.ajouterChamp("test-id", idTest);
     	run.ajouterChamp("owner", propretaire);
     	run.ajouterChamp("subtype-id", "hp.qc.run.MANUAL");
-    	run.ajouterChamp("status", etat?"Passed":"Failed");
+    	run.ajouterChamp("status", "No Run");
+    	//run.ajouterChamp("jenkins-job-name", "A venir");
+    	//run.ajouterChamp("jenkins-url", "A venir");
     	//Si l'id du scénario (test set) n'est pas connu, cela entrainera une erreur dans l'affichage du RUN. On evite cela en le rendant obligatoire bien qu'il ne le soit pas.
     	run.ajouterChamp("cycle-id", idScenario);
     	if (idCycle != null) {
@@ -379,18 +355,172 @@ public class SeleniumALMRESTWrapper {
     	
     	try {
         	// On prépare les paramètres de la création et on l'effectue
-			return creerEntite(con.buildEntityCollectionUrl("run"), convertirEntiteEnChaine(run));
+    		String urlConsult = creerEntite(con.buildEntityCollectionUrl("run"), convertirEntiteEnChaine(run));
+    		// On met à jour l'état du RUN afin de mettre à jour le test instance ne même temps. C'est le seul moyen d'éviter la création d'un run auto inutile.
+    		Entity runMaj = new Entity();
+    		runMaj.setType("run");
+    		//runMaj.ajouterChamp("name", nomRunComplet);
+    		// En fonction de la valeur de etat, on indique que le run est Passed, Failed ou Not Completed.
+    		if (etat != null) {
+    			runMaj.ajouterChamp("status", etat?"Passed":"Failed");
+    		} else {
+    			runMaj.ajouterChamp("status", "Not Completed");
+    		}
+    		// Mise à jour de l'entité avec le nouvel état.
+    		majEntite(urlConsult, convertirEntiteEnChaine(runMaj));
+			return urlConsult;
 		} catch (Exception e) {
+			//e.printStackTrace();
 			throw new SeleniumException(Erreurs.E032, "Impossible de creer le run (" + e.getMessage() + ")");
 		}
     }
     
     /**
+     * Applique l'état paramètre a l'instance de test dont l'id de test set et l'id de scénario est passé en paramètre.
+     * Attention l'instance de test est la version du test contenue dans le scénario (il est possible par exemple d'avoir plusieurs exemplaire de test dans un scénario, chacun aura une instance de test).
+     * @param idTestSet l'identifiant du test set à mettre à jour
+     * @param etat l'état à appliquer.
+     * @throws SeleniumException en cas d'erreur lors de la mise à jour du cas de test.
+     */
+    public void majTestInstance(String idTestSet, String idScenario, Boolean etat) throws SeleniumException {
+    	if (etat != null) {
+			String testInstanceID = "";
+			try {
+				// On récupère l'instance de test liée au test set
+				try {
+					Entity testInstance = obtenirEntite(null, "query={cycle-id[" + idScenario + "];test-id[" + idTestSet + "];}", "test-instance");
+					testInstanceID = testInstance.obtenirChamp("id").getValue().get(0);
+	    		} catch (Exception ex) {
+	    			throw new SeleniumException(Erreurs.E032, "Impossible d'extraire l'id de l'instance de test  (" + ex.getMessage() + ")");
+	    		}
+	    		//Entity testInstance = obtenirEntite(null, "query={id[" + idTestSet + "];}", "test-set");
+	    		// On créer une instance de mise à jour de test-set
+		    	Entity testSetMaj = new Entity();   
+	    		testSetMaj.setType("test-instance");
+	    		testSetMaj.ajouterChamp("status", etat?"Passed":"Failed");
+	    		// On effectue la mise à jour en modifier le test set à partir de l'entité de mise à jour
+	    		majEntite(con.buildEntityCollectionUrl("test-instance") + "/" + testInstanceID, convertirEntiteEnChaine(testSetMaj));
+			} catch (Exception ex) {
+				throw new SeleniumException(Erreurs.E032, "Impossible de mettre à jour le test set "+ idTestSet + " pour l'instance " + testInstanceID + " (" + ex.getMessage() + ")");
+			}
+    	}
+    }
+    //https://hpalm.intranatixis.com/qcbin/rest/domains/NATIXIS_FINANCEMENT/projects/CREDIT_CONSOMMATION/customization/entities/test-set/fields?login-form-required=y
+    
+    /**
+     * Fonction ayant pour objectif de créer un scénario de test (test-set) dans ALM.
+     * @param nom nom du cas de test
+     * @param position l'id du test-set-folder dans le test lab
+     * @param description description technique de l'objet, n'apparais pas dans l'IHM ALM.
+     * @param commentaire description fonctionnelle de l'objet, apparais dans l'IHM ALM.
+     * @return l'url vers l'objet test ainsi créer.
+     * @throws SeleniumException en cas d'erreur.
+     */
+    public String creerScenarioDeTest(String nom, String position, String description, String commentaire) throws SeleniumException {
+    	// On créer la coquille vide du test.
+    	Entity test = new Entity();
+    	test.setType("test-set");
+    	test.ajouterChamp("name", StringEscapeUtils.escapeHtml4(nom));
+    	// Ici il s'agit du repertoire parent où on créer le cas de test, test-set-folder pour le test lab, test-folder pour le test plan.
+    	test.ajouterChamp("parent-id", position);
+    	// Attention, le champs description ne contient pas le description chez CCO, mais le commentaire
+    	if (description != null) {
+    		test.ajouterChamp("description", encode(description, hexHtmlEncoder)); 
+    	}
+    	if (commentaire != null) {
+    		test.ajouterChamp("comment", "<HTML><BODY>" + encode(commentaire, hexHtmlEncoder) + "</BODY></HTML>"); 
+    	}
+    	// Champs obligatoire à renseigner
+    	test.ajouterChamp("status", "Open"); 
+    	test.ajouterChamp("subtype-id", "hp.qc.test-set.default"); 
+    	try {
+			return creerEntite(con.buildEntityCollectionUrl("test-set"), convertirEntiteEnChaine(test));
+		} catch (Exception e) {
+			throw new SeleniumException(Erreurs.E032, "Impossible de creer le test (" + e.getMessage() + ")");
+		}
+    }
+    
+    /**
+     * Fonction ayant pour objectif de créer un scénario de test (test-set) dans ALM si il n'existe pas ou de renvoyer l'url vers celui ci si il existe.
+     * @param nom nom du cas de test
+     * @param position l'id du test-set-folder dans le test lab
+     * @param description description technique de l'objet, n'apparais pas dans l'IHM ALM.
+     * @param commentaire description fonctionnelle de l'objet, apparais dans l'IHM ALM.
+     * @return l'url vers l'entité de scénario.
+     * @throws SeleniumException en cas d'erreur.
+     */
+    public String synchroScenarioDeTest(String nom, String position, String description, String commentaire) throws SeleniumException {
+    	try {
+	    	Entity retour = obtenirEntite(null, "query={name[" + nom + "];parent-id[" + position + "];}", "test-set");
+	    	String urlTestLab = "";
+	    	if (retour == null) {
+	    		urlTestLab = creerScenarioDeTest(nom, position, description, commentaire);
+	    	} else {
+	    		urlTestLab = con.buildEntityCollectionUrl("test-set") + "/" + retour.getFields().getFieldValue("id");
+	    	}
+	    	return urlTestLab;
+		}  catch (SeleniumException ex) {
+			throw ex;
+		}  catch (Exception e) {
+			throw new SeleniumException(Erreurs.E032, "Impossible d'obtenir le scénario dans le test lab (" + e.getMessage() + ")");
+		}
+    }
+    
+    /**
+     * Permet de créer un design step pour un test donc l'id est connu. Si un step possedant le même nom existe déjà, celui ci n'est pas remplacer.
+     * @param nom le nom du design step
+     * @param description la description de l'étape
+     * @param expected l'attendu lors de l'étape
+     * @param idTest l'identifiant du test qui accueille le design step (ou l'url de consultation du dit test)
+     * @return l'url vers le design step qu'il est été créer ou non.
+     * @throws SeleniumException en cas d'erreur
+     */
+    public String synchroDesignStep(String nom, String description, String expected, String idTest) throws SeleniumException {
+    	String url = "";
+    	// Si on fournit une url en paramètre, on en extrait l'id.
+    	if (idTest.startsWith("http")) {
+    		idTest = idTest.substring(idTest.lastIndexOf("/") + 1);
+    	}
+    	
+    	try {
+    		Entity retour = obtenirEntite(null, "query={name[" + nom + "];parent-id[" + idTest + "];}", "design-step");
+	    	if (retour == null) {
+	        	// On précise le type d'entité et on remplis les champs obligatoires
+	        	Entity step = new Entity();   	
+	        	step.setType("design-step");
+	        	step.ajouterChamp("name", StringEscapeUtils.escapeHtml4(nom));
+	        	// Les informations textuelles sont supposées être de l'HTML. Mais pour les envoyer via les services REST il faut les encoder en hexa.
+	        	step.ajouterChamp("description", encode(description, hexHtmlEncoder));
+	        	step.ajouterChamp("expected", encode(expected, hexHtmlEncoder));
+	        	step.ajouterChamp("parent-id", idTest);
+	        	// On effectue la création proprement dites
+	    		url = creerEntite(con.buildEntityCollectionUrl("design-step"), convertirEntiteEnChaine(step));
+	    	} else {
+	    		url = con.buildEntityCollectionUrl("design-step") + "/" + retour.getFields().getFieldValue("id");
+	    	}
+		}  catch (SeleniumException ex) {
+			throw ex;
+		}  catch (Exception e) {
+			e.printStackTrace();
+			throw new SeleniumException(Erreurs.E032, "Impossible d'obtenir ou de créer le design step dans le test plan (" + e.getMessage() + ")");
+		}
+    	return url;
+    }
+    
+    
+    //test-set-folder => Répertoire du test lab
+    //test-folder => Répertoire du test plan
+    //test-set => Scénario
+    //test => Cas de test
+    //design-step => Step des cas de tests
+    //test-instance => Instance du cas de test pour un scenario
+    
+    /**
      * Permet de créer une step pour un run donné.
      * @param nom nom du step
      * @param description la description de l'étape
-     * @param actual l'attendu lors de l'étape
-     * @param expected le constaté lors de l'étape
+     * @param actual le constaté lors de l'étape
+     * @param expected l'attendu lors de l'étape
      * @param idRun l'identifiant du run, ou l'url d'accès au run
      * @param idTest l'identifiant du test
      * @param etat true si Passed, false si Failed.
@@ -403,10 +533,15 @@ public class SeleniumALMRESTWrapper {
     	// On précise le type d'entité et on remplis les champs obligatoires
     	step.setType("run-step");
     	step.ajouterChamp("name", StringEscapeUtils.escapeHtml4(nom));
-    	step.ajouterChamp("status", etat?"Passed":"Failed");
-    	step.ajouterChamp("description", "<![CDATA[" + StringEscapeUtils.escapeHtml4(description) + "]]>");
-    	step.ajouterChamp("actual", "<![CDATA[" + StringEscapeUtils.escapeHtml4(actual) + "]]>");
-    	step.ajouterChamp("expected", "<![CDATA[" + StringEscapeUtils.escapeHtml4(expected) + "]]>");
+    	if (null == etat) {
+    		step.ajouterChamp("status", "Not Completed");
+    	} else {
+    		step.ajouterChamp("status", etat?"Passed":"Failed");
+    	} 
+    	// Les informations textuelles sont supposées être de l'HTML. Mais pour les envoyer via les services REST il faut les encoder en hexa.
+    	step.ajouterChamp("description", encode(description, hexHtmlEncoder));
+    	step.ajouterChamp("actual", encode(actual, hexHtmlEncoder));
+    	step.ajouterChamp("expected", encode(expected, hexHtmlEncoder));
     	// test-id (ex: 18475) --> Le même que celui du RUN, c'est l'id du test parent. Il est facultatif mais son absence entraine des erreurs.
     	step.ajouterChamp("test-id", idTest);
     	// parent-id (ex: 23115) --> L'Id du Run, champ obligatoire
@@ -417,12 +552,14 @@ public class SeleniumALMRESTWrapper {
     		step.ajouterChamp("parent-id", idRun);
     	}
     	
-    	System.out.println(convertirEntiteEnChaine(step));
+    	//System.out.println(convertirEntiteEnChaine(step));
     	
     	// On prépare les paramètres de la création et on l'effectue
+    	//System.out.println(convertirEntiteEnChaine(step));
     	try {
 			return creerEntite(con.buildEntityCollectionUrl("run-step"), convertirEntiteEnChaine(step));
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new SeleniumException(Erreurs.E032, "Impossible de creer le step (" + e.getMessage() + ")");
 		}
     }
@@ -468,6 +605,15 @@ public class SeleniumALMRESTWrapper {
         // On effectue une requête de type "PUT" pour mettre à jour l'entité.
         Response putResponse = con.httpPut(entityUrl, updatedEntityXml.getBytes(), requestHeaders);
 
+        if (putResponse.getStatusCode() == HttpURLConnection.HTTP_MOVED_PERM) {
+        	// On rencontre une erreur 301. Le chemin vers l'entité à été modifiée, on va suivre ce chemin
+        	String newUri = putResponse.getResponseHeaders().get("Location").iterator().next();
+        	// On rétablie le header indiquant le type de contenu envoyé.
+        	requestHeaders.put("Content-Type", "application/xml");
+        	putResponse = con.httpPut(newUri, updatedEntityXml.getBytes(), requestHeaders);
+        }
+        
+        // Si on rencontre autre chose que le code retour OK et ce même après avoir gérer le code retour 301, c'est qu'on à une erreur.
         if (putResponse.getStatusCode() != HttpURLConnection.HTTP_OK) {
             throw new Exception(putResponse.toString());
         }
@@ -485,6 +631,15 @@ public class SeleniumALMRESTWrapper {
         requestHeaders.put("Accept", "application/xml");
 
         Response serverResponse = con.httpDelete(entityUrl, requestHeaders);
+        
+        if (serverResponse.getStatusCode() == HttpURLConnection.HTTP_MOVED_PERM) {
+        	// On rencontre une erreur 301. Le chemin vers l'entité à été modifiée, on va suivre ce chemin
+        	String newUri = serverResponse.getResponseHeaders().get("Location").iterator().next();
+        	// On rétablie le header indiquant le type de contenu envoyé.
+        	requestHeaders.put("Content-Type", "application/xml");
+        	serverResponse = con.httpDelete(newUri, requestHeaders);
+        }
+        
         if (serverResponse.getStatusCode() != HttpURLConnection.HTTP_OK) {
             throw new Exception(serverResponse.toString());
         }
@@ -862,19 +1017,40 @@ public class SeleniumALMRESTWrapper {
  	 * @param etat l'état final du cas de test.
  	 * @throws SeleniumException en cas d'erreur.
  	 */
- 	public static void miseAJourTestSet(CasEssaiBean casEssai, boolean etat) throws SeleniumException {
+ 	public static void miseAJourTestSet(CasEssaiBean casEssai, Boolean etat) throws SeleniumException {
  		// On vérifie les données pour ALM.
  		if (casEssai.getAlm()) {
+			// Si l'état n'est pas renseigné, on l'obtient de la somme des états des sous cas.
+ 			// Si on rencontre un step à failed le scénario est failed, sinon si un step est à null alors on est à not completed.
+			if (etat == null) {
+				etat = true;
+				for (ObjectifBean step : casEssai.getObjectifs().values()) {
+					if (step.isStep()) {
+						if (null == step.getEtat()) {
+							etat = null;
+						} else if(step.getEtat() == false) {
+							etat = false;
+							break;
+						}
+					}
+				}
+			}
+
  			// Si le cas est unique on met à jour le "Cas de test" (Test) dans le "scénario" (Test Set) en lui ajoutant un "Run".
  			if (casEssai.getTests().isEmpty()) {
  	 			// On vérifie la validité des informations :
  	 			if (casEssai.getIdUniqueTestLab() == -1 || casEssai.getIdUniqueTestPlan() == -1) {
- 	 				throw new SeleniumException(Erreurs.E033, "Impossible de mettre à jour l'état du cas de test dans ALM : Les ID doivent être renseignés.");
+ 	 				throw new SeleniumException(Erreurs.E033, "Impossible de mettre à jour l'état du cas de test " + casEssai.getNomCasEssai() + "  dans ALM : Les ID doivent être renseignés.");
  	 			}
- 	 			// Si les informations sont valides on initialise la connexion.
- 				SeleniumALMRESTWrapper wrapper = new SeleniumALMRESTWrapper();
- 				wrapper.preparerWrapper(ALMBean.URL_ALM, ALMBean.DOMAIN_ALM, ALMBean.PROJECT_ALM, ALMBean.LOGIN_ALM, ALMBean.PASSWORD_ALM);
+ 	 			
  				try {
+ 		 			// Si les informations sont valides on initialise la connexion.
+ 					SeleniumALMRESTWrapper wrapper = new SeleniumALMRESTWrapper();
+ 					wrapper.preparerWrapper(ALMBean.URL_ALM, ALMBean.DOMAIN_ALM, ALMBean.PROJECT_ALM, ALMBean.LOGIN_ALM, ALMBean.PASSWORD_ALM);
+ 					
+ 					// En premier lieu, on met à jour le test set
+ 					//wrapper.majTestInstance(casEssai.getIdUniqueTestPlan().toString(), casEssai.getIdUniqueTestLab().toString(), etat);
+ 					
  					// Mise à jour de l'état général du cas de test via la création d'un nouveau RUN lié.
  					String run = wrapper.creerRun("RunAuto", null, casEssai.getIdUniqueTestLab().toString(), casEssai.getIdUniqueTestPlan().toString(), ALMBean.LOGIN_ALM, etat);
  					//TODO On rétablie le protocole autorisé (https, sans précision de port)
@@ -912,7 +1088,7 @@ public class SeleniumALMRESTWrapper {
  						throw new SeleniumException(Erreurs.E032, "Impossible de clôturer la session ALM !");
  					}
  				} catch (Exception e) {
- 					//e.printStackTrace();
+ 					e.printStackTrace();
  					throw new SeleniumException(Erreurs.E032, "Impossible de mettre à jour l'état du cas de test dans ALM : " + e.getMessage());
  				}
  			} else {
@@ -1146,6 +1322,76 @@ public class SeleniumALMRESTWrapper {
 
          //Vérification de la déconnexion
          Assert.assertNotNull("La connexion est toujours active malgré la demande de déconnexion.", example.obtenirURLConnexion());
+     }
+     
+//     public String encodeHexa(String s) {
+//	     StringBuilder sb = new StringBuilder();
+//	     s.codePoints().forEach(codePoint -> {
+//	         if (Character.UnicodeBlock.of(codePoint) != Character.UnicodeBlock.BASIC_LATIN) {
+//	             sb.append("&#");
+//	             sb.append(codePoint);
+//	             sb.append(';');
+//	         } else {
+//	             sb.appendCodePoint(codePoint);
+//	         }
+//	     });
+//	     return sb.toString();
+//     }
+     
+     /**
+      * Fonction qui encore une chaine de caractère pour qu'elle soit compatible avec ALM.
+      * @param str la chaine à encoder.
+      * @param encoder l'encodeur à utiliser.
+      * @return la chaine une fois encoder.
+      */
+     static private String encode(String str, CharEncoder encoder)
+     {
+         StringBuilder buff = new StringBuilder();
+         for ( int i = 0; i < str.length(); i++)
+             encoder.encode(str.charAt(i), buff);
+         return ""+buff;
+     }
+     
+     /**
+      * Classe interne permetant l'encodage des caractères.
+      * @author levieilfa
+      *
+      */
+     private static class CharEncoder
+     {
+    	 /**
+    	  * Le préfixe à utilisé.
+    	  */
+         String prefix; 
+         /**
+          * Le suffixe à utilisé.
+          */
+         String suffix;
+         /**
+          * La base à utilisée.
+          */
+         int radix;
+         
+         /**
+          * Constructeur pour l'encodeur.
+          * @param prefix le préfixe
+          * @param suffix le suffixe
+          * @param radix la base
+          */
+         public CharEncoder(String prefix, String suffix, int radix)        {
+             this.prefix = prefix;
+             this.suffix = suffix;
+             this.radix = radix;
+         }
+         
+         /**
+          * Fonction qui effectue l'encodage pour un char.
+          * @param c le char à encoder
+          * @param buff le constructeur de string qui va accueuillir le char une fois encodé.
+          */
+         void encode(char c, StringBuilder buff)     {
+             buff.append(prefix).append(Integer.toString(c, radix)).append(suffix);
+         }
      }
 
 }

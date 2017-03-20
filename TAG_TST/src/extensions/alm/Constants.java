@@ -13,7 +13,7 @@ public class Constants {
    public static final String PORT = null;
 
    public static final String USERNAME = "levieilfa";
-   public static final String PASSWORD = "Sombros100";
+   public static final String PASSWORD = "Sombros101";
 
    public static final String DOMAIN = "NATIXIS_FINANCEMENT";
    public static final String PROJECT = "CREDIT_CONSOMMATION";

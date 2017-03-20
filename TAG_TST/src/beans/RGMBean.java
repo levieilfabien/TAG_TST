@@ -71,7 +71,7 @@ public class RGMBean extends ObjectifBean implements Serializable {
 	 * @param bean le beau objectif.
 	 */
 	public RGMBean(ObjectifBean bean) {
-		super(bean.getDescriptif(), bean.getCode(), bean.getEtat());
+		super(bean.getDescriptif(), bean.getCode(), bean.isEtat());
 		this.cible = null;
 		this.typeComparaison = PRESENCE;
 	}

@@ -5,6 +5,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -568,57 +570,128 @@ public class PDFOutils extends PDFUtil {
 	 * La comparaison à lieue par paire et produit un fichier de diff visuel sous forme d'image PNG pour les pages où des différences sont trouvées.
 	 * @param repertoire1 le répertoire de révision (la "nouvelle version")
 	 * @param repertoire2 le répertoire de référence (l'"ancienne version")
-	 * @return une liste de boolean indiquant les différences des paires.
+	 * @param sortie le repertoire où produire les sortie
+	 * @param taillePrefixe la taille du prefixe commun aux fichiers à comparer.
+	 * @return une map listant les comparaison effectuée et indiquant si différence il y a ou pas
 	 * @throws SeleniumException en cas d'impossibilité d'accès ou de lecture d'un fichier ou d'un répertoire.
 	 */
-	public static List<Boolean> comparerListePDF(File repertoire1, File repertoire2) throws SeleniumException {
-		List<Boolean> retour = new LinkedList<Boolean>();
+	public static HashMap<String, Boolean> comparerListePDF(File repertoire1, File repertoire2, File sortie, int taillePrefixe) throws SeleniumException {
+//		List<Boolean> retour = new LinkedList<Boolean>();
+//		boolean temp = false;
+//		PDFUtil pdfutil = new PDFUtil();
+//		pdfutil.setCheminSauvegarde(".");
+//		pdfutil.setOptionComparaisonComplete(true);
+//		pdfutil.setOptionSurlignerDifferences(true);
+//		pdfutil.setModeDeComparaison(CompareMode.VISUAL_MODE);
+//		String cheminProduction = ".";
+//		
+//		// On vérifie que l'on manipule bien des répertoires.
+//		if (repertoire1.isDirectory() && repertoire2.isDirectory()) {
+//			// Si les repertoires existe on prépare le répertoire de sauvegarde
+//			cheminProduction = repertoire1.getParent();
+//			if (cheminProduction != null) {
+//				cheminProduction = cheminProduction.concat(File.separator + "diff");
+//				pdfutil.setCheminSauvegarde(cheminProduction);
+//			} else {
+//				throw new SeleniumException(Erreurs.E021, "Impossible de créer le répertoire de sortie.");
+//			}
+//			// On va parcourir le premier repertoire et chercher dans le second repertoire tous les fichiers portant le même nom
+//			for (File fichierPDF : repertoire1.listFiles()) {
+//				if (fichierPDF.getName().toUpperCase().contains(".PDF")) {
+//					// On parcours le second répertoire
+//					for (File fichierPDFCible : repertoire2.listFiles()) {
+//						// On choisit le fichier dont le nom est le même
+//						if (fichierPDF.getName().toUpperCase().equals(fichierPDFCible.getName().toUpperCase())) {
+//							try {
+//								temp = pdfutil.compare(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath());
+//								//comparaisonTextuelleParBloc(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath());
+//								publierDiff(fichierPDF, fichierPDFCible, cheminProduction);
+//								retour.add(temp);
+////								if (temp) {
+////									retour.add(cheminProduction + File.separator + fichierPDF.getName() + "_diff.png");
+////								}
+//								break;
+//							} catch (/*IO*/Exception e) {
+//								throw new SeleniumException(Erreurs.E021, "Les fichiers PDF ne sont pas lisibles où le repertoire de sauvegarde n'est pas accessible.");
+//							}
+//						}
+//					}
+//				}
+//			}
+//		} else {
+//			throw new SeleniumException(Erreurs.E021, "Les fichiers fournit ne sont pas des repertoires");
+//		}
+		
+		
+		HashMap<String, Boolean> resultats = new LinkedHashMap<String, Boolean>();
+		if (repertoire1.isDirectory() && repertoire2.isDirectory()) {
+			resultats = comparerListePDF(repertoire1.listFiles(), repertoire2.listFiles(), sortie, true, true, 50, taillePrefixe);
+		} else {
+			throw new SeleniumException(Erreurs.E021, "Les répertoire fournie n'existent pas où ne sont pas accessibles.");
+		}
+		
+		
+		return resultats;
+	}
+	
+	/**
+	 * Effectue une comparaison entre une liste finie de fichier PDF et une autre.
+	 * Les fichiers dont le suffixe (7 premiers caractères) sont le même sont comparer 1 à 1.
+	 * @param liste1 la liste de fichiers "nouvelle version"
+	 * @param liste2 la liste de fichiers "référence"
+	 * @param sortie le répertoire de sortie pour la production des diffs.
+	 * @param transparence à vrai si les zones identiques sont mises en transparence.
+	 * @param tolerance à vrai si on accepte un seuil de tolérance sur les différence pour limiter les faux positifs.
+	 * @param seuilTolerance le seuil de tolérence (il s'agit d'une distance entre les couleurs des pixels, par défaut à 50)
+	 * @param taillePrefixe le nombre de caractères composant le préfixe commun des fichiers à comparer.
+	 * @return une map listant les comparaison effectuée et indiquant si différence il y a ou pas
+	 * @throws SeleniumException en cas d'impossibilité d'accès aux fichiers ou au répertoire de sauvegarde.
+	 */
+	public static HashMap<String, Boolean> comparerListePDF(File[] liste1, File[] liste2, File sortie, boolean transparence, boolean tolerance, int seuilTolerance, int taillePrefixe) throws SeleniumException {
+		//List<Boolean> retour = new LinkedList<Boolean>();
+		HashMap<String, Boolean> resultats = new LinkedHashMap<String, Boolean>();
 		boolean temp = false;
 		PDFUtil pdfutil = new PDFUtil();
 		pdfutil.setCheminSauvegarde(".");
 		pdfutil.setOptionComparaisonComplete(true);
 		pdfutil.setOptionSurlignerDifferences(true);
 		pdfutil.setModeDeComparaison(CompareMode.VISUAL_MODE);
-		String cheminProduction = ".";
 		
 		// On vérifie que l'on manipule bien des répertoires.
-		if (repertoire1.isDirectory() && repertoire2.isDirectory()) {
+		if (liste1.length > 0 || liste2.length > 0) {
 			// Si les repertoires existe on prépare le répertoire de sauvegarde
-			cheminProduction = repertoire1.getParent();
-			if (cheminProduction != null) {
-				cheminProduction = cheminProduction.concat(File.separator + "diff");
-				pdfutil.setCheminSauvegarde(cheminProduction);
-			} else {
-				throw new SeleniumException(Erreurs.E021, "Impossible de créer le répertoire de sortie.");
+			if (sortie == null || !sortie.isDirectory()) {
+				throw new SeleniumException(Erreurs.E021, "Le repertoire proposé pour la sortie n'en est pas un (" + sortie + ").");
 			}
+			pdfutil.setCheminSauvegarde(sortie.getAbsolutePath());
 			// On va parcourir le premier repertoire et chercher dans le second repertoire tous les fichiers portant le même nom
-			for (File fichierPDF : repertoire1.listFiles()) {
-				if (fichierPDF.getName().toUpperCase().contains(".PDF")) {
-					// On parcours le second répertoire
-					for (File fichierPDFCible : repertoire2.listFiles()) {
-						// On choisit le fichier dont le nom est le même
-						if (fichierPDF.getName().toUpperCase().equals(fichierPDFCible.getName().toUpperCase())) {
-							try {
-								temp = pdfutil.compare(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath());
-								//comparaisonTextuelleParBloc(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath());
-								publierDiff(fichierPDF, fichierPDFCible, cheminProduction);
-								retour.add(temp);
-//								if (temp) {
-//									retour.add(cheminProduction + File.separator + fichierPDF.getName() + "_diff.png");
-//								}
-								break;
-							} catch (/*IO*/Exception e) {
-								throw new SeleniumException(Erreurs.E021, "Les fichiers PDF ne sont pas lisibles où le repertoire de sauvegarde n'est pas accessible.");
+			for (File fichierPDF : liste1) {
+				// On parcours le second répertoire à condition que le nom du fichier soit au moins de la taille du préfixe.
+				if (fichierPDF.getName().length() >= taillePrefixe && fichierPDF.getName().toUpperCase().contains(".PDF")) {
+					for (File fichierPDFCible : liste2) {
+						if (fichierPDFCible.getName().length() >= taillePrefixe && fichierPDFCible.getName().toUpperCase().contains(".PDF")) {
+							// On choisit le fichier dont le suffixe (7 premiers caractères) est le même
+							if (fichierPDF.getName().substring(0, taillePrefixe).toUpperCase().equals(fichierPDFCible.getName().substring(0, taillePrefixe).toUpperCase())) {
+								try {
+									//temp = pdfutil.compare(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath());
+									temp = pdfutil.convertirEnImageEtComparer(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath(), -1, -1, true, transparence, tolerance, seuilTolerance);
+									//comparaisonTextuelleParBloc(fichierPDF.getAbsolutePath(), fichierPDFCible.getAbsolutePath());
+									publierDiff(fichierPDF, fichierPDFCible, sortie.getAbsolutePath());
+									resultats.put(fichierPDF.getName() + "/" + fichierPDFCible.getName(), temp);
+									break;
+								} catch (Exception e) {
+									throw new SeleniumException(Erreurs.E021, "Les fichiers PDF ne sont pas lisibles où le repertoire de sauvegarde n'est pas accessible.");
+								}
 							}
 						}
 					}
 				}
 			}
 		} else {
-			throw new SeleniumException(Erreurs.E021, "Les fichiers fournit ne sont pas des repertoires");
+			throw new SeleniumException(Erreurs.E021, "Une des liste fournie au moins est vide.");
 		}
 		
-		return retour;
+		return resultats;
 	}
 
 	/**
@@ -628,7 +701,7 @@ public class PDFOutils extends PDFUtil {
 	public static void main(String[] args) {
 			try {
 				//PDFOutils.comparerListePDF(new File("C:\\work\\TEST1"), new File("C:\\work\\TEST2"));
-				PDFOutils.comparerListePDF(new File("C:\\work\\PDF V16.03"), new File("C:\\work\\PDF V15.11"));
+				PDFOutils.comparerListePDF(new File("C:\\work\\PDF V16.03"), new File("C:\\work\\PDF V15.11"), new File("C:\\work\\diff"), 3);
 //				List<String> retour = PDFOutils.lirePDFBalise("C:\\work\\PDF V16.03\\DEX.pdf", false);
 				
 //				try {

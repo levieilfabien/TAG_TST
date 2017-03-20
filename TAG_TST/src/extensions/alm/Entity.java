@@ -253,6 +253,21 @@ public class Entity {
             }
             return this.field;
         }
+        
+        /**
+         * Parcours l'ensemble des champs de l'entité pour trouver celle disposant du nom en paramètre.
+         * Renvoie la première valeur associée si elle existe, sinon null.
+         * @param fieldName le nom du champ dont on souhaites la première valeur associée.
+         * @return la première valeur associée à ce nom de champ ou null si il n'en existe pas.
+         */
+        public String getFieldValue(String fieldName) {
+        	for (Field field: getField()) {
+        		if (fieldName.equals(field.getName()) && field.getValue() != null && field.getValue().size() > 0) {
+        			return field.getValue().get(0);
+        		}
+        	}
+            return null;
+        }
 
         /**
          * Java class for anonymous complex type.

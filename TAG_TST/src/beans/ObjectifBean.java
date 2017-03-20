@@ -123,6 +123,7 @@ public class ObjectifBean implements Serializable {
 		super();
 		this.descriptif = descriptif;
 		this.code = code;
+		//TODO vérifier si cela n'as pas d'impact de mettre null à la place de false.
 		this.etat = false;
 		this.clefUnique = clef;
 		this.step = true;
@@ -151,6 +152,13 @@ public class ObjectifBean implements Serializable {
 	}
 
 	public Boolean getEtat() {
+		return etat;
+	}
+	
+	public Boolean isEtat() {
+		if (etat == null) {
+			return false;
+		}
 		return etat;
 	}
 

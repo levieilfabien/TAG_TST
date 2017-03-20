@@ -3,6 +3,7 @@ package beans;
 import java.io.Serializable;
 import java.util.List;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.openqa.selenium.By;
 
 import constantes.Clefs;
@@ -259,6 +260,7 @@ public class CibleBean implements Serializable {
 			// On creer le by correspondant au XPATH construit.
 			//System.out.println(chaineXpath);
 			by = By.xpath(chaineXpath);
+			System.out.println(chaineXpath);
 		}
 		return by;
 	}
@@ -455,6 +457,22 @@ public class CibleBean implements Serializable {
 		this.clef = Clefs.ID;
 		this.criteres = new String[] {criteres};
 		this.frame = null;
+	}
+	
+	/**
+	 * Constructeur paramètré pour ajouter des critères supplémentaire à un cible disposant déjà de critère.
+	 * @param reference la cible de référence.
+	 * @param criteres les critères d'identification.
+	 */
+	public CibleBean(CibleBean reference, String... criteres) {
+		super();
+		
+		String[] criteresComplet = new String[reference.getCriteres().length + criteres.length];
+		criteresComplet = ArrayUtils.addAll(reference.getCriteres(), criteres);
+		
+		this.clef = reference.getClef();
+		this.criteres = criteresComplet;
+		this.frame = reference.getFrame();
 	}
 	
 	/**
