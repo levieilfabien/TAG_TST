@@ -43,6 +43,7 @@ import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.UnexpectedTagNameException;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -716,6 +717,27 @@ public class SeleniumOutils {
 	    }
 	}
 	
+
+	public void attendreElement(final CibleBean cible) throws SeleniumException {
+		
+//		FluentWait<WebDriver> fluentWait = new FluentWait<>(driver)
+//		        .withTimeout(30, TimeUnit.SECONDS)
+//		        .pollingEvery(200, TimeUnit.MILLISECONDS)
+//		        .ignoring(NoSuchElementException.class);
+		
+	    try {
+	    	logger("On attend le chargement de l'élément " + cible.getClef() + " : " + cible.lister() + " (Frame : " + cible.getFrame() + ")");
+	    	final By critere = cible.creerBy();
+	    	// On cherche à obtenir l'élément. Pour être légitime il doit être clickable.
+	    	WebElement element = (new WebDriverWait(driver, attenteMax)).until(ExpectedConditions.elementToBeClickable(critere));
+	    } catch (TimeoutException e) {
+	    	throw new SeleniumException(Erreurs.E009, "Element introuvable (ou désactivé) : " + cible.lister());
+	    } catch (StaleElementReferenceException ex) {
+    		// La référence à l'élément obselète mais celui ci existe bel et bien, on réinitialise l'attente.
+    		attendreElement(cible);
+    	}
+	}
+	
 	/**
 	 * Attend le chargement d'un élément visible dans la page avant de poursuivre le test.
 	 * La recherche s'effectue dans la Frame active.
@@ -1239,6 +1261,37 @@ public class SeleniumOutils {
 	}
 	
 	/**
+	 * Cette fonction attend l'affichage de la cible puis clique dessus.
+	 * Ensuite elle ne "rend la main" qu'une fois que la cible de l'attente est présente à l'écran.
+	 * En cas d'echec de l'attente, on tente à nouveau le clic aussi souvent que nécessaire. Le nombre d'essai maximal est fixé par l'attribut "attenteMax".
+	 * @param cible la cible du clic.
+	 * @param cibleAttente la cible de l'attente.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public void cliquerJusqua(CibleBean cible, CibleBean cibleAttente) throws SeleniumException {
+		attendreElement(cible);
+		boolean boucle = true;
+		int nbEssai = attenteMax;
+		while(boucle) {
+			nbEssai--;
+			if (nbEssai > 0) {
+				try {
+					cliquer(cible);
+					attendreElement(cibleAttente);
+					// Cette ligne ne sera atteinte que si le test est concluant.
+					boucle = false;
+					System.out.println("La cible de l'attente est bien présente");
+				} catch (Exception ex) {
+					boucle = true;
+				}
+			} else {
+				// On a pas réussi dans le délai apparti de faire apparaitre la cible d'attente
+				throw new SeleniumException(Erreurs.E009, "La cible de l'attente n'est jamais apparue : " + cibleAttente.lister());
+			}
+		}
+	}
+	
+	/**
 	 * Permet de cliquer sur autant d'éléments que possible répondant aux critères de ciblage.
 	 * @param cible la cible des clics.
 	 * @return le nombre de clics effectués.
@@ -1389,8 +1442,45 @@ public class SeleniumOutils {
 			ex.printStackTrace();
 			throw new SeleniumException(ex, "(Selecteur : " + cible.lister() + ", Valeur : " + libelle + ")");
 		} catch (StaleElementReferenceException ex) {
-			ex.printStackTrace();
-			throw new SeleniumException(Erreurs.E023, "(Selecteur : " + cible.lister() + ", Valeur : " + libelle + ")");
+			// Il s'agit d'un problème de référence, il faut renouveller la sélection.
+			try {
+				// On obtiens le select (à condition qu'il soit visible)
+				WebElement tempWebElement = obtenirElementVisible(cible);
+				WebElement tempOption = null;
+				// On créer un selecteur à partir du WebElement.
+				Select temp = new Select(tempWebElement);
+				// On séléctionne le texte ou la valeur.
+				try {
+					// On essai d'abord de selectionné par libelle d'option.
+					temp.selectByVisibleText(libelle);
+					// Si la selection est effective, il devient alors possible de cliquer dessus
+					if (cible.getClef() == Clefs.CRITERES_ITERATIF) {
+						tempOption = obtenirElement(new CibleBean(null, cible, "*", "text=" + libelle));
+					} else {
+						tempOption = obtenirElement(new CibleBean(Clefs.TEXTE_PARTIEL, libelle));
+					}
+					
+				}	catch (NoSuchElementException ex2) {
+					// Si le texte n'est pas visible, on essai de sélectionner par valeur.
+					temp.selectByValue(libelle);
+					// Si la selection est effective, il devient alors possible de cliquer dessus
+					if (cible.getClef() == Clefs.CRITERES_ITERATIF) {
+						tempOption = obtenirElement(new CibleBean(null, cible, "*", "value=" + libelle));
+					} else {
+						tempOption = obtenirElement(new CibleBean(Clefs.VALEUR, libelle));
+					}
+				}
+				// On doit ensuite envoyer une validation à la selection, sans quoi la selection n'est pas finalisée.
+				if (tempOption != null) {
+					tempOption.sendKeys(Keys.RETURN);
+				}		
+				// On effectue pas la vérification sur une deuxième tentative.
+				success = true;
+			} catch (Exception ex3) {
+				// Quelle que soit l'erreur qui remonte, c'est la perte de référence qui l'emporte dans cette circonstance
+				ex.printStackTrace();
+				throw new SeleniumException(Erreurs.E023, "(Selecteur : " + cible.lister() + ", Valeur : " + libelle + ")");
+			}
 		}
 		
 		if (!success) {

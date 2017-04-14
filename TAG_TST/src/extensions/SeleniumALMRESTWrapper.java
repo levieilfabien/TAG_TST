@@ -3,9 +3,13 @@ package extensions;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.net.HttpURLConnection;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +32,7 @@ import extensions.alm.EntityDescriptor;
 import extensions.alm.EntityMarshallingUtils;
 import extensions.alm.Response;
 import extensions.alm.RestConnector;
+import outils.XLSOutils;
 
 public class SeleniumALMRESTWrapper {
 
@@ -65,24 +70,44 @@ public class SeleniumALMRESTWrapper {
     	}
     	url = url.concat("/qcbin");
     	
-    	CasEssaiBean casEssai = new CasEssaiBean();
-    	casEssai.setAlm(true);
-    	casEssai.setEtatFinal(false);
-    	//54199//78516
-    	casEssai.setIdUniqueTestLab(49375);
-    	casEssai.setIdUniqueTestPlan(76408);
-    	casEssai.setNomCasEssai("TEST-ALM");
-    	casEssai.ajouterStep("OBJ1", "OBJ1", "Attendu");
-    	casEssai.setRepertoireTelechargement("./TEST-ALM");
+//    	CasEssaiBean casEssai = new CasEssaiBean();
+//    	casEssai.setAlm(true);
+//    	casEssai.setEtatFinal(false);
+//    	//54199//78516
+//    	casEssai.setIdUniqueTestLab(49375);
+//    	casEssai.setIdUniqueTestPlan(76408);
+//    	casEssai.setNomCasEssai("TEST-ALM");
+//    	casEssai.ajouterStep("OBJ1", "OBJ1", "Attendu");
+//    	casEssai.setRepertoireTelechargement("./TEST-ALM");
     	
     	SeleniumALMRESTWrapper wrapper = new SeleniumALMRESTWrapper();
     	wrapper.preparerWrapper(url, Constants.DOMAIN, Constants.PROJECT, Constants.USERNAME, Constants.PASSWORD);
     	
     	//String urlTestLab = wrapper.synchroScenarioDeTest("CAS_TEST_AUTO5", "10954", "Ceci est un cas de test créer automatiquement.", "Une description par défaut.");
+    	//String urlCasTest = wrapper.synchroCasDeTest("CASTEST2", "A supprimer", "Equipe T&R", "levieilfa", "", "19394");
 
-    	String urlDesignStep = wrapper.synchroDesignStep("STEP1", "Description", "Excepted", "78961");
+    	//String urlDesignStep = wrapper.synchroDesignStep("STEP1", "Description", "Excepted", "78961");
     	
-    	System.out.println(urlDesignStep);
+
+    	
+//    	String exemple = "CASTEST2" + "/n"
+//    	+ "<Step1>"  + "/n"
+//    	+ "A : Décrire l'action à mener (description du step)"  + "/n"
+//    	+ "R : Décrire le résultat attendu (attendu du step)"  + "/n"
+//    	+ "Nom du step2" + "/n"
+//    	+ "A : Décrire l'action à mener (description du step)"  + "/n"
+//    	+ "R : Décrire le résultat attendu (attendu du step)";
+    	
+    	//List<Entity> liste = extraireStep(exemple);
+    	
+    	//String urlCasTest = wrapper.extrationCasTest(exemple, "Description du CT", "Equipe T&R", "levieilfa", "", "19394");
+    	
+    	//System.out.println(urlCasTest);
+    	
+    	//XLSOutils.extraireInformationALM("c:\\Temp\\test.xlsx", "10954", "19394", wrapper);
+    	
+    	
+    	XLSOutils.extraireInformationALM("c:\\Temp\\test.xlsm", "10962", "19400", wrapper);
     	
     	wrapper.deconnexion();
     	
@@ -288,8 +313,11 @@ public class SeleniumALMRESTWrapper {
         } else if (query != null) {
         	urlComplete = urlComplete.concat("?" + query);
         }
-        //System.out.println(urlComplete);
+        System.out.println(urlComplete);
         String responseStr = con.httpGet(urlComplete, null, requestHeaders).toString();
+        
+        //System.out.println(responseStr);
+        
         // On extrait l'entity de la réponse 
         Entity entity = null;
         if (query != null) {
@@ -378,17 +406,18 @@ public class SeleniumALMRESTWrapper {
     /**
      * Applique l'état paramètre a l'instance de test dont l'id de test set et l'id de scénario est passé en paramètre.
      * Attention l'instance de test est la version du test contenue dans le scénario (il est possible par exemple d'avoir plusieurs exemplaire de test dans un scénario, chacun aura une instance de test).
-     * @param idTestSet l'identifiant du test set à mettre à jour
+     * @param idTest l'identifiant du test à mettre à jour
+     * @param idSenario l'identifiant du scenario
      * @param etat l'état à appliquer.
      * @throws SeleniumException en cas d'erreur lors de la mise à jour du cas de test.
      */
-    public void majTestInstance(String idTestSet, String idScenario, Boolean etat) throws SeleniumException {
+    public void majTestInstance(String idTest, String idScenario, Boolean etat) throws SeleniumException {
     	if (etat != null) {
 			String testInstanceID = "";
 			try {
 				// On récupère l'instance de test liée au test set
 				try {
-					Entity testInstance = obtenirEntite(null, "query={cycle-id[" + idScenario + "];test-id[" + idTestSet + "];}", "test-instance");
+					Entity testInstance = obtenirEntite(null, "query={cycle-id[" + idScenario + "];test-id[" + idTest + "];}", "test-instance");
 					testInstanceID = testInstance.obtenirChamp("id").getValue().get(0);
 	    		} catch (Exception ex) {
 	    			throw new SeleniumException(Erreurs.E032, "Impossible d'extraire l'id de l'instance de test  (" + ex.getMessage() + ")");
@@ -401,7 +430,7 @@ public class SeleniumALMRESTWrapper {
 	    		// On effectue la mise à jour en modifier le test set à partir de l'entité de mise à jour
 	    		majEntite(con.buildEntityCollectionUrl("test-instance") + "/" + testInstanceID, convertirEntiteEnChaine(testSetMaj));
 			} catch (Exception ex) {
-				throw new SeleniumException(Erreurs.E032, "Impossible de mettre à jour le test set "+ idTestSet + " pour l'instance " + testInstanceID + " (" + ex.getMessage() + ")");
+				throw new SeleniumException(Erreurs.E032, "Impossible de mettre à jour le test set "+ idTest + " pour l'instance " + testInstanceID + " (" + ex.getMessage() + ")");
 			}
     	}
     }
@@ -428,14 +457,18 @@ public class SeleniumALMRESTWrapper {
     		test.ajouterChamp("description", encode(description, hexHtmlEncoder)); 
     	}
     	if (commentaire != null) {
-    		test.ajouterChamp("comment", "<HTML><BODY>" + encode(commentaire, hexHtmlEncoder) + "</BODY></HTML>"); 
+    		test.ajouterChamp("comment", encode(commentaire, hexHtmlEncoder)); 
     	}
     	// Champs obligatoire à renseigner
     	test.ajouterChamp("status", "Open"); 
     	test.ajouterChamp("subtype-id", "hp.qc.test-set.default"); 
+    	
+    	System.out.println(convertirEntiteEnChaine(test));
+    	
     	try {
 			return creerEntite(con.buildEntityCollectionUrl("test-set"), convertirEntiteEnChaine(test));
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new SeleniumException(Erreurs.E032, "Impossible de creer le test (" + e.getMessage() + ")");
 		}
     }
@@ -451,7 +484,7 @@ public class SeleniumALMRESTWrapper {
      */
     public String synchroScenarioDeTest(String nom, String position, String description, String commentaire) throws SeleniumException {
     	try {
-	    	Entity retour = obtenirEntite(null, "query={name[" + nom + "];parent-id[" + position + "];}", "test-set");
+	    	Entity retour = obtenirEntite(null, "query={name[\"" + URLEncoder.encode(nom, "UTF-8") + "\"];parent-id[" + position + "];}", "test-set");
 	    	String urlTestLab = "";
 	    	if (retour == null) {
 	    		urlTestLab = creerScenarioDeTest(nom, position, description, commentaire);
@@ -483,7 +516,7 @@ public class SeleniumALMRESTWrapper {
     	}
     	
     	try {
-    		Entity retour = obtenirEntite(null, "query={name[" + nom + "];parent-id[" + idTest + "];}", "design-step");
+    		Entity retour = obtenirEntite(null, "query={name[\"" + URLEncoder.encode(nom, "UTF-8") + "\"];parent-id[" + idTest + "];}", "design-step");
 	    	if (retour == null) {
 	        	// On précise le type d'entité et on remplis les champs obligatoires
 	        	Entity step = new Entity();   	
@@ -503,6 +536,96 @@ public class SeleniumALMRESTWrapper {
 		}  catch (Exception e) {
 			e.printStackTrace();
 			throw new SeleniumException(Erreurs.E032, "Impossible d'obtenir ou de créer le design step dans le test plan (" + e.getMessage() + ")");
+		}
+    	return url;
+    }
+    
+    public String synchroInstanceTest(String nom, String idScenario, String idTest) throws SeleniumException {
+    	String url = "";
+    	// Si on fournit une url en paramètre, on en extrait l'id.
+    	if (idTest.startsWith("http")) {
+    		idTest = idTest.substring(idTest.lastIndexOf("/") + 1);
+    	}
+    	
+    	if (idScenario.startsWith("http")) {
+    		idScenario = idScenario.substring(idScenario.lastIndexOf("/") + 1);
+    	}
+    	
+    	try {
+    		Entity retour = obtenirEntite(null, "query={cycle-id[" + idScenario + "];test-id[" + idTest + "];}", "test-instance");
+	    	if (retour == null) {
+	        	// On précise le type d'entité et on remplis les champs obligatoires
+	        	Entity testInstance = new Entity();   	
+	        	testInstance.setType("test-instance");
+	        	//testInstance.ajouterChamp("name", StringEscapeUtils.escapeHtml4(nom));
+	        	// Les informations textuelles sont supposées être de l'HTML. Mais pour les envoyer via les services REST il faut les encoder en hexa.
+	        	testInstance.ajouterChamp("test-id", idTest);
+	        	testInstance.ajouterChamp("cycle-id", idScenario);
+	        	testInstance.ajouterChamp("subtype-id", "hp.qc.test-instance.MANUAL");
+	        	testInstance.ajouterChamp("status", "No Run");
+	        	// On effectue la création proprement dites
+	    		url = creerEntite(con.buildEntityCollectionUrl("test-instance"), convertirEntiteEnChaine(testInstance));
+	    	} else {
+	    		url = con.buildEntityCollectionUrl("test-instance") + "/" + retour.getFields().getFieldValue("id");
+	    	}
+		}  catch (SeleniumException ex) {
+			throw ex;
+		}  catch (Exception e) {
+			e.printStackTrace();
+			throw new SeleniumException(Erreurs.E032, "Impossible d'obtenir ou de créer l'instance de test dans le test lab (" + e.getMessage() + ")");
+		}
+    	return url;
+    }
+    
+    /**
+     * Permet de synchroniser un cas de test du test plan. Si celui ci existe on renvoie l'url. Sinon on créer un nouveau cas de test.
+     * @param nom le nom du cas de test
+     * @param description la description du cas de test
+     * @param emetteur l'équipe émetrice
+     * @param proprietaire le login ALM du propriétaire.
+     * @param application l'application sur laquelle s'applique le test
+     * @param idTestFolder l'identifiant unique du dossier qui accueille le cas de test.
+     * @return l'url vers le cas de test existant ou nouvellement créer.
+     * @throws SeleniumException en cas d'erreur.
+     */
+    public String synchroCasDeTest(String nom, String description, String emetteur, String proprietaire, String application, String idTestFolder) throws SeleniumException {
+    	String url = "";
+    	// Si on fournit une url en paramètre, on en extrait l'id.
+    	if (idTestFolder.startsWith("http")) {
+    		idTestFolder = idTestFolder.substring(idTestFolder.lastIndexOf("/") + 1);
+    	}
+    	
+    	try {
+    		Entity retour = obtenirEntite(null, "query={name[\"" + URLEncoder.encode(nom, "UTF-8") + "\"];parent-id[" + idTestFolder + "];}", "test");
+	    	if (retour == null) {
+	        	// On précise le type d'entité et on remplis les champs obligatoires
+	        	Entity test = new Entity();   	
+	        	test.setType("test");
+	        	test.ajouterChamp("name", StringEscapeUtils.escapeHtml4(nom));
+	        	// Les informations textuelles sont supposées être de l'HTML. Mais pour les envoyer via les services REST il faut les encoder en hexa.
+	        	test.ajouterChamp("description", encode(description, hexHtmlEncoder));
+	        	test.ajouterChamp("parent-id", idTestFolder);
+	        	test.ajouterChamp("user-template-01", encode(emetteur, hexHtmlEncoder));
+	        	test.ajouterChamp("owner", proprietaire);
+	        	if (application != null && !"".equals(application)) {
+	        		test.ajouterChamp("user-05", encode(application, hexHtmlEncoder));
+	        	}
+	        	// Champs obligatoire à renseigner
+	        	test.ajouterChamp("status", "En cours"); 
+	        	test.ajouterChamp("subtype-id", "MANUAL"); 
+	        	
+	        	System.out.println(convertirEntiteEnChaine(test));
+
+	        	// On effectue la création proprement dites
+	    		url = creerEntite(con.buildEntityCollectionUrl("test"), convertirEntiteEnChaine(test));
+	    	} else {
+	    		url = con.buildEntityCollectionUrl("test") + "/" + retour.getFields().getFieldValue("id");
+	    	}
+		}  catch (SeleniumException ex) {
+			throw ex;
+		}  catch (Exception e) {
+			e.printStackTrace();
+			throw new SeleniumException(Erreurs.E032, "Impossible d'obtenir ou de créer le cas de test dans le test plan (" + e.getMessage() + ")");
 		}
     	return url;
     }
@@ -1324,19 +1447,191 @@ public class SeleniumALMRESTWrapper {
          Assert.assertNotNull("La connexion est toujours active malgré la demande de déconnexion.", example.obtenirURLConnexion());
      }
      
-//     public String encodeHexa(String s) {
-//	     StringBuilder sb = new StringBuilder();
-//	     s.codePoints().forEach(codePoint -> {
-//	         if (Character.UnicodeBlock.of(codePoint) != Character.UnicodeBlock.BASIC_LATIN) {
-//	             sb.append("&#");
-//	             sb.append(codePoint);
-//	             sb.append(';');
-//	         } else {
-//	             sb.appendCodePoint(codePoint);
-//	         }
-//	     });
-//	     return sb.toString();
+     /**
+      * Extrait d'une chaine de caractère respetant le formalisme prévu un nom de cas de test ainsi que des steps.
+      * Si un des éléments existe déjà, la création est ignorée pour celui-ci.
+      * @param chaineCasDeTest la chaine à découper.
+      * @param descriptionCT la description du cas de test à créer
+      * @param emetteur l'équipe émettrice du cas de test 
+      * @param proprietaire le propriétaire du cas de test
+      * @param application l'application concernée par le cas de test
+      * @param idTestFolder l'identifiant unique du répertoire dans lequel on doit créer le cas de test.
+      * @return l'url vers le cas de test.
+      * @throws SeleniumException en cas d'erreur lors des créations ou des obtentions.
+      */
+     public String extrationCasTest(String chaineCasDeTest, String idTestFolder) throws SeleniumException {
+    	 // EXEMPLE :
+			//    	 Nom du cas de test
+			//    	 <Nom du step1>
+			//    	 A : Décrire l'action à mener (description du step)
+			//    	 R : Décrire le résultat attendu (attendu du step)
+			//    	 <Nom du step2>
+			//    	 A : Décrire l'action à mener (description du step)
+			//    	 R : Décrire le résultat attendu (attendu du step)
+    	 //String retour = "";
+    	 // Récupération des lignes de la description via un découpage du paragraphe
+    	 String[] lignes = chaineCasDeTest.split("\\n");
+    	 List<String> listeLigne = Arrays.asList(lignes); 
+    	 String ligne = "";
+    	 Iterator<String> iterator =  listeLigne.iterator();
+    	 // Extraction du nom du cas de test
+    	 String nomCasTest = iterator.next();
+    	 String emetteurCT = "";
+    	 String proprietaireCT = "";
+    	 String applicationCT = "";
+    	 String descriptionCT = "";
+    	 // On vas extraire le descriptif du cas de test à partir des infos préfixée de "=XX=" :
+    	 for (String ligneTemp : listeLigne) {
+    		 if (ligneTemp.startsWith("=EX=")) {
+    			 descriptionCT = descriptionCT.concat("Exigence testée : " + ligneTemp.replace("=EX=", ""));
+    		 }
+    		 if (ligneTemp.startsWith("=RD=")) {
+    			 descriptionCT = descriptionCT.concat("\nRègle de gestion testée : " + ligneTemp.replace("=RD=", ""));
+    		 }
+    		 if (ligneTemp.startsWith("=NA=")) {
+    			 descriptionCT = descriptionCT.concat("\nNature du cas de test : " + ligneTemp.replace("=NA=", ""));
+    		 }
+    		 if (ligneTemp.startsWith("=TY=")) {
+    			 descriptionCT = descriptionCT.concat("\nType de cas de test : " + ligneTemp.replace("=TY=", ""));
+    		 }
+    		 if (ligneTemp.startsWith("=EM=")) {
+    			 emetteurCT = ligneTemp.replace("=EM=", "");
+    		 }
+    		 if (ligneTemp.startsWith("=AU=")) {
+    			 proprietaireCT = ligneTemp.replace("=AU=", "");
+    		 }
+    	 }
+    	 
+    	 // Synchronisation pour le cas de test
+    	 String idCasTest = "";
+    	 if (nomCasTest.startsWith("@")) {
+    		 // Si la ligne commence par arobase c'est une référence à un id de cas de test déjà existant, on ne créer ni le CT ni les steps.
+    		 idCasTest = nomCasTest.substring(1);
+    	 } else {
+    		 // On extrait les step que si on est en train de créer un cas de test, sinon on passe directement à l'étape suivante.
+    		 idCasTest = this.synchroCasDeTest(nomCasTest, descriptionCT, emetteurCT, proprietaireCT, applicationCT, idTestFolder);	 
+
+	    	 // Extraction des steps
+    		 String nom = "";
+    		 String description = "";
+    		 String expected = "";
+    		 boolean nomExtrait = false;
+    		 // On parcours les lignes suivantes pour connaitre le contenu des steps du cas de test.
+    		 while(iterator.hasNext()) {
+    			 // On extrait une ligne
+    			 ligne = iterator.next();
+    			 // On ne traite pas les lignes débutant par un signe "="
+    			 //if (!ligne.startsWith("=") && !ligne.startsWith("@")) {
+			    		if (ligne.startsWith("A :")) {
+	    				 	// Si la ligne débute par un A on alimente la description
+			    			if (!"".equals(description)) {
+			    				description = description.concat("\n" + ligne.replaceFirst("A :", ""));
+			    			} else {
+			    				description = ligne;
+			    			}
+			    		} else if (ligne.startsWith("R :")) {
+	    				 	// Si la ligne débute par un R on alimente le résultat
+			    			if (!"".equals(expected)) {
+			    				expected = expected.concat("\n" + ligne.replaceFirst("R :", ""));
+			    			} else {
+			    				expected = ligne;
+			    			}
+			    		} else if (!nomExtrait) {
+			    			// Si la ligne ne débute ni par un A ni par un R, c'est qu'il s'agit du nom du step
+			    			nom = ligne;
+			    			nomExtrait = true;
+			    		} else {
+			    			// Si on arrive ici c'est qu'on à rencontrer une deuxième ligne sans préfixe (qui est donc le nom du prochain step)
+			    			// On créer donc le step courant avec les infos extraites
+			    			this.synchroDesignStep(nom, description, expected, idCasTest);
+
+			    			// Si la ligne en cours d'analyse contient les symbole interdit, on sort.
+			    			if (!ligne.startsWith("=") && !ligne.startsWith("@")) {
+				    			// Ensuite on utilise la ligne pour alimiter le nom du prochain step et on réinitialise les description et résultats
+				    			nom = ligne;
+				    			description = "";
+				    			expected = "";
+				    			nomExtrait = true;
+			    			} else {
+			    				break;
+			    			}
+			    		}
+			    		
+			    		
+    			 //}
+    		 }
+    		
+    	 }
+    	 // Rattachement du cas de test au scenario
+    	 return idCasTest;
+     }
+     
+     
+	 // Extraction des steps
+//    	 while(iterator.hasNext()) {		 
+//    		 // Les lignes marchent par trois : Nom, Action (Description), Resultat (Excepted)
+//	    	String nom = iterator.next();
+//	    	if (!nom.startsWith("=")) {
+//	    		 
+//	    		 String description = "";
+//	    		 String expected = "";
+//	    		 ligne = iterator.next();
+//	    		 if (ligne.startsWith("A")) {
+//	    			 description = ligne; 
+//	    		 }
+//	    		 ligne = iterator.next();
+//	    		 if (ligne.startsWith("R")) {
+//	    			 expected = ligne; 
+//	    		 } 
+//	    		 // On effectue la synchronisation pour le design step
+//	    		 this.synchroDesignStep(nom, description, expected, idCasTest);
+//    		 }
+//    	 } 	 
+     
+//     static List<Entity> extraireStep(String chaineCasDeTest) {
+//    	 // EXEMPLE :
+//			//    	 Nom du cas de test
+//			//    	 <Nom du step1>
+//			//    	 A : Décrire l'action à mener (description du step)
+//			//    	 R : Décrire le résultat attendu (attendu du step)
+//			//    	 <Nom du step2>
+//			//    	 A : Décrire l'action à mener (description du step)
+//			//    	 R : Décrire le résultat attendu (attendu du step)
+//    	 // On initialise une liste ordonnée pour stocker le nom du cas de test et les steps.
+//    	 List<Entity> retour = new LinkedList<Entity>();
+//    	 // Récupération des lignes de la description via un découpage du paragraphe
+//    	 String[] lignes = chaineCasDeTest.split("/n");
+//    	 List<String> listeLigne = Arrays.asList(lignes); 
+//    	 String ligne = "";
+//    	 Iterator<String> iterator =  listeLigne.iterator();
+//    	 // Extraction du nom du cas de test
+//    	 String nomCasTest = iterator.next();
+//    	 // Extraction des steps
+//    	 while(iterator.hasNext()) {		 
+//    		 // Les lignes marchent par trois : Nom, Action (Description), Resultat (Excepted)
+//    		 String nom = iterator.next();
+//    		 String description = "";
+//    		 String expected = "";
+//    		 ligne = iterator.next();
+//    		 if (ligne.startsWith("A")) {
+//    			 description = ligne; 
+//    		 }
+//    		 ligne = iterator.next();
+//    		 if (ligne.startsWith("R")) {
+//    			 expected = ligne; 
+//    		 }
+//    		Entity step = new Entity();	
+//        	step.setType("design-step");
+//        	step.ajouterChamp("name", StringEscapeUtils.escapeHtml4(nom));
+//        	step.ajouterChamp("description", encode(description, hexHtmlEncoder));
+//        	step.ajouterChamp("expected", encode(expected, hexHtmlEncoder));
+//        	//step.ajouterChamp("parent-id", idTest);
+//        	retour.add(step);
+//    	 }
+//    	 
+//    	 return retour;
 //     }
+     
      
      /**
       * Fonction qui encore une chaine de caractère pour qu'elle soit compatible avec ALM.
@@ -1350,6 +1645,16 @@ public class SeleniumALMRESTWrapper {
          for ( int i = 0; i < str.length(); i++)
              encoder.encode(str.charAt(i), buff);
          return ""+buff;
+     }
+     
+     /**
+      * Fonction qui encore une chaine de caractère pour qu'elle soit compatible avec ALM en utilisant l'encodeur hexhtml.
+      * @param str la chaine à encoder.
+      * @return la chaine une fois encoder.
+      */
+     static public String encode(String str)
+     {
+    	 return encode(str, hexHtmlEncoder);
      }
      
      /**
