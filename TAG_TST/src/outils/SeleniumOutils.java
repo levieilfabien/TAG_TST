@@ -16,6 +16,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import javax.imageio.ImageIO;
 
@@ -371,7 +372,7 @@ public class SeleniumOutils {
     	}
 		
 		try {
-			(new WebDriverWait(driver, 10)).until(new ExpectedCondition<Boolean>() {
+			(new WebDriverWait(driver, 10)).until(new Function<WebDriver, Boolean>() {
 		        public Boolean apply(WebDriver d) {
 		        	// En fait on ne respecte jamais la casse...
 		        	boolean temp = lowerCase?supprimerCaracteresSpeciaux(d.getTitle().toLowerCase(Locale.ENGLISH)).startsWith(supprimerCaracteresSpeciaux(titre.toLowerCase(Locale.ENGLISH))):supprimerCaracteresSpeciaux(d.getTitle().toUpperCase(Locale.ENGLISH)).startsWith(supprimerCaracteresSpeciaux(titre.toUpperCase(Locale.ENGLISH)));
@@ -489,7 +490,7 @@ public class SeleniumOutils {
 	    	if (testerPresenceAlerteJavascript()) {
 	    		accepterAlerteJavascript();
 	    	}    	
-			(new WebDriverWait(driver, attenteMax)).until(new ExpectedCondition<Boolean>() {
+			(new WebDriverWait(driver, attenteMax)).until(new Function<WebDriver, Boolean>() {
 		        public Boolean apply(WebDriver d) {
 		            return changerDeFenetre(titre).getTitle().toLowerCase().startsWith(titre.toLowerCase());
 		        }
@@ -539,7 +540,7 @@ public class SeleniumOutils {
 	public void attendrePresenceTexte(final String frame, final String texte, final long attente) throws SeleniumException {
 		final Long timestamp = new Date().getTime();
 	    try {
-			(new WebDriverWait(driver, attente)).until(new ExpectedCondition<Boolean>() {
+			(new WebDriverWait(driver, attente)).until(new Function<WebDriver, Boolean>() {
 		        public Boolean apply(WebDriver d) {
 		        	return testerPresenceTexte(frame, texte, true, timestamp);
 		        }
@@ -554,6 +555,54 @@ public class SeleniumOutils {
 	    } catch (Exception ex) {
 	    	// Une erreur technique inconnue à eu lieue, cela ne doit pas stopper le test.
 	    	logger("Lors de l'attente de l'apparition du texte (" + texte + "), une erreur inconnue est survenue.");
+	    	ex.printStackTrace();
+	    	return;
+	    }
+	}
+	
+	/**
+	 * Attend que la cible prenne une valeur non vide et non nulle
+	 * @param cible la cible dont on attend la valorisation.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public void attendreValorisation(final CibleBean cible) throws SeleniumException  {
+		attendreValorisation(cible, null);
+	}
+	
+	/**
+	 * Attend que la cible prenne la valeur donnée en paramètre.
+	 * @param cible la cible dont on attend la valorisation.
+	 * @param texte la valeur que doit prendre la cible, si à null alors n'importe quelle valeur non vide est acceptée.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public void attendreValorisation(final CibleBean cible, final String texte) throws SeleniumException  {
+	    try {
+				(new WebDriverWait(driver, attenteMax)).until(new Function<WebDriver, Boolean>() {
+			        public Boolean apply(WebDriver d) {
+			        	String retour;
+						try {
+							retour = obtenirValeur(cible);
+						} catch (SeleniumException e) {
+							return false;
+						}
+			        	if (texte != null) {
+			        		return texte.equals(retour);
+			        	} else {
+			        		return (retour != null && !"".equals(retour));
+			        	}
+			            
+			        }
+				});
+		} catch (TimeoutException e) {
+	    	throw new SeleniumException(Erreurs.E013, texte);
+	    	//Assert.fail("Le texte " + texte + " est présent et visible sur la page.");
+	    } catch (UnhandledAlertException e) {
+	    	// Une popup est présente à l'écran, le texte n'est probablement plus présente à l'écran.
+	    	logger("Une alerte bloque le processus de vérification de la valorisation de la cible.");
+	    	return;
+	    } catch (Exception ex) {
+	    	// Une erreur technique inconnue à eu lieue, cela ne doit pas stopper le test.
+	    	logger("Lors de l'attente de valorisation, une erreur inconnue est survenue.");
 	    	ex.printStackTrace();
 	    	return;
 	    }
@@ -576,7 +625,7 @@ public class SeleniumOutils {
 	 */
 	public void attendreNonPresenceTexte(final String texte, Integer time) throws SeleniumException {
 	    try {
-			(new WebDriverWait(driver, time)).until(new ExpectedCondition<Boolean>() {
+			(new WebDriverWait(driver, time)).until(new Function<WebDriver, Boolean>() {
 		        public Boolean apply(WebDriver d) {
 		            return !testerPresenceTexte(null, texte, true, null);
 		        }
@@ -683,7 +732,7 @@ public class SeleniumOutils {
 	    try {
 	    	logger("On attend le chargement de l'élément " + cible.getClef() + " : " + cible.lister() + " (Frame : " + cible.getFrame() + ")");
 	    	//final By critere = cible.creerBy();
-			(new WebDriverWait(driver, attenteMax)).until(new ExpectedCondition<Boolean>() {
+			(new WebDriverWait(driver, attenteMax)).until(new Function<WebDriver, Boolean>() {
 		        public Boolean apply(WebDriver driver) {
 		        	try {
 		        		Boolean retour = false;
@@ -717,7 +766,12 @@ public class SeleniumOutils {
 	    }
 	}
 	
-
+	/**
+	 * Fonction d'attente qui vérifie l'affichage et l'état "cliquable" d'un élément désigné par la cible.
+	 * Cette fonction exploite les capacité des ExpectedConditions.
+	 * @param cible la cible désignant l'élément dont on attend l'affichage
+	 * @throws SeleniumException en cas d'erreur ou de non disponibilité de l'élément.
+	 */
 	public void attendreElement(final CibleBean cible) throws SeleniumException {
 		
 //		FluentWait<WebDriver> fluentWait = new FluentWait<>(driver)
@@ -729,7 +783,13 @@ public class SeleniumOutils {
 	    	logger("On attend le chargement de l'élément " + cible.getClef() + " : " + cible.lister() + " (Frame : " + cible.getFrame() + ")");
 	    	final By critere = cible.creerBy();
 	    	// On cherche à obtenir l'élément. Pour être légitime il doit être clickable.
-	    	WebElement element = (new WebDriverWait(driver, attenteMax)).until(ExpectedConditions.elementToBeClickable(critere));
+	    	new WebDriverWait(driver, attenteMax).until(
+	    			new Function<WebDriver, Boolean>() {
+	    	            public Boolean apply(WebDriver driver) {
+	    	            	WebElement element = ExpectedConditions.elementToBeClickable(critere).apply(driver);
+	    	            	return element != null;
+	    	            }
+	    	        });	
 	    } catch (TimeoutException e) {
 	    	throw new SeleniumException(Erreurs.E009, "Element introuvable (ou désactivé) : " + cible.lister());
 	    } catch (StaleElementReferenceException ex) {
@@ -744,15 +804,19 @@ public class SeleniumOutils {
 	 * @param cible la cible désignant l'élement à attendre.
 	 * @throws SeleniumException en cas d'erreur.
 	 */
-	public WebElement attendreVisibiliteElement(CibleBean cible) throws SeleniumException {
+	public void attendreVisibiliteElement(CibleBean cible) throws SeleniumException {
 	    WebDriverWait wait = new WebDriverWait(driver, attenteMax);
-	    WebElement element;
 	    try {
-	    	element = wait.until(ExpectedConditions.visibilityOfElementLocated(cible.creerBy()));
+	    	wait.until(			
+	    			new Function<WebDriver, Boolean>() {
+	    	            public Boolean apply(WebDriver driver) {
+	    	            	WebElement element = ExpectedConditions.visibilityOfElementLocated(cible.creerBy()).apply(driver);
+	    	            	return element != null;
+	    	            }
+	    	        });	
 	    } catch (TimeoutException e) {
 	    	throw new SeleniumException(Erreurs.E009, "Element introuvable (ou désactivé) : " + cible.lister());
 	    }
-	    return element;
 	}
 	
 	/**
@@ -764,7 +828,7 @@ public class SeleniumOutils {
 	public void attendre(long nbSec) {
 	    try {;
 	    	logger("On attend pendant " + nbSec + " secondes.");
-			(new WebDriverWait(driver, nbSec)).until(new ExpectedCondition<Boolean>() {
+			(new WebDriverWait(driver, nbSec)).until(new Function<WebDriver, Boolean>() {
 		        public Boolean apply(WebDriver driver) {
 		        	return false;
 		        }
@@ -784,7 +848,7 @@ public class SeleniumOutils {
 	    try {
 	    	logger("On attend la disparition de l'élément " + cible.getClef() + " : " + cible.lister() + " (Frame : " + cible.getFrame() + ")");
 	    	final By critere = cible.creerBy();
-			(new WebDriverWait(driver, nbreSecondes)).until(new ExpectedCondition<Boolean>() {
+			(new WebDriverWait(driver, nbreSecondes)).until(new Function<WebDriver, Boolean>() {
 		        public Boolean apply(WebDriver driver) {
 	        		// Impossible d'atteindre l'élément. Donc l'élément n'est pas présent sur la page.
 	        		// Il est aussi possible qu'un changement de page soit survenue (ex : loadingbar)
@@ -1634,7 +1698,7 @@ public class SeleniumOutils {
 	 */
 	public void attendreNonPresenceElement(final CibleBean cible) throws SeleniumException {
 	    try {
-			(new WebDriverWait(driver, 20)).until(new ExpectedCondition<Boolean>() {
+			(new WebDriverWait(driver, 20)).until(new Function<WebDriver, Boolean>() {
 		        public Boolean apply(WebDriver d) {
 		        	boolean retour = false;
 		        	try {
@@ -2152,7 +2216,7 @@ public class SeleniumOutils {
 	 */
 	public void attendreValeur(final CibleBean cible, final String valeur, int temps) throws SeleniumException {
 	    try {
-			(new WebDriverWait(driver, temps)).until(new ExpectedCondition<Boolean>() {
+			(new WebDriverWait(driver, temps)).until(new Function<WebDriver, Boolean>() {
 		        public Boolean apply(WebDriver d) {
 		            try {
 		            	return valeur.equals(obtenirValeur(cible, false));

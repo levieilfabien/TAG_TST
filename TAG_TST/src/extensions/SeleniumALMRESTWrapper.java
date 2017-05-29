@@ -107,7 +107,7 @@ public class SeleniumALMRESTWrapper {
     	//XLSOutils.extraireInformationALM("c:\\Temp\\test.xlsx", "10954", "19394", wrapper);
     	
     	
-    	XLSOutils.extraireInformationALM("c:\\Temp\\test.xlsm", "10962", "19400", wrapper);
+    	XLSOutils.extraireInformationALM("c:\\Temp\\test.xlsm", "10991", "19412", wrapper);
     	
     	wrapper.deconnexion();
     	

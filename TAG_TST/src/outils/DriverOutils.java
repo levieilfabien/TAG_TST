@@ -6,16 +6,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import beans.CookieBean;
-
-import com.google.common.base.Function;
  
 /**
  * Outils additionnels pour le driver sélénium.
@@ -59,13 +57,13 @@ public class DriverOutils {
      * @param locator le critère de recherche dans la page.
      * @return la fonction spécifique associée à un élément donné répondant au critère de recherche.
      */
-    Function<WebDriver, WebElement> testerPresenceElement(final By locator) {
+    Function<WebDriver, Boolean> testerPresenceElement(final By locator) {
         /**
          * Cette fonction associée un élément au webdriver associé.
          */
-    	return new Function<WebDriver, WebElement>() {
-            public WebElement apply(WebDriver driver) {
-                return driver.findElement(locator);
+    	return new Function<WebDriver, Boolean>() {
+            public Boolean apply(WebDriver driver) {
+                return driver.findElement(locator) != null;
             }
         };
     }
@@ -76,6 +74,12 @@ public class DriverOutils {
      */
     public void attentreElementPresent(final By locator){
     	// Si on peux associé un élément au webdriver via le locator
+//    	this.wait.until(new Function<WebDriver, Boolean>() {
+//            @Override
+//            public Boolean apply(WebDriver driver) {
+//            	return true;
+//            }
+//    	});    	
         this.wait.until(testerPresenceElement(locator));
     }
      
