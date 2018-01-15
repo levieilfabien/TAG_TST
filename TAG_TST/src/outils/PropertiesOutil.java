@@ -14,6 +14,12 @@ import beans.CasEssaiBean;
 import constantes.Erreurs;
 import exceptions.SeleniumException;
 
+/**
+ * Classe permettant la manipulation des fichier de properties des projets de test.
+ * Si un projet ne dispose pas du fichier de properties des erreurs seront remontées.
+ * @author levieilfa
+ *
+ */
 public class PropertiesOutil {
 	
 	/**

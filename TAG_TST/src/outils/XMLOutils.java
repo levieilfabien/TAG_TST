@@ -385,6 +385,7 @@ public class XMLOutils {
 		public static String toXml(Object instanceAnnotee) {
 			String retour = new String();
 			try {
+				//System.out.println("On inspecte l'instance de type : " + instanceAnnotee.getClass());
 				// On récupère l'annotation de la classe
 				BaliseXml classe_annotation = instanceAnnotee.getClass().getAnnotation(BaliseXml.class);
 				
@@ -443,6 +444,7 @@ public class XMLOutils {
 			//} catch (NoSuchMethodException e1, SecurityException e2, IllegalAccessException e3, IllegalArgumentException e4, InvocationTargetException e5, NoSuchFieldException e6) {
 			} catch (Exception erreur) {
 				System.out.println("L'objet n'est pas correctement balisé");
+				//erreur.printStackTrace();
 			}
 			return retour;
 

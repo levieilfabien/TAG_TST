@@ -648,6 +648,24 @@ public class PDFOutils extends PDFUtil {
 	 * @throws SeleniumException en cas d'impossibilité d'accès aux fichiers ou au répertoire de sauvegarde.
 	 */
 	public static HashMap<String, Boolean> comparerListePDF(File[] liste1, File[] liste2, File sortie, boolean transparence, boolean tolerance, int seuilTolerance, int taillePrefixe) throws SeleniumException {
+		return comparerListePDF(liste1, liste2, sortie, transparence, tolerance, seuilTolerance, taillePrefixe, false);
+	}
+	
+	/**
+	 * Effectue une comparaison entre une liste finie de fichier PDF et une autre.
+	 * Les fichiers dont le suffixe (7 premiers caractères) sont le même sont comparer 1 à 1.
+	 * @param liste1 la liste de fichiers "nouvelle version"
+	 * @param liste2 la liste de fichiers "référence"
+	 * @param sortie le répertoire de sortie pour la production des diffs.
+	 * @param transparence à vrai si les zones identiques sont mises en transparence.
+	 * @param tolerance à vrai si on accepte un seuil de tolérance sur les différence pour limiter les faux positifs.
+	 * @param seuilTolerance le seuil de tolérence (il s'agit d'une distance entre les couleurs des pixels, par défaut à 50)
+	 * @param taillePrefixe le nombre de caractères composant le préfixe commun des fichiers à comparer.
+	 * @param generationAjoutSuppression option qui permet si à true de produire des images d'ajout et de suppression.
+	 * @return une map listant les comparaison effectuée et indiquant si différence il y a ou pas
+	 * @throws SeleniumException en cas d'impossibilité d'accès aux fichiers ou au répertoire de sauvegarde.
+	 */
+	public static HashMap<String, Boolean> comparerListePDF(File[] liste1, File[] liste2, File sortie, boolean transparence, boolean tolerance, int seuilTolerance, int taillePrefixe, boolean generationAjoutSuppression) throws SeleniumException {
 		//List<Boolean> retour = new LinkedList<Boolean>();
 		HashMap<String, Boolean> resultats = new LinkedHashMap<String, Boolean>();
 		boolean temp = false;
@@ -656,6 +674,7 @@ public class PDFOutils extends PDFUtil {
 		pdfutil.setOptionComparaisonComplete(true);
 		pdfutil.setOptionSurlignerDifferences(true);
 		pdfutil.setModeDeComparaison(CompareMode.VISUAL_MODE);
+		pdfutil.setOptionGenererationAjoutSuppression(generationAjoutSuppression);
 		
 		// On vérifie que l'on manipule bien des répertoires.
 		if (liste1.length > 0 || liste2.length > 0) {

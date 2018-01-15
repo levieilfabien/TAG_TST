@@ -2,18 +2,19 @@ package extensions.alm;
 
 /**
 *
-* These constants are used throughout the code to set the
-* server to work with.
-* To execute this code, change these settings to fit
-* those of your server.
+* Cette classe défini des constantes par défaut lorsque celle ci ne sont pas valorisées dans des fichier properties.
+* Les valorisations dans ce fichier ne seront pas maintenues et ne doivent être utilisées que pour des tests en interne du framework.
 */
 public class Constants {
 
-   public static final String HOST = "hpalm.intranatixis.com";
+   public static final String HOST_ALM = "hpalm.intranatixis.com";
+   public static final String HOST_CONFLUENCE = "https://confluence.eqsmut.intranatixis.com/rest/api"; //content/68944055";
    public static final String PORT = null;
+   
+   public static final String HOST_PROXY = "proxypartners.intranet";
 
    public static final String USERNAME = "levieilfa";
-   public static final String PASSWORD = "Sombros102";
+   public static final String PASSWORD = "Sombros957";
 
    public static final String DOMAIN = "NATIXIS_FINANCEMENT";
    public static final String PROJECT = "CREDIT_CONSOMMATION";

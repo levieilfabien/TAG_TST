@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -17,9 +16,9 @@ import org.apache.commons.lang3.StringEscapeUtils;
 
 import com.google.common.io.Files;
 
-import beans.ALMBean;
 import beans.CasEssaiBean;
 import beans.ObjectifBean;
+import beans.RESTBean;
 import constantes.Erreurs;
 import exceptions.SeleniumException;
 import extensions.alm.Assert;
@@ -44,17 +43,17 @@ public class SeleniumALMRESTWrapper {
     /**
      * Encodeur HEXA pour les contenu HTML.
      */
-    static final CharEncoder hexHtmlEncoder = new CharEncoder("&#x",";",16);
+    public static final CharEncoder hexHtmlEncoder = new CharEncoder("&#x",";",16);
     
     /**
      * Encodeur HEXA pour les URL.
      */
-    static final CharEncoder hexUrlEncoder = new CharEncoder("%","",16);
+    public static final CharEncoder hexUrlEncoder = new CharEncoder("%","",16);
     
     /**
      * Encodeur DECIMAL pour les contenu HTML.
      */
-    static final CharEncoder decimalHtmlEncoder = new CharEncoder("&#",";",10);
+    public static final CharEncoder decimalHtmlEncoder = new CharEncoder("&#",";",10);
     
     /**
      * Fonction de test pour tenter une connexion ALM.
@@ -64,7 +63,7 @@ public class SeleniumALMRESTWrapper {
     public static void main(String[] args) throws Exception {
     	
     	// On prépare l'URL. Si le port n'est pas précisé c'est qu'on en utilise pas.
-    	String url = "https://" + Constants.HOST;
+    	String url = "https://" + Constants.HOST_ALM;
     	if (Constants.PORT != null) {
     		url = url.concat(":" + Constants.PORT);
     	}
@@ -105,9 +104,9 @@ public class SeleniumALMRESTWrapper {
     	//System.out.println(urlCasTest);
     	
     	//XLSOutils.extraireInformationALM("c:\\Temp\\test.xlsx", "10954", "19394", wrapper);
+    		
     	
-    	
-    	XLSOutils.extraireInformationALM("c:\\Temp\\test.xlsm", "10991", "19412", wrapper);
+    	XLSOutils.extraireInformationALM("c:\\Temp\\matrice_ACPR.xlsm", "11103", "19474", wrapper);
     	
     	wrapper.deconnexion();
     	
@@ -304,7 +303,7 @@ public class SeleniumALMRESTWrapper {
         Map<String, String> requestHeaders = new HashMap<String, String>();
         requestHeaders.put("Accept", "application/xml");
         // On précise que le type d'entity à manipuler est un defect
-        String resourceWeWantToRead = con.buildEntityCollectionUrl(typeEntite);
+        String resourceWeWantToRead = con.buildALMEntityCollectionUrl(typeEntite);
         // On effectue la connexion vers l'entité dont à fournit l'id est on récupère la réponse.
         // Si il y a une requête on la prend en compte :
         String urlComplete = resourceWeWantToRead;
@@ -383,7 +382,7 @@ public class SeleniumALMRESTWrapper {
     	
     	try {
         	// On prépare les paramètres de la création et on l'effectue
-    		String urlConsult = creerEntite(con.buildEntityCollectionUrl("run"), convertirEntiteEnChaine(run));
+    		String urlConsult = creerEntite(con.buildALMEntityCollectionUrl("run"), convertirEntiteEnChaine(run));
     		// On met à jour l'état du RUN afin de mettre à jour le test instance ne même temps. C'est le seul moyen d'éviter la création d'un run auto inutile.
     		Entity runMaj = new Entity();
     		runMaj.setType("run");
@@ -428,7 +427,7 @@ public class SeleniumALMRESTWrapper {
 	    		testSetMaj.setType("test-instance");
 	    		testSetMaj.ajouterChamp("status", etat?"Passed":"Failed");
 	    		// On effectue la mise à jour en modifier le test set à partir de l'entité de mise à jour
-	    		majEntite(con.buildEntityCollectionUrl("test-instance") + "/" + testInstanceID, convertirEntiteEnChaine(testSetMaj));
+	    		majEntite(con.buildALMEntityCollectionUrl("test-instance") + "/" + testInstanceID, convertirEntiteEnChaine(testSetMaj));
 			} catch (Exception ex) {
 				throw new SeleniumException(Erreurs.E032, "Impossible de mettre à jour le test set "+ idTest + " pour l'instance " + testInstanceID + " (" + ex.getMessage() + ")");
 			}
@@ -466,7 +465,7 @@ public class SeleniumALMRESTWrapper {
     	System.out.println(convertirEntiteEnChaine(test));
     	
     	try {
-			return creerEntite(con.buildEntityCollectionUrl("test-set"), convertirEntiteEnChaine(test));
+			return creerEntite(con.buildALMEntityCollectionUrl("test-set"), convertirEntiteEnChaine(test));
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new SeleniumException(Erreurs.E032, "Impossible de creer le test (" + e.getMessage() + ")");
@@ -489,7 +488,7 @@ public class SeleniumALMRESTWrapper {
 	    	if (retour == null) {
 	    		urlTestLab = creerScenarioDeTest(nom, position, description, commentaire);
 	    	} else {
-	    		urlTestLab = con.buildEntityCollectionUrl("test-set") + "/" + retour.getFields().getFieldValue("id");
+	    		urlTestLab = con.buildALMEntityCollectionUrl("test-set") + "/" + retour.getFields().getFieldValue("id");
 	    	}
 	    	return urlTestLab;
 		}  catch (SeleniumException ex) {
@@ -527,9 +526,9 @@ public class SeleniumALMRESTWrapper {
 	        	step.ajouterChamp("expected", encode(expected, hexHtmlEncoder));
 	        	step.ajouterChamp("parent-id", idTest);
 	        	// On effectue la création proprement dites
-	    		url = creerEntite(con.buildEntityCollectionUrl("design-step"), convertirEntiteEnChaine(step));
+	    		url = creerEntite(con.buildALMEntityCollectionUrl("design-step"), convertirEntiteEnChaine(step));
 	    	} else {
-	    		url = con.buildEntityCollectionUrl("design-step") + "/" + retour.getFields().getFieldValue("id");
+	    		url = con.buildALMEntityCollectionUrl("design-step") + "/" + retour.getFields().getFieldValue("id");
 	    	}
 		}  catch (SeleniumException ex) {
 			throw ex;
@@ -564,9 +563,9 @@ public class SeleniumALMRESTWrapper {
 	        	testInstance.ajouterChamp("subtype-id", "hp.qc.test-instance.MANUAL");
 	        	testInstance.ajouterChamp("status", "No Run");
 	        	// On effectue la création proprement dites
-	    		url = creerEntite(con.buildEntityCollectionUrl("test-instance"), convertirEntiteEnChaine(testInstance));
+	    		url = creerEntite(con.buildALMEntityCollectionUrl("test-instance"), convertirEntiteEnChaine(testInstance));
 	    	} else {
-	    		url = con.buildEntityCollectionUrl("test-instance") + "/" + retour.getFields().getFieldValue("id");
+	    		url = con.buildALMEntityCollectionUrl("test-instance") + "/" + retour.getFields().getFieldValue("id");
 	    	}
 		}  catch (SeleniumException ex) {
 			throw ex;
@@ -617,9 +616,9 @@ public class SeleniumALMRESTWrapper {
 	        	System.out.println(convertirEntiteEnChaine(test));
 
 	        	// On effectue la création proprement dites
-	    		url = creerEntite(con.buildEntityCollectionUrl("test"), convertirEntiteEnChaine(test));
+	    		url = creerEntite(con.buildALMEntityCollectionUrl("test"), convertirEntiteEnChaine(test));
 	    	} else {
-	    		url = con.buildEntityCollectionUrl("test") + "/" + retour.getFields().getFieldValue("id");
+	    		url = con.buildALMEntityCollectionUrl("test") + "/" + retour.getFields().getFieldValue("id");
 	    	}
 		}  catch (SeleniumException ex) {
 			throw ex;
@@ -680,7 +679,7 @@ public class SeleniumALMRESTWrapper {
     	// On prépare les paramètres de la création et on l'effectue
     	//System.out.println(convertirEntiteEnChaine(step));
     	try {
-			return creerEntite(con.buildEntityCollectionUrl("run-step"), convertirEntiteEnChaine(step));
+			return creerEntite(con.buildALMEntityCollectionUrl("run-step"), convertirEntiteEnChaine(step));
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new SeleniumException(Erreurs.E032, "Impossible de creer le step (" + e.getMessage() + ")");
@@ -1127,9 +1126,6 @@ public class SeleniumALMRESTWrapper {
 
          return response.getResponseHeaders().get("Location").iterator().next();
      }
-
-     
-     
      
  	/**
  	 * Fonction permettant la mise à jour dans ALM du cas de test à partir des informations saisies.
@@ -1169,13 +1165,13 @@ public class SeleniumALMRESTWrapper {
  				try {
  		 			// Si les informations sont valides on initialise la connexion.
  					SeleniumALMRESTWrapper wrapper = new SeleniumALMRESTWrapper();
- 					wrapper.preparerWrapper(ALMBean.URL_ALM, ALMBean.DOMAIN_ALM, ALMBean.PROJECT_ALM, ALMBean.LOGIN_ALM, ALMBean.PASSWORD_ALM);
+ 					wrapper.preparerWrapper(RESTBean.URL_ALM, RESTBean.DOMAIN_ALM, RESTBean.PROJECT_ALM, RESTBean.LOGIN_ALM, RESTBean.PASSWORD_ALM);
  					
  					// En premier lieu, on met à jour le test set
  					//wrapper.majTestInstance(casEssai.getIdUniqueTestPlan().toString(), casEssai.getIdUniqueTestLab().toString(), etat);
  					
  					// Mise à jour de l'état général du cas de test via la création d'un nouveau RUN lié.
- 					String run = wrapper.creerRun("RunAuto", null, casEssai.getIdUniqueTestLab().toString(), casEssai.getIdUniqueTestPlan().toString(), ALMBean.LOGIN_ALM, etat);
+ 					String run = wrapper.creerRun("RunAuto", null, casEssai.getIdUniqueTestLab().toString(), casEssai.getIdUniqueTestPlan().toString(), RESTBean.LOGIN_ALM, etat);
  					//TODO On rétablie le protocole autorisé (https, sans précision de port)
  					run = run.replaceAll("http:", "https:");
  			    	run = run.replaceAll(":80", "");
@@ -1699,4 +1695,13 @@ public class SeleniumALMRESTWrapper {
          }
      }
 
+	public RestConnector getCon() {
+		return con;
+	}
+
+	public void setCon(RestConnector con) {
+		this.con = con;
+	}
+
+     
 }

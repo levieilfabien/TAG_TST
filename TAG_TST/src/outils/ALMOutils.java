@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 
 import atu.alm.wrapper.enums.StatusAs;
 import atu.alm.wrapper.exceptions.ALMServiceException;
-import beans.ALMBean;
+import beans.RESTBean;
 import beans.CasEssaiBean;
 import beans.ObjectifBean;
 
@@ -214,7 +214,7 @@ public class ALMOutils {
 	 * @throws ALMServiceException
 	 */
 	public static SeleniumALMWrapper myConnectionALMWrapper() throws ALMServiceException {
-		return myConnectionALMWrapper(ALMBean.LOGIN_ALM, ALMBean.PASSWORD_ALM, ALMBean.DOMAIN_ALM, ALMBean.PROJECT_ALM, ALMBean.URL_ALM);
+		return myConnectionALMWrapper(RESTBean.LOGIN_ALM, RESTBean.PASSWORD_ALM, RESTBean.DOMAIN_ALM, RESTBean.PROJECT_ALM, RESTBean.URL_ALM);
 	}
 	
 	/**

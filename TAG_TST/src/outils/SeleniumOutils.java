@@ -44,7 +44,6 @@ import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.UnexpectedTagNameException;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -94,7 +93,7 @@ public class SeleniumOutils {
 	/**
 	 * L'attente maximale autorisée pour les fonctions d'attentes.
 	 */
-	private int attenteMax = 10;
+	private int attenteMax = 20;
 	
 	public void ajouterListener() {
 		EventFiringWebDriver eventDriver = new EventFiringWebDriver(driver);
@@ -594,7 +593,11 @@ public class SeleniumOutils {
 			        }
 				});
 		} catch (TimeoutException e) {
-	    	throw new SeleniumException(Erreurs.E013, texte);
+			if (texte == null || "".equals(texte)) {
+				throw new SeleniumException(Erreurs.E026, "On attendais n'importe quelle valorisation dans " + cible.lister());
+			} else {
+				throw new SeleniumException(Erreurs.E013, "On attendais " + texte + " dans " + cible.lister());
+			}
 	    	//Assert.fail("Le texte " + texte + " est présent et visible sur la page.");
 	    } catch (UnhandledAlertException e) {
 	    	// Une popup est présente à l'écran, le texte n'est probablement plus présente à l'écran.
@@ -729,7 +732,8 @@ public class SeleniumOutils {
 	 * @throws SeleniumException en cas d'erreur.
 	 */
 	public void attendreChargementElement(final CibleBean cible, final boolean visible, final boolean actif) throws SeleniumException {
-	    try {
+    	Long tempsAttendu = new Date().getTime();
+		try {
 	    	logger("On attend le chargement de l'élément " + cible.getClef() + " : " + cible.lister() + " (Frame : " + cible.getFrame() + ")");
 	    	//final By critere = cible.creerBy();
 			(new WebDriverWait(driver, attenteMax)).until(new Function<WebDriver, Boolean>() {
@@ -750,18 +754,22 @@ public class SeleniumOutils {
 		        		}
 		        		return retour;
 		        	} catch (SeleniumException e) {
+		        		//e.printStackTrace();
 		        		// L'élément n'est pas encore présent.
 		        		return false;
 		        	} catch (StaleElementReferenceException ex) {
+		        		//ex.printStackTrace();
 		        		// L'élément n'est plus présent, la référence est donc obselète.
 		        		return false;
 		        	} catch (Exception ex2) {
+		        		//ex2.printStackTrace();
 		        		// Une erreur non prévue s'est déroulée. On ne fait que relancer jusqu'au timer.
 		        		return false;
 		        	}
 		        }
 		    });
 	    } catch (TimeoutException e) {
+	    	System.out.println("Temps attendu avant timeout : " + (tempsAttendu - new Date().getTime()));
 	    	throw new SeleniumException(Erreurs.E009, "Element introuvable (ou désactivé) : " + cible.lister());
 	    }
 	}
@@ -1048,6 +1056,8 @@ public class SeleniumOutils {
 				throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est plus disponible (rechargement?).");
 			} catch (NullPointerException ex2) {
 				throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est pas visible (ou absente).");
+			} catch (SeleniumException ex2) {
+				throw new SeleniumException(ex2.getInformations(), "La cible " + cible.toString() + " n'as pas pu être atteinte même après rechargement de la référence obselète.");
 			}
 		}
 	}
@@ -1308,6 +1318,7 @@ public class SeleniumOutils {
 	 * @throws SeleniumException en cas d'erreur.
 	 */
 	public void attendreEtCliquer(CibleBean cible) throws SeleniumException {
+		//attendreElement(cible);
 		attendreChargementElement(cible, true, true);
 		cliquer(cible);
 	}
@@ -1363,6 +1374,32 @@ public class SeleniumOutils {
 	 */
 	public int cliquerMultiple(CibleBean cible) throws SeleniumException {
 		return cliquerMultiple(cible, null);	
+	}
+	
+	/**
+	 * Fonction appliquant une condition à une cible. On s'attend à un WebElement en retour de la condition
+	 * Cette fonction exploite les capacité des ExpectedConditions.
+	 * @param cible la cible désignant l'élément dont on attend l'affichage
+	 * @param condition la condition à respecter, celle-ci doit renvoyée un WebElement
+	 * @throws SeleniumException en cas d'erreur ou de non disponibilité de l'élément.
+	 */
+	public void appliquerCondition(final CibleBean cible, final ExpectedCondition condition) throws SeleniumException {
+	    try {
+	    	logger("On applique la condition " +  condition + " sur la cible " + cible.getClef() + " : " + cible.lister() + " (Frame : " + cible.getFrame() + ")");
+	    	// On cherche à obtenir l'élément. Pour être légitime il doit être clickable.
+	    	new WebDriverWait(driver, attenteMax).until(
+	    			new Function<WebDriver, Boolean>() {
+	    	            public Boolean apply(WebDriver driver) {
+	    	            	WebElement element = (WebElement) condition.apply(driver);
+	    	            	return element != null;
+	    	            }
+	    	        });	
+	    } catch (TimeoutException e) {
+	    	throw new SeleniumException(Erreurs.E009, "La condition n'as jamais été respectée ( cible : " + cible.lister() + ")");
+	    } catch (StaleElementReferenceException ex) {
+    		// La référence à l'élément obselète mais celui ci existe bel et bien, on réinitialise l'attente.
+	    	appliquerCondition(cible, condition);
+    	}
 	}
 
 	/**
@@ -1444,8 +1481,12 @@ public class SeleniumOutils {
 				}
 				
 			}	catch (NoSuchElementException ex) {
-				// Si le texte n'est pas visible, on essai de sélectionner par valeur.
-				temp.selectByValue(libelle);
+				try {
+					// Si le texte n'est pas visible, on essai de sélectionner par valeur.
+					temp.selectByValue(libelle);
+				} catch (NoSuchElementException ex2) {
+					throw new SeleniumException(Erreurs.E009, "(Selecteur : " + cible.lister() + ", Valeur : " + libelle + ")");
+				}
 				// Si la selection est effective, il devient alors possible de cliquer dessus
 				if (cible.getClef() == Clefs.CRITERES_ITERATIF) {
 					tempOption = obtenirElement(new CibleBean(null, cible, "*", "value=" + libelle));
@@ -1697,19 +1738,27 @@ public class SeleniumOutils {
 	 * @throws SeleniumException en cas d'erreur ou de non disparition de l'élément.
 	 */
 	public void attendreNonPresenceElement(final CibleBean cible) throws SeleniumException {
-	    try {
-			(new WebDriverWait(driver, 20)).until(new Function<WebDriver, Boolean>() {
+	    Long tempsAttendu = new Date().getTime();
+		try {
+			(new WebDriverWait(driver, attenteMax)).until(new Function<WebDriver, Boolean>() {
 		        public Boolean apply(WebDriver d) {
 		        	boolean retour = false;
 		        	try {
 		        		retour = (obtenirElementVisible(cible) == null);
 		        	} catch (SeleniumException ex) {
-		        		logger(ex.toString());
+		        		// Si on constate que l'objet n'est pas présent sur la page alors on renvoie vrai.
+		        		// De même si on constate que la référence de l'objet n'est plus valide. On suppose alors que celui ci étais présent mais à disparu.
+		        		if (ex.getInformations() == Erreurs.E009 || ex.getInformations() == Erreurs.E023) {
+		        			retour = true;
+		        		} else {
+		        			logger(ex.toString());
+		        		}
 		        	}
 		            return (retour);
 		        }
 		    });
 	    } catch (TimeoutException e) {
+	    	System.out.println("Temps attendu avant timeout : " + (tempsAttendu - new Date().getTime()));
 	    	throw new SeleniumException(Erreurs.E013, cible.lister());
 	    	//Assert.fail("Le texte " + texte + " est présent et visible sur la page.");
 	    } catch (UnhandledAlertException e) {
@@ -1861,7 +1910,9 @@ public class SeleniumOutils {
 			attendreChargementElement(cible, visibilite, visibilite);
 			return true;
 		} catch (Exception ex) {
-			System.out.println(ex.getMessage());
+			// Quelle que soit l'erreur, l'objectif de cette fonction n'est pas de remonter une exception.
+			// On ne considère que deux états : l'élément est présent ou l'élément est absent
+			//System.out.println(ex.getMessage());
 			return false;
 		}
 	}
@@ -2166,47 +2217,6 @@ public class SeleniumOutils {
 	}
 
 	/**
-	 * Constructeur pour la boite à outil.
-	 * Fixe le temps d'attente implicite à 10 secondes.
-	 * @param driver le driver émulant firefox.
-	 */
-	public SeleniumOutils(GenericDriver driver) {
-		super();
-		this.typeImpl = GenericDriver.FIREFOX_IMPL;
-		this.driver = driver;
-		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-	}
-
-	/**
-	 * Constructeur pour la boite à outil.
-	 * Fixe le temps d'attente implicite à 10 secondes.
-	 * @param driver le driver.
-	 * @param typeImpl l'implémentation à utiliser.
-	 */
-	public SeleniumOutils(GenericDriver driver, String typeImpl) {
-		super();
-		this.typeImpl = typeImpl;
-		this.driver = driver;
-		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-	}
-	
-	/**
-	 * Permet de récuperer ke driver associé avec cet outil.
-	 * @return le driver.
-	 */
-	public GenericDriver getDriver() {
-		return driver;
-	}
-
-	/**
-	 * Permet de fixer le driver associé à cet outil.
-	 * @param driver le driver à mettre.
-	 */
-	public void setDriver(GenericDriver driver) {
-		this.driver = driver;
-	}
-
-	/**
 	 * Fonction d'attente permettant de vérifier la valeur d'un champ comme prérequis d'autres actions.
 	 * On s'intérresse ici au paramètre "value" du champs.
 	 * @param cible la cible dont on vérifie la valeur.
@@ -2268,4 +2278,83 @@ public class SeleniumOutils {
 		this.repertoireRacine = repertoireRacine;
 	}
 	
+	/**
+	 * Fonction résolvant une action simple utilisée courrament sur des cibles/textes.
+	 * @param action une action parmi celles disponibles dans l'énumération Actions.
+	 * @param cibles la ou les cibles/textes concernées par l'action.
+	 * @throws SeleniumException en cas d'erreur renvoyée par l'action effectuée.
+	 */
+	public void action(constantes.Actions action, Object... cibles) throws SeleniumException {
+		switch(action) {
+			case CLIQUER : attendreEtCliquer((CibleBean) cibles[0]); break;
+			case CLIQUER_GAUCHE : cliquerGauche((CibleBean) cibles[0]); break;
+			case CLIQUER_JUSQUA : cliquerJusqua((CibleBean) cibles[0], (CibleBean) cibles[1]); break;
+			case CLIQUER_OPTIONNEL : cliquerSiPossible((CibleBean) cibles[0]); break;
+			case CLIQUER_SI_TEXTE : 
+				if (testerPresenceTexte((String) cibles[1], true)) {
+					cliquer((CibleBean) cibles[0]);
+				}
+				break;
+			case ATTENDRE : 
+				if(cibles[0].getClass() == CibleBean.class) {
+					//attendreElement((CibleBean) cibles[0]);
+					attendreChargementElement((CibleBean) cibles[0], true, true);
+				} else {
+					attendrePresenceTexte((String) cibles[0]);
+				}
+				break;
+			case ATTENDRE_VALEUR : 
+				if(cibles[1] != null) {
+					attendreValorisation((CibleBean) cibles[0], (String) cibles[1]);
+				} else {
+					attendreValorisation((CibleBean) cibles[0], null);
+				}
+				break;
+			case VIDER_ET_SAISIR : viderEtSaisir((String) cibles[1], (CibleBean) cibles[0]); break;
+			case SELECTIONNER : selectionner((String) cibles[1], (CibleBean) cibles[0]); break;
+			default : return;
+		}
+	}
+	
+	
+	/**
+	 * Constructeur pour la boite à outil.
+	 * Fixe le temps d'attente implicite à 10 secondes.
+	 * @param driver le driver émulant firefox.
+	 */
+	public SeleniumOutils(GenericDriver driver) {
+		super();
+		this.typeImpl = GenericDriver.FIREFOX_IMPL;
+		this.driver = driver;
+		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+	}
+
+	/**
+	 * Constructeur pour la boite à outil.
+	 * Fixe le temps d'attente implicite à 10 secondes.
+	 * @param driver le driver.
+	 * @param typeImpl l'implémentation à utiliser.
+	 */
+	public SeleniumOutils(GenericDriver driver, String typeImpl) {
+		super();
+		this.typeImpl = typeImpl;
+		this.driver = driver;
+		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+	}
+	
+	/**
+	 * Permet de récuperer ke driver associé avec cet outil.
+	 * @return le driver.
+	 */
+	public GenericDriver getDriver() {
+		return driver;
+	}
+
+	/**
+	 * Permet de fixer le driver associé à cet outil.
+	 * @param driver le driver à mettre.
+	 */
+	public void setDriver(GenericDriver driver) {
+		this.driver = driver;
+	}
 }

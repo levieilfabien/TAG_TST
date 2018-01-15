@@ -154,7 +154,7 @@ public class IHMComparaisonPDF {
 							JOptionPane.showMessageDialog((JButton) e.getSource(),"Repertoire de sortie choisie incorrect \n mise par défaut à C:\\Temp","Repertoire incorrect",JOptionPane.ERROR_MESSAGE);
 						}
 						// Effectuer la comparaison.
-						resultats = PDFOutils.comparerListePDF(ihm.nouveau.getSelectedFiles(), ihm.ancien.getSelectedFiles(), sortie, ihm.optionTransparence.getSelectedObjects() != null, ihm.optionTolerance.getSelectedObjects() != null, seuil, prefixe);
+						resultats = PDFOutils.comparerListePDF(ihm.nouveau.getSelectedFiles(), ihm.ancien.getSelectedFiles(), sortie, ihm.optionTransparence.getSelectedObjects() != null, ihm.optionTolerance.getSelectedObjects() != null, seuil, prefixe, true);
 						
 						// On analyse le retour.
 						String temp = "";

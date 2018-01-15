@@ -1,6 +1,7 @@
 package beans;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -57,6 +58,12 @@ public class CasEssaiBean implements Serializable {
 	 * Le cas de test existe t'il dans ALM.
 	 */
 	private Boolean alm = false;
+	
+	/**
+	 * Indique l'id de la page confluence à mettre à jour.
+	 * Si la valeur est à null, c'est qu'il n'y pas de mise à jour confluence.
+	 */
+	private String idConfluence = null;
 	
 	/**
 	 * Repertoire de téléchargement.
@@ -140,7 +147,7 @@ public class CasEssaiBean implements Serializable {
 	 * @return le timestamp unique du cas de test.
 	 */
 	public String getTime() {
-		return String.valueOf(getDateCreation().getTime());
+		return String.valueOf(new SimpleDateFormat("yyyy_MM_dd").format(getDateCreation()) + "_" + getDateCreation().getTime());
 	}
 
 	/**
@@ -234,9 +241,12 @@ public class CasEssaiBean implements Serializable {
 		// Si toutes les sous étapes du cas de test sont valides (typiquement les steps) alors le cas de test est lui même valide.
 		boolean tousValide = true;
 		for (ObjectifBean objectif : getObjectifs().values()) {
+			//System.out.println(objectif.getClefUnique() + " " + objectif.isEtat());
 			tousValide = tousValide && (objectif.isEtat() == true);
 		}
-		setEtatFinal(tousValide);
+		if(tousValide) {
+			setEtatFinal(tousValide);
+		}
 	}
 	
 	/**
@@ -402,6 +412,7 @@ public class CasEssaiBean implements Serializable {
 	}
 
 	public void setEtatFinal(Boolean etatFinal) {
+		//System.out.println("Modification etat final " + this.getNomCasEssai() + " : " + etatFinal);
 		this.etatFinal = etatFinal;
 	}
 
@@ -542,6 +553,14 @@ public class CasEssaiBean implements Serializable {
 
 	public void setIdUniqueTestPlan(Integer idUniqueTestPlan) {
 		this.idUniqueTestPlan = idUniqueTestPlan;
+	}
+
+	public String getIdConfluence() {
+		return idConfluence;
+	}
+
+	public void setIdConfluence(String idConfluence) {
+		this.idConfluence = idConfluence;
 	}
 	
 	////////////////////////////////////////////////////////////////

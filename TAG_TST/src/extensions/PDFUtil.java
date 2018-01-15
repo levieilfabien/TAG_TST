@@ -67,6 +67,10 @@ public class PDFUtil {
 	 */
 	private boolean optionComparaisonComplete;
 	/**
+	 * Option permettant la génération des diff d'ajout et de suppressio en plus du diff classique.
+	 */
+	private boolean generationAjoutSuppression = true;
+	/**
 	 * Indique le type de comparaison à effectuer (text ou image).
 	 */
 	private CompareMode modeDeComparaison;
@@ -503,7 +507,7 @@ public class PDFUtil {
 				logger.info("Comparing Page No : " + (iPage+1));
 				BufferedImage image1 = pdfRenderer1.renderImageWithDPI(iPage, 300, ImageType.RGB);
 				BufferedImage image2 = pdfRenderer2.renderImageWithDPI(iPage, 300, ImageType.RGB);
-				result = IMGOutils.compareAndHighlight(image1, image2, fileName, surligner, transparence, tolerance, seuilTolerance) && result;
+				result = IMGOutils.compareAndHighlight(image1, image2, fileName, surligner, transparence, tolerance, seuilTolerance, this.generationAjoutSuppression) && result;
 				if(!this.optionComparaisonComplete && !result){
 					break;
 				}
@@ -692,6 +696,10 @@ public class PDFUtil {
 
 	public void setOptionSurlignerDifferences(boolean optionSurlignerDifferences) {
 		this.optionSurlignerDifferences = optionSurlignerDifferences;
+	}
+	
+	public void setOptionGenererationAjoutSuppression(boolean optionGeneratioNSuppression) {
+		this.generationAjoutSuppression = optionGeneratioNSuppression;
 	}
 
 	public Color getCouleurDiff() {

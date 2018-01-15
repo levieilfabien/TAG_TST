@@ -5,12 +5,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.Proxy;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import javax.net.ssl.HttpsURLConnection;
 
 
 /**
@@ -36,6 +40,10 @@ public class RestConnector {
      */
     protected String project;
     /**
+     * Le proxy si il existe.
+     */
+    protected Proxy proxy = null;
+    /**
      * L'instance de connecteur REST qui sera manipulée. Elle est initialisée à vide.
      */
     private static RestConnector instance = new RestConnector();
@@ -58,6 +66,19 @@ public class RestConnector {
     }
 
     /**
+     * Initialise le connecteur de service REST Confluence.
+     * @param cookies les cookies à ajouter lors de l'accès au service REST.
+     * @param serverUrl l'url de serveur de connexion
+     * @return le connecteur initialisé et paramtètré.
+     */
+    public RestConnector init(Map<String, String> cookies, String serverUrl) {
+        this.cookies = cookies;
+        this.serverUrl = serverUrl;
+        return this;
+    }
+
+    
+    /**
      * Constructeur privé sans paramètre n'initialisant pas les critères de connexions.
      */
     private RestConnector() {
@@ -74,10 +95,11 @@ public class RestConnector {
 
     /**
      * Construit une url permettant de consulter la liste des entitées disponibles pour un type donnée.
+     * Cette url est utilisée pour les connexions à ALM.
      * @param entityType le type d'entité (sans "s") que l'on souhaites consulter.
      * @return l'url permettant l'accès à la liste d'entité.
      */
-    public String buildEntityCollectionUrl(String entityType) {
+    public String buildALMEntityCollectionUrl(String entityType) {
         return buildUrl("rest/domains/"
                         + domain
                         + "/projects/"
@@ -85,6 +107,22 @@ public class RestConnector {
                         + "/"
                         + entityType
                         + "s");
+    }
+    
+    /**
+     * Construit une url permettant de consulter la liste des entitées disponibles pour un type donnée.
+     * Cette url est utilisée pour les connexions à Confluence.
+     * @param entityType le type d'entité (ex : content, user) que l'on souhaites consulter.
+     * @return l'url permettant l'accès à la liste d'entité.
+     */
+    public String buildConfluenceEntityCollectionUrl(String entityType) {
+    	// Si on pointe déjà sur l'API, inutile de rajouté le suffixe.
+    	if (serverUrl.endsWith("api")) {
+    		return buildUrl(entityType);
+    	} else {
+    		return buildUrl("rest/api/" + entityType);
+    	}
+        
     }
 
     /**
@@ -199,19 +237,43 @@ public class RestConnector {
         if ((queryString != null) && !queryString.isEmpty()) {
             url += "?" + queryString;
         }
+        Response ret;
 
-        // On initialise la connexion et on positionne le type de requête
-        HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
-        con.setRequestMethod(type);
-        
-        // On récupère les cookie et on prépare la requête à partir des données data et headers
-        String cookieString = getCookieString();
-        prepareHttpRequest(con, headers, data, cookieString);
-        
-        // On effectue la requête et on récupère le retour
-        con.connect();
-        Response ret = retrieveHtmlResponse(con);
-
+        if (url.startsWith("https")) {
+	        HttpsURLConnection con;
+	        // On initialise la connexion et on positionne le type de requête
+	        if (proxy != null) {
+	        	con = (HttpsURLConnection) new URL(url).openConnection(proxy);
+	        } else {
+	        	con = (HttpsURLConnection) new URL(url).openConnection();
+	        }
+	        con.setConnectTimeout(15000);
+	        con.setRequestMethod(type);
+	        // On récupère les cookie et on prépare la requête à partir des données data et headers
+	        String cookieString = getCookieString();
+	        prepareHttpRequest(con, headers, data, cookieString);
+	        
+	        // On effectue la requête et on récupère le retour
+	        con.connect();
+	        ret = retrieveHtmlResponse(con);
+        } else {
+	        HttpURLConnection con;
+	        // On initialise la connexion et on positionne le type de requête
+	        if (proxy != null) {
+	        	con = (HttpURLConnection) new URL(url).openConnection(proxy);
+	        } else {
+	        	con = (HttpURLConnection) new URL(url).openConnection();
+	        }
+	        con.setConnectTimeout(15000);
+	        con.setRequestMethod(type);
+	        // On récupère les cookie et on prépare la requête à partir des données data et headers
+	        String cookieString = getCookieString();
+	        prepareHttpRequest(con, headers, data, cookieString);
+	        
+	        // On effectue la requête et on récupère le retour
+	        con.connect();
+	        ret = retrieveHtmlResponse(con);
+        }
         updateCookies(ret);
 
         return ret;
@@ -239,6 +301,7 @@ public class RestConnector {
             contentType = headers.remove("Content-Type");
             // Pour permettre d'utiliser ALM 12 on le fait qu'on accepte les fichiers XML => Nécessaire lors de l'obtention d'une session QC.
             //headers.put("Accept", "application/xml");
+            //headers.put("Accept", "application/json");
             // On traite les différents entêtes pour les ajouter à la connexion.
             Iterator<Entry<String, String>> headersIterator = headers.entrySet().iterator();
             while (headersIterator.hasNext()) {
@@ -248,10 +311,12 @@ public class RestConnector {
             
         }
 
+        //Map<String, List<String>> test = con.getRequestProperties();
+        
         // Si il y a des données à transmettre on les traites ici et on remet le content type.
         if ((bytes != null) && (bytes.length > 0)) {
             con.setDoOutput(true);
-
+            //con.setDoInput(true);
             if (contentType != null) {
                 con.setRequestProperty("Content-Type", contentType);
             }
@@ -314,8 +379,7 @@ public class RestConnector {
      */
     private void updateCookies(Response response) {
 
-        Iterable<String> newCookies =
-            response.getResponseHeaders().get("Set-Cookie");
+        Iterable<String> newCookies = response.getResponseHeaders().get("Set-Cookie");
         if (newCookies != null) {
 
             for (String cookie : newCookies) {
@@ -325,6 +389,10 @@ public class RestConnector {
                 String cookieKey = cookie.substring(0, equalIndex);
                 String cookieValue = cookie.substring(equalIndex + 1, semicolonIndex);
 
+                if (cookies == null) {
+                	cookies = new HashMap<String, String>();
+                }
+                
                 cookies.put(cookieKey, cookieValue);
             }
         }
@@ -337,7 +405,7 @@ public class RestConnector {
     public String getCookieString() {
         StringBuilder sb = new StringBuilder();
         // Si il existe des cookie on récupère les informations contenues dans ceux ci et on les restitue sous forme de chaine.
-        if (!cookies.isEmpty()) {
+        if (cookies != null && !cookies.isEmpty()) {
             Set<Entry<String, String>> cookieEntries = cookies.entrySet();
             for (Entry<String, String> entry : cookieEntries) {
             	sb.append(entry.getKey()).append("=").append(entry.getValue()).append(";");
@@ -364,4 +432,13 @@ public class RestConnector {
         } 
     }
 
+	public Proxy getProxy() {
+		return proxy;
+	}
+
+	public void setProxy(Proxy proxy) {
+		this.proxy = proxy;
+	}
+
+    
 }

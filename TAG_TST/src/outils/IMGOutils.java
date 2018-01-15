@@ -170,7 +170,7 @@ public class IMGOutils {
 	 * @throws IOException en cas d'erreur de manipulation des fichiers.
 	 */
 	public static boolean compareAndHighlight(final BufferedImage img1, final BufferedImage img2, String fileName, boolean highlight) throws IOException {
-		return compareAndHighlight(img1, img2, fileName, highlight, true, true, 50);
+		return compareAndHighlight(img1, img2, fileName, highlight, true, true, 50, true);
 	}
 	
 	/**
@@ -182,11 +182,14 @@ public class IMGOutils {
 	 * @param transparence à vrai si on souhaites que les pixels identiques soit légèrement transparent.
 	 * @param tolerance à vrai si on souhaites que si un certain seuil n'est pas dépassé dans les distance, alors on ne colorise pas.
 	 * @param seuilTolerance le seuil de distance de tolérane à respecter si tolerance est à vrai.
+	 * @param generationAjoutSuppression indique si on souhaites avoir les image d'ajout et de suppression.
 	 * @return true si les documents sont identiques, false sinon.
 	 * @throws IOException en cas d'erreur de manipulation des fichiers.
 	 */
-	public static boolean compareAndHighlight(final BufferedImage img1, final BufferedImage img2, String fileName, boolean highlight, boolean transparence, boolean tolerance, int seuilTolerance) throws IOException {
-
+	public static boolean compareAndHighlight(final BufferedImage img1, final BufferedImage img2, String fileName, boolean highlight, boolean transparence, boolean tolerance, int seuilTolerance, boolean generationAjoutSuppression) throws IOException {
+		// On va évaluer le nombre de pixels de différence
+		int nbDifference = 0;
+		int nbPixelsNonVideP1 = 0;
 		// On récupère les informations de tailles pour les images.
 	    final int w = img1.getWidth();
 	    final int h = img1.getHeight();
@@ -203,7 +206,11 @@ public class IMGOutils {
 	    	// On ne parcours tous les pixels que si on cherche à produire un diff
 	    	if(highlight){
 	    	    for (int i = 0; i < p1.length; i++) {
+	    	    	if (p1[i] != Color.WHITE.getRGB()) {
+	    	    		nbPixelsNonVideP1++;
+	    	    	}
 	    	        if (p1[i] != p2[i]){
+	    		    	nbDifference++;
 	    	        	if (p2[i] == Color.WHITE.getRGB()) {
 	    	        		////// AJOUT //////
 	    	        		// Si P2 est blanc c'est que P1 est "en plus" par rapport à P2
@@ -235,19 +242,23 @@ public class IMGOutils {
 	    	    final BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
 	    	    out.setRGB(0, 0, w, h, p1, 0, w);
 //	    	    saveImage(out, fileName);
-	    	    // Création de l'image d'ajout des nouvelles colorisations de ajout.
-	    	    final BufferedImage imgAjout = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-	    	    imgAjout.setRGB(0, 0, w, h, ajout, 0, w);
-	    	    //saveImage(out, fileName);
-	    	    // Création de l'image de suppression des nouvelles colorisations de suppression.
-	    	    final BufferedImage imgSupp = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-	    	    imgSupp.setRGB(0, 0, w, h, suppression, 0, w);
-	    	    //saveImage(out, fileName);
-	    	    
-	    	    
-	    	    saveImage(imgAjout, fileName.replace(".png", "ajout.png"));
-	    	    saveImage(imgSupp, fileName.replace(".png", "supp.png"));
+	    	    if (generationAjoutSuppression) {
+		    	    // Création de l'image d'ajout des nouvelles colorisations de ajout.
+		    	    final BufferedImage imgAjout = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+		    	    imgAjout.setRGB(0, 0, w, h, ajout, 0, w);
+		    	    // Création de l'image de suppression des nouvelles colorisations de suppression.
+		    	    final BufferedImage imgSupp = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+		    	    imgSupp.setRGB(0, 0, w, h, suppression, 0, w);
+		    	    // Sauvegarde des images sur le disque.
+		    	    saveImage(imgAjout, fileName.replace(".png", "ajout.png"));
+		    	    saveImage(imgSupp, fileName.replace(".png", "supp.png"));
+	    		}	
 	    	    saveImage(out, fileName);
+	    	    
+	    	    if (nbDifference > 0) {
+	    	    	System.out.println("Taille totale de pixels non vide = " + nbPixelsNonVideP1);
+	    	    	System.out.println("Le nombre de différences sur " + fileName + " de " + nbDifference + " soit " + ((nbDifference/(nbPixelsNonVideP1))*1000) + "%%");
+	    	    }
 	    	    
 	    	    // On produit une image contenant deux sous images, les ajouts et les suppressions.
 	    	    //final BufferedImage multi = new BufferedImage(w*3, h, BufferedImage.TYPE_INT_ARGB);

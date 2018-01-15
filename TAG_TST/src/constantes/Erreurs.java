@@ -39,7 +39,11 @@ public enum Erreurs {
 	E032("E032", "Impossible de communiquer correctement avec ALM", "Erreur ALM", true),
 	E033("E033", "Element mal configuré pour une communication avec ALM", "Erreur ALM", true),
 	E034("E034", "L'élément n'as jamais pris la valeur attendue dans le délai apparti.", "Erreur lors d'une l'attente", true),
-	E035("E035", "L'élément n'as jamais disparu comme prévu.", "Erreur lors d'une l'attente", true);
+	E035("E035", "L'élément n'as jamais disparu comme prévu.", "Erreur lors d'une l'attente", true),
+	E036("E036", "Impossible de communiquer correctement avec Confluence", "Erreur Confluence", true),
+	E037("E037", "L'élément JSON à remplacer n'est pas une chaine de caractère mais un objet JSON.", "Erreur JSON", true),
+	E038("E038", "L'élément JSON demandé n'existe pas !.", "Erreur JSON", true),
+	E039("E039", "Impossible de mettre à jour la page confluence.", "Erreur JSON", true);
 	
 	/**
 	 * Le code associé a l'erreur.

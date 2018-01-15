@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.Proxy;
@@ -16,12 +17,11 @@ import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
-import outils.SeleniumOutils;
 import beans.CibleBean;
-import beans.EcranBean;
 import beans.ObjectifBean;
 import constantes.Clefs;
 import exceptions.SeleniumException;
+import outils.SeleniumOutils;
 
 /**
  * Classe d'extension du driver firefox pour la prise en charge de fonction simplifiées.
@@ -66,6 +66,7 @@ public class FirefoxImpl extends FirefoxDriver implements GenericDriver {
 		//super(new FirefoxDriver(profile));
 		super(profile);
 		this.profilFirefox = profile;
+		this.setLogLevel(Level.OFF);
 		manage().timeouts().implicitlyWait(2, TimeUnit.SECONDS);
 		logger("Injection du profil utilisateur dans le driver");
 	}
