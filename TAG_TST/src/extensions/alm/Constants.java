@@ -13,8 +13,8 @@ public class Constants {
    
    public static final String HOST_PROXY = "proxypartners.intranet";
 
-   public static final String USERNAME = "levieilfa";
-   public static final String PASSWORD = "Sombros957";
+   public static final String USERNAME = "";
+   public static final String PASSWORD = "";
 
    public static final String DOMAIN = "NATIXIS_FINANCEMENT";
    public static final String PROJECT = "CREDIT_CONSOMMATION";

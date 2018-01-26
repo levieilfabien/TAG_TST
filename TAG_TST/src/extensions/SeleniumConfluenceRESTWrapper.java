@@ -8,6 +8,7 @@ import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -364,7 +365,14 @@ public class SeleniumConfluenceRESTWrapper extends SeleniumALMRESTWrapper {
     
     public static void main(String[] args) throws Exception {
     	SeleniumConfluenceRESTWrapper wrapper = new SeleniumConfluenceRESTWrapper();
-    	wrapper.preparerWrapper(Constants.HOST_CONFLUENCE, Constants.USERNAME, Constants.PASSWORD);
+    	Scanner input = new Scanner( System.in );
+    	
+    	System.out.print("Enter login : ");
+    	String login = input.next( );
+    	System.out.print("Enter password : ");
+    	String password = input.next( );
+    	
+    	wrapper.preparerWrapper(Constants.HOST_CONFLUENCE, login, password);
     	//String retour = wrapper.obtenirEntiteConfluence("68944055", "expand=body.storage,version", "content");
     	
     	//System.out.println(wrapper.remplacerElementJSON(retour, "body#storage#value", "\"<p>BODY TEST2</p>\""));

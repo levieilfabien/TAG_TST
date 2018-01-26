@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
@@ -80,7 +81,14 @@ public class SeleniumALMRESTWrapper {
 //    	casEssai.setRepertoireTelechargement("./TEST-ALM");
     	
     	SeleniumALMRESTWrapper wrapper = new SeleniumALMRESTWrapper();
-    	wrapper.preparerWrapper(url, Constants.DOMAIN, Constants.PROJECT, Constants.USERNAME, Constants.PASSWORD);
+    	Scanner input = new Scanner( System.in );
+    	
+    	System.out.print("Enter login : ");
+    	String login = input.next( );
+    	System.out.print("Enter password : ");
+    	String password = input.next( );
+    	
+    	wrapper.preparerWrapper(url, Constants.DOMAIN, Constants.PROJECT, login, password);
     	
     	//String urlTestLab = wrapper.synchroScenarioDeTest("CAS_TEST_AUTO5", "10954", "Ceci est un cas de test créer automatiquement.", "Une description par défaut.");
     	//String urlCasTest = wrapper.synchroCasDeTest("CASTEST2", "A supprimer", "Equipe T&R", "levieilfa", "", "19394");
