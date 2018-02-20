@@ -55,6 +55,22 @@ public class SeleniumException extends Exception {
 		this.informations = ex.getInformations();
 		this.informationComplement = ex.getInformationComplement() + complement;
 	}
+	
+	public String toString() {
+		String retour = "";
+		
+		if (informations != null) {
+			retour = informations.toString();
+		}
+		if (informationComplement != null && !"".equals(informationComplement)) {
+			retour = retour.concat(informationComplement);
+		}
+		if (elementEnCause != null) {
+			retour = retour.concat(" (Cause : " + elementEnCause +")");
+		}
+		
+		return retour;
+	}
 
 	////////////////////////////////////////////////////////////////
 	

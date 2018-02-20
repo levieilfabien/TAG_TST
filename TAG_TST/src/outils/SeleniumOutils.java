@@ -649,7 +649,7 @@ public class SeleniumOutils {
 	}
 	
 	/**
-	 * Teste la présnece d'un texte dans une page.
+	 * Teste la présence d'un texte dans une page.
 	 * @param frame la frame où se situe le texte.
 	 * @param text le texte dont la présence est à tester.
 	 * @param visible la condition de visibilité du texte.
@@ -659,14 +659,14 @@ public class SeleniumOutils {
 	public boolean testerPresenceTexte(String frame, String text, boolean visible, Long timestamp){
 		logger("On teste la presence du texte " + (visible?"visible":"invisible") + " '" + text + "' (frame : " + frame + ")");
 		// Utilisation d'un timeStamp pour l'unicité des objectifs.
-		// On tente de localisé le texte tel quel (sans balise)
+		// On tente de localiser le texte tel quel (sans balise)
 		List<WebElement> objets;
 		if (frame == null) {
 			objets = driver.findElements(By.xpath("//*[text()='" + text + "']"));
 		} else {
 			objets = driver.switchTo().frame(frame).findElements(By.xpath("//*[text()='" + text + "']"));
 		}
-		// Si on ne trouve pas le texte proprement dit, on tente de le localisé comme attribué d'une balise.
+		// Si on ne trouve pas le texte proprement dit, on tente de le localiser comme attribut d'une balise.
 		if (objets.size() == 0) {
 			if (frame == null) {
 				objets = driver.findElements(By.xpath("//*[normalize-space()='" + text + "']"));
@@ -713,6 +713,18 @@ public class SeleniumOutils {
 	 */
 	public boolean testerPresenceTexte(String text, boolean visible){
 		return testerPresenceTexte(null, text, visible, new Date().getTime());
+	}
+	
+	/**
+	 * Fonction expérimentale de test de la présence d'un élément dans la page en exploitant les expected exception.
+	 * @param cible la cible de l'attente
+	 * @throws SeleniumException en cas d'erreur ou d'indisponibilité de l'élément.
+	 */
+	public void attendreChargementElementViaCondition(final CibleBean cible) throws SeleniumException {
+		//WebDriverWait wait = new WebDriverWait(driver, attenteMax);
+		//WebElement element = wait.until(ExpectedConditions.elementToBeClickable(cible.creerBy()));
+		//return element != null;
+		appliquerCondition(cible, ExpectedConditions.elementToBeClickable(cible.creerBy()));
 	}
 	
 	/**
@@ -1118,10 +1130,10 @@ public class SeleniumOutils {
 			element.sendKeys(texte);
 		} catch (InvalidElementStateException ex) {
 			// Si on est ici , alors le champ n'est pas saisissable.
-			throw new SeleniumException(Erreurs.E022, by.toString());
+			throw new SeleniumException(Erreurs.E022, "L'element " + by.toString() + "n'est pas saisissable.");
 		} catch (StaleElementReferenceException ex2) {
 			// Si on est ici , alors le champ est pas visible, sans doute rechargé depuis le test.
-			throw new SeleniumException(Erreurs.E023, "L'element " + by.toString() + " n'est plus sur la page");
+			throw new SeleniumException(Erreurs.E023, "L'element " + by.toString() + " n'est plus sur la page.");
 		}
 			
 	}
@@ -1307,7 +1319,9 @@ public class SeleniumOutils {
 	 * Permet un clic sur un élément désigné par son ID.
 	 * @param valeur l'ID de l'élément avec lequel on intérragit.
 	 * @throws SeleniumException en cas d'erreur.
+	 * @deprecated Dans l'idéal, toujour se référer à une cible, eviter les références directes à un ID.
 	 */
+	@Deprecated
 	public void cliquer(String valeur) throws SeleniumException {
 		cliquer(new CibleBean(null, Clefs.ID, new String[] {valeur}));
 	}
@@ -1380,12 +1394,13 @@ public class SeleniumOutils {
 	 * Fonction appliquant une condition à une cible. On s'attend à un WebElement en retour de la condition
 	 * Cette fonction exploite les capacité des ExpectedConditions.
 	 * @param cible la cible désignant l'élément dont on attend l'affichage
-	 * @param condition la condition à respecter, celle-ci doit renvoyée un WebElement
+	 * @param condition la condition à respecter, celle-ci doit renvoyée un WebElement, son "by" est renseigner avec les informations de la cibles.
 	 * @throws SeleniumException en cas d'erreur ou de non disponibilité de l'élément.
 	 */
-	public void appliquerCondition(final CibleBean cible, final ExpectedCondition condition) throws SeleniumException {
+	public void appliquerCondition(final CibleBean cible, final ExpectedCondition<WebElement> condition) throws SeleniumException {
 	    try {
 	    	logger("On applique la condition " +  condition + " sur la cible " + cible.getClef() + " : " + cible.lister() + " (Frame : " + cible.getFrame() + ")");
+	    	
 	    	// On cherche à obtenir l'élément. Pour être légitime il doit être clickable.
 	    	new WebDriverWait(driver, attenteMax).until(
 	    			new Function<WebDriver, Boolean>() {
@@ -1395,7 +1410,7 @@ public class SeleniumOutils {
 	    	            }
 	    	        });	
 	    } catch (TimeoutException e) {
-	    	throw new SeleniumException(Erreurs.E009, "La condition n'as jamais été respectée ( cible : " + cible.lister() + ")");
+	    	throw new SeleniumException(Erreurs.E009, "La condition " + condition + " n'as jamais été respectée ( cible : " + cible.lister() + ")");
 	    } catch (StaleElementReferenceException ex) {
     		// La référence à l'élément obselète mais celui ci existe bel et bien, on réinitialise l'attente.
 	    	appliquerCondition(cible, condition);

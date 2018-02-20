@@ -90,6 +90,8 @@ public class SeleniumALMRESTWrapper {
     	
     	wrapper.preparerWrapper(url, Constants.DOMAIN, Constants.PROJECT, login, password);
     	
+    	input.close();
+    	
     	//String urlTestLab = wrapper.synchroScenarioDeTest("CAS_TEST_AUTO5", "10954", "Ceci est un cas de test créer automatiquement.", "Une description par défaut.");
     	//String urlCasTest = wrapper.synchroCasDeTest("CASTEST2", "A supprimer", "Equipe T&R", "levieilfa", "", "19394");
 
@@ -114,7 +116,7 @@ public class SeleniumALMRESTWrapper {
     	//XLSOutils.extraireInformationALM("c:\\Temp\\test.xlsx", "10954", "19394", wrapper);
     		
     	
-    	XLSOutils.extraireInformationALM("c:\\Temp\\matrice_ACPR.xlsm", "11103", "19474", wrapper);
+    	XLSOutils.extraireInformationALM("c:\\Temp\\matrice3.xlsm", "11110", "19475", wrapper);
     	
     	wrapper.deconnexion();
     	
