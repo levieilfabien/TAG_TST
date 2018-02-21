@@ -42,7 +42,11 @@ public enum Actions {
 	/**
 	 * Effectue un clique si un texte est présent à l'écran.
 	 */
-	CLIQUER_SI_TEXTE(8, 2, "<Cible> ET <Texte>")
+	CLIQUER_SI_TEXTE(8, 2, "<Cible> ET <Texte>"),
+	/**
+	 * Fonction d'attente pour une cible, on doit pouvoir intérragir avec elle
+	 */
+	ATTENDRE_DISPONIBILITE_ELEMENT(9, 1, "<Cible>")
 	;
 	
 	/**

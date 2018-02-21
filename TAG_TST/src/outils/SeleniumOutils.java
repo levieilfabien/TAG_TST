@@ -2327,6 +2327,7 @@ public class SeleniumOutils {
 				break;
 			case VIDER_ET_SAISIR : viderEtSaisir((String) cibles[1], (CibleBean) cibles[0]); break;
 			case SELECTIONNER : selectionner((String) cibles[1], (CibleBean) cibles[0]); break;
+			case ATTENDRE_DISPONIBILITE_ELEMENT : attendreChargementElementViaCondition((CibleBean) cibles[0]);break;
 			default : return;
 		}
 	}
