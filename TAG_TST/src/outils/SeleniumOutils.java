@@ -2018,7 +2018,7 @@ public class SeleniumOutils {
 				break;
 			}
 		} 
-		throw new SeleniumException(Erreurs.E017, "La recherche intuitive à échouée");
+		throw new SeleniumException(Erreurs.E017, "La saisie intuitive à échouée");
 	}
 
 	/**
@@ -2051,7 +2051,7 @@ public class SeleniumOutils {
 							return;
 						}
 					} catch (Exception ex) {
-						// SI ON A DEPASER LE NOMBRE DE FRAME CONNU ON STOPPE POUR CETTE CLEF
+						// SI ON A DEPASSER LE NOMBRE DE FRAME CONNU ON STOPPE POUR CETTE CLEF
 						//temp.toString();
 						break;
 					}
