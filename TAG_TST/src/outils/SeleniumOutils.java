@@ -59,6 +59,7 @@ import beans.RGMBean;
 import constantes.Clefs;
 import constantes.Erreurs;
 import exceptions.SeleniumException;
+import moteurs.ChromeImpl;
 import moteurs.FirefoxImpl;
 import moteurs.GenericDriver;
 import moteurs.IEImpl;
@@ -380,8 +381,10 @@ public class SeleniumOutils {
 		        		if (casEssai != null) {
 		        			if (driver.impl.equals(GenericDriver.IE_IMPL)) {
 		        				casEssai.ajouterEcran((IEImpl)d, titre.replace(" ", "") + timestamp.toString(), new ObjectifBean(d.getTitle(), titre, titre + timestamp.toString(), true));
-		        			} else {
+		        			} else if(driver.impl.equals(GenericDriver.FIREFOX_IMPL)) {
 		        				casEssai.ajouterEcran((FirefoxImpl)d, titre.replace(" ", "") + timestamp.toString(), new ObjectifBean(d.getTitle(), titre, titre + timestamp.toString(), true));
+		        			} else {
+		        				casEssai.ajouterEcran((ChromeImpl)d, titre.replace(" ", "") + timestamp.toString(), new ObjectifBean(d.getTitle(), titre, titre + timestamp.toString(), true));
 		        			}
 		        		} else {
 		        			ajouterObjectifObtenu(new ObjectifBean(d.getTitle(), titre, titre.replace(" ", "") + timestamp.toString(), true));
@@ -391,8 +394,10 @@ public class SeleniumOutils {
 		        		if (casEssai != null) {
 		        			if (driver.impl.equals(GenericDriver.IE_IMPL)) {
 		        				casEssai.ajouterEcran((IEImpl)d, titre.replace(" ", "") + timestamp.toString(), new ObjectifBean(d.getTitle(), titre, titre + timestamp.toString(), false));
-		        			} else {
+		        			} else if(driver.impl.equals(GenericDriver.FIREFOX_IMPL)) {
 		        				casEssai.ajouterEcran((FirefoxImpl)d, titre.replace(" ", "") + timestamp.toString(), new ObjectifBean(d.getTitle(), titre, titre + timestamp.toString(), false));
+		        			} else {
+		        				casEssai.ajouterEcran((ChromeImpl)d, titre.replace(" ", "") + timestamp.toString(), new ObjectifBean(d.getTitle(), titre, titre + timestamp.toString(), false));
 		        			}
 		        		} else {
 		        			ajouterObjectifObtenu(new ObjectifBean(d.getTitle(), titre, titre.replace(" ", "") + timestamp.toString(), false));
@@ -911,6 +916,8 @@ public class SeleniumOutils {
 				return (FirefoxImpl) driver.switchTo().defaultContent().switchTo().frame(idFrame);
 			} else if (typeImpl == GenericDriver.IE_IMPL) {
 				return (IEImpl) driver.switchTo().defaultContent().switchTo().frame(idFrame);
+			} else if (typeImpl == GenericDriver.CHROME_IMPL) {
+				return (ChromeImpl) driver.switchTo().defaultContent().switchTo().frame(idFrame);
 			} else {
 				//TODO à réaliser.
 				return null;
