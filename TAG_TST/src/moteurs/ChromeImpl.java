@@ -35,11 +35,6 @@ public class ChromeImpl extends ChromeDriver implements GenericDriver {
 	public boolean activationLog = true;
 	
 	/**
-	 * Le profil utilise.
-	 */
-	public FirefoxProfile profilFirefox;
-	
-	/**
 	 * Spécification de l'implémentation.
 	 */
 	public String impl = GenericDriver.CHROME_IMPL;
@@ -122,7 +117,7 @@ public class ChromeImpl extends ChromeDriver implements GenericDriver {
 	 * @param element l'élément concerné par l'objectif.
 	 * @param objectif l'objectif.
 	 */
-	private void ajouterObjectifObtenu(WebElement element, ObjectifBean objectif) {
+	public void ajouterObjectifObtenu(WebElement element, ObjectifBean objectif) {
 		getObjectifsDriver().put(objectif.getClefUnique(), objectif);
 		if (element != null) {
 			new SeleniumOutils(this).captureEcran(element, objectif.getClefUnique());
@@ -178,46 +173,5 @@ public class ChromeImpl extends ChromeDriver implements GenericDriver {
 	public void setObjectifsDriver(HashMap<String, ObjectifBean> objectifsDriver) {
 		this.objectifsDriver = objectifsDriver;
 	}
-	
-	////////////////////////////// TODO A SUPPRIMER /////////////////////////////////////////////////
-	
-	public static FirefoxProfile configurerProfilNatixis() {
-		FirefoxProfile profile = new FirefoxProfile();
-		profile.setPreference("app.update.enabled", Boolean.FALSE);
-		profile.setPreference("network.negotiate-auth.trusted-uris", "https://open-workplace.intranatixis.com/nfi/front-middle/wiki-izivente/Rfrentiel/Liens%20Izivente.aspx");
-		profile.setPreference("network.automatic-ntlm-auth.trusted-uris", "https://open-workplace.intranatixis.com/nfi/front-middle/wiki-izivente/Rfrentiel/Liens%20Izivente.aspx");
-		return profile;
-	}
-	
-	public static FirefoxProfile configurerProfil() {
-		FirefoxProfile profile = new FirefoxProfile();
-		Proxy proxy = new Proxy();
-		proxy = proxy.setAutodetect(false);
-		proxy = proxy.setProxyType(ProxyType.MANUAL);
-		// TODO : Remplace la prise en compte du proxy
-		//profile.setProxyPreferences(proxy);
-		
-		profile.setPreference("network.http.phishy-userpass-length", 255);
-		profile.setPreference("network.proxy.autoconfig_url", "http://proxypac.log.intra.laposte.fr/proxyie.pac");
-		profile.setPreference("network.proxy.no_proxies_on", "*,*.intra.laposte.fr,localhost,127.0.0.1,93.93*,187.0.22.240,187.0.22.238,79.125.41.167,.spt.net2-courrier.extra.laposte.fr,.refprod.net-courrier.extra.laposte.fr,.refprod.pprd.net2-courrier.extra.laposte.fr,rao.net-courrier.extra.laposte.fr,gestri.net-courrier.extra.laposte.fr,refprod.net-courrier.extra.laposte.fr,.reftournees.pprd.net2-courrier.extra.laposte.fr,.gestri.pprd.net2-courrier.extra.laposte.fr");
-		profile.setPreference("network.proxy.ftp", "web.pandore.log.intra.laposte.fr");
-		profile.setPreference("network.proxy.http", "web.pandore.log.intra.laposte.fr");
-		profile.setPreference("network.proxy.ssl", "web.pandore.log.intra.laposte.fr");
-		profile.setPreference("network.proxy.socks", "web.pandore.log.intra.laposte.fr");
-		profile.setPreference("network.proxy.gopher", "web.pandore.log.intra.laposte.fr");
-		profile.setPreference("network.proxy.gopher_port", 8080);
-		profile.setPreference("network.proxy.ftp_port", 8080);
-		profile.setPreference("network.proxy.socks_port", 8080);
-		profile.setPreference("network.proxy.http_port", 8080);
-		profile.setPreference("network.proxy.ssl_port", 8080);
-		profile.setPreference("network.proxy.type", 1);
-		profile.setPreference("network.proxy.share_proxy_settings", Boolean.TRUE);
-		//profile.setPreference("network.negotiate-auth.allow-proxies", Boolean.FALSE);
-		//profile.setPreference("network.automatic-ntlm-auth.allow-proxies", Boolean.FALSE);
-		profile.setPreference("network.auth.use-sspi", Boolean.FALSE);
-		profile.setPreference("capability.policy.strict.Window.alert", "noAccess");
-		profile.setPreference("network.negotiate-auth.trusted-uris", "http://www.wac.courrier.intra.laposte.fr/,http://idp.si-tri.com/,https://gestri.recdtc.dip.courrier.intra.laposte.fr/gestri/");
-		profile.setPreference("network.automatic-ntlm-auth.trusted-uris", "http://www.wac.courrier.intra.laposte.fr/,http://idp.si-tri.com/,gestri.assemblage.net3-courrier.extra.laposte.fr,https://gestri.recdtc.dip.courrier.intra.laposte.fr/gestri/");
-		return profile;
-	}
+
 }
