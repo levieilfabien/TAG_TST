@@ -301,6 +301,8 @@ public class CibleBean implements Serializable {
 			by = By.partialLinkText(valeur);
 		} else if (Clefs.CLASSE == identification) {
 			by = By.className(valeur);
+		} else if (Clefs.CSSSELECTOR == identification) {
+			by = By.cssSelector(valeur);
 		} else {
 			// On remplace les simple quote par des doubles.
 			if (valeur.contains("'")) {

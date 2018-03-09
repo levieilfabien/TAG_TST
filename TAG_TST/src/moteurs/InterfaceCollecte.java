@@ -350,14 +350,15 @@ public class InterfaceCollecte extends JFrame {
 		//SeleniumDriver driver = new SeleniumDriver("http://proxypac.log.intra.laposte.fr/proxyie.pac");
 		
 		//profile.setPreference("general.config.filename", new File("Test").getAbsolutePath() + File.separator + "test.cfg");
-		FirefoxImpl driver = new FirefoxImpl(configurerProfil());
+		//FirefoxImpl driver = new FirefoxImpl(configurerProfil());
+		ChromeImpl driver = new ChromeImpl();
 		 
 		//driver.ecouter();
 		SeleniumOutils outil = new SeleniumOutils(driver);
 		//SeleniumDriver driver = new SeleniumDriver("http://proxypac.log.intra.laposte.fr/proxyie.pac");
 		
-	    //Connection à l'intranet
-	    driver.get("http://www.wac.courrier.intra.laposte.fr/");
+	    //Connection
+	    driver.get("http://www.google.fr");
 	    
 	    InterfaceCollecte interfaceCollecte = new InterfaceCollecte(driver);
 	}

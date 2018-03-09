@@ -2041,7 +2041,7 @@ public class SeleniumOutils {
 		List<String> listeFrame = null;
 		for (Clefs clef : Clefs.values()) {
 			// ON NE TESTE QUE LES CLEFS POUVANT REPONDRE AUX CRITERES
-			if (clef.getCode() < 10) {
+			if (clef.getCode() < Clefs.XPATH.getCode()) {
 				// ON EXTRAIT LES FRAMES
 				listeFrame = extraireFrames();
 				if (listeFrame == null || listeFrame.size() == 0) {
