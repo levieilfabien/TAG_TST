@@ -2083,7 +2083,7 @@ public class SeleniumOutils {
 	 * @throws SeleniumException en cas d'erreur.
 	 */
 	public void saisieInstantanee(CibleBean cible, String valeur) throws SeleniumException {
-        ((JavascriptExecutor) this).executeScript("arguments[0].value = arguments[1]", obtenirElement(cible), valeur);
+        ((JavascriptExecutor) this.driver).executeScript("arguments[0].value = arguments[1]", obtenirElement(cible), valeur);
     }
 
 	/**
