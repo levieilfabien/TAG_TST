@@ -1519,7 +1519,12 @@ public class SeleniumOutils {
 			}
 			// On doit ensuite envoyer une validation à la selection, sans quoi la selection n'est pas finalisée.
 			if (tempOption != null) {
-				tempOption.sendKeys(Keys.RETURN);
+				try {
+					tempOption.sendKeys(Keys.RETURN);
+				} catch (ElementNotVisibleException ex) {
+					// Si nous arrivons ici, c'est que l'élément n'est pas visible. La validation par la touche entrée n'est peu être pas nécessaire
+					return;
+				}
 				
 				// Si aucune vérification n'est demandée et que la selection est déjà effective, on s'arrête là.
 				if (!verification) {

@@ -90,5 +90,20 @@ public enum Actions {
 		return nbParam;
 	}
 	
+	/**
+	 * Permet de connaitre la syntaxe de l'action.
+	 * @return la syntaxe de l'action.
+	 */
+	public String getSyntaxe() {
+		return syntaxe;
+	}
+	
+	/**
+	 * Renvoie une chaine de caractère représentant l'action.
+	 * @return la représentation sous forme de chaine de l'action.
+	 */
+	public String toString() {
+		return this.name() + " : Paramètres = " + nbParam + " , Syntaxe : " + syntaxe;
+	}
 	
 }
