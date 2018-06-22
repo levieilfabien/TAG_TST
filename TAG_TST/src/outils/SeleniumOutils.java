@@ -1081,7 +1081,39 @@ public class SeleniumOutils {
 			}
 		}
 	}
-	
+	/**
+	 * Permet de cliquer sur un element en fonction de sa position.
+	 * Il n'est pas possible d'interragir avec un élément invisible, aussi on clique toujours sur un élément visible.
+	 * @param cible la cible du clic.
+	 * @throws SeleniumException en cas d'erreur.
+	 */
+	public void cliquercoordonnees(CibleBean cible) throws SeleniumException {
+		logger("On clique sur " + cible.creerBy().toString() + " (idFrame : " + cible.getFrame() + ")");
+		WebElement temp = obtenirElement(cible);
+		
+		try {		
+			if (temp != null) {
+			new Actions(driver).moveToElement(temp).click().perform();
+			
+			} else {
+				//L'objet n'est pas trouvé dans la page.
+				throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est pas visible (ou absente).");
+			}
+		} catch (StaleElementReferenceException ex) {
+			// L'objet qu'on cherche à cliquer n'est plus présent : la référence est obselète
+			try {
+				// On tente à nouveau le clique avec une référence directe, si c'est à nouveau un échec on conclue sur une impossibilité.
+				obtenirElementVisible(cible).click();
+			} catch (StaleElementReferenceException ex2) {
+				throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est plus disponible (rechargement?).");
+			} catch (NullPointerException ex2) {
+				throw new SeleniumException(Erreurs.E017, "La cible " + cible.toString() + " du clic n'est pas visible (ou absente).");
+			} catch (SeleniumException ex2) {
+				throw new SeleniumException(ex2.getInformations(), "La cible " + cible.toString() + " n'as pas pu être atteinte même après rechargement de la référence obselète.");
+			}
+		}
+	}
+
 	/**
 	 * Permet un clic optionnel sur un objet potentiellement absent mais non obligatoire.
 	 * @param cible la cible du clic.
